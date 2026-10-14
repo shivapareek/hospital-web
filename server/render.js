@@ -345,7 +345,7 @@ const absAsset = (v) => (v && ASSET.test(v) ? "/" + v : v);
 function hindiPass($, db) {
   const A = i18n.ATTRS.hi;
   $("html").attr("lang", "hi");
-  const fonts = "https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400..700&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap";
+  const fonts = "https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400..700&family=Noto+Serif+Devanagari:wght@400..600&display=swap";
   if (!$(`link[href="${fonts}"]`).length) {
     const g = $('link[href^="https://fonts.googleapis.com/css2"]').last();
     if (g.length) g.after(`<link href="${fonts}" rel="stylesheet" />`); else $("head").append(`<link href="${fonts}" rel="stylesheet" />`);

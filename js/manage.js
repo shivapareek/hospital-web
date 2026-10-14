@@ -99,7 +99,9 @@
   function card() {
     const b = booking;
     const hist = (b.history || []).map((h) => {
-      const at = new Date(h.at).toLocaleString(LANG === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+      const dt = new Date(h.at);
+      // Hindi: the same short month names as the date tiles (browsers spell some hi-IN months differently)
+      const at = LANG === "hi" ? `${dt.getDate()} ${MON[dt.getMonth()]}, ${dt.toLocaleTimeString("hi-IN", { hour: "numeric", minute: "2-digit" })}` : dt.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
       if (h.action === "rescheduled") return `<li>${esc(at)}: ${esc(tr("moved from {from} to {to}", { from: h.from, to: h.to }))}</li>`;
       return `<li>${esc(at)}: ${esc(tr(ACTIONS[h.action] || h.action))}</li>`;
     }).join("");
@@ -116,7 +118,7 @@
         ${b.fee ? `<div><dt>${tr("Fee")}</dt><dd>₹${esc(Number(b.fee).toLocaleString("en-IN"))}</dd></div>` : ""}
       </dl>
       ${b.canChange ? `<div class="mb-actions"><button type="button" class="btn btn--accent" data-act="reschedule">${tr("Change date or time")}</button><button type="button" class="btn btn--line" data-act="cancel">${tr("Cancel appointment")}</button></div>`
-        : `<p class="mb-lock">${esc(b.lockReason)}${b.status === "cancelled" ? ` <a href="${HOME}#book">${tr("Book a new visit")}</a>.` : ""}</p>`}
+        : `<p class="mb-lock">${esc(b.lockReason)}${b.status === "cancelled" ? " " + tr('<a href="{href}">Book a new visit</a>.', { href: HOME + "#book" }) : ""}</p>`}
       ${hist ? `<div class="mb-history"><h3>${tr("Changes")}</h3><ul>${hist}</ul></div>` : ""}
     </div><div data-panel></div>`;
   }

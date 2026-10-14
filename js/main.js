@@ -719,7 +719,7 @@
     const d = new Date(start); d.setDate(d.getDate() + 280);
     const weeks = Math.floor((Date.now() - start) / (7 * 864e5));
     if (weeks < 0 || weeks > 42) { out.textContent = tr("Choose a date within the last 42 weeks."); return; }
-    out.innerHTML = `<b>${d.getDate()} ${(I18N["@monthsLong"] || MON)[d.getMonth()]} ${d.getFullYear()}</b>${tr("Your estimated due date. You're about {weeks} weeks along, in trimester {n}.", { weeks, n: weeks < 13 ? 1 : weeks < 27 ? 2 : 3 })}`;
+    out.innerHTML = `<b>${d.getDate()} ${(I18N["@monthsLong"] || MON)[d.getMonth()]} ${d.getFullYear()}</b>${tr("Your estimated due date. You're about {weeks} weeks along, in trimester {n}.", { weeks, n: weeks < 13 ? 1 : weeks < 27 ? 2 : 3, nth: tr(weeks < 13 ? "first" : weeks < 27 ? "second" : "third") })}`;
   }
   lmp.addEventListener("input", due);
   due();

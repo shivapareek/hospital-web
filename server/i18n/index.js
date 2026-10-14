@@ -76,6 +76,8 @@ function localized(col, item, lang) {
       out.label = hi && filled(item.name_hi) ? item.name_hi : item.name;
       ["desc", "caption", "captionAlt", "overview", "conditions", "treatments", "faqs"].forEach(swap);
       if (hi && item.inset && filled(item.insetLabel_hi)) out.inset = { ...item.inset, label: item.insetLabel_hi };
+      // credit lines stay in English (source and licence names); only the leading word is Hindi
+      if (hi) for (const f of ["credit", "creditAlt"]) if (typeof item[f] === "string") out[f] = item[f].replace(/^Model:/, "मॉडल:").replace(/^Image:/, "तस्वीर:");
       if (hi && Array.isArray(item.costs) && Array.isArray(item.costs_hi)) out.costs = item.costs.map((c, i) => (c && filled(item.costs_hi[i]) ? { ...c, item: item.costs_hi[i] } : c));
       break;
     case "packages":

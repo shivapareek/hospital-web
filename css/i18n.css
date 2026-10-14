@@ -1,7 +1,8 @@
 /* =========================================================
    Languages: the header switcher (every page) and Hindi typography.
    Hindi pages (/hi/…) load "Noto Sans Devanagari" (body and UI, next to Atkinson Hyperlegible) and
-   "Tiro Devanagari Hindi" (display and headings, next to Newsreader). The Latin faces stay first in each
+   "Noto Serif Devanagari" (display and headings, next to Newsreader: a calm, open serif whose colour
+   matches Newsreader's light display weight; Tiro Devanagari Hindi was tried and set the danda too loose). The Latin faces stay first in each
    stack, so numbers, ₹ amounts and English terms (OPD, ICU, MRI) keep the site's own type; the Devanagari
    faces take over for Devanagari letters. Everything below is scoped to :lang(hi).
    ========================================================= */
@@ -36,7 +37,7 @@
 
 /* ---------- Hindi typography ---------- */
 :root:lang(hi) {
-  --serif: "Newsreader", "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Iowan Old Style", Georgia, serif;
+  --serif: "Newsreader", "Noto Serif Devanagari", "Iowan Old Style", Georgia, serif;
   --sans: "Atkinson Hyperlegible Next", "Noto Sans Devanagari", "Nirmala UI", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
   --mono: "Atkinson Hyperlegible Mono", "Noto Sans Devanagari", ui-monospace, "SF Mono", Menlo, monospace;
 }
@@ -65,6 +66,9 @@
 :lang(hi) .btn--sm { padding-block: 6px; }
 :lang(hi) .nav__link { white-space: nowrap; }
 :lang(hi) .prose { line-height: 1.75; }
+/* short Devanagari labels set in the monospace face read better in the UI sans (mono spaces are very wide) */
+:lang(hi) .chapter__stat, :lang(hi) .lb-read, :lang(hi) .read-line__label, :lang(hi) .scrub-hint__state,
+:lang(hi) .articles__meta, :lang(hi) .pg-article__facts, :lang(hi) .live__facts dt, :lang(hi) .next-slot .mono, :lang(hi) #tDate { font-family: var(--sans); letter-spacing: 0; }
 :lang(hi) .prose h2, :lang(hi) .prose h3 { line-height: 1.35; }
 :lang(hi) .tabs button, :lang(hi) .tabs a { line-height: 1.4; }
 :lang(hi) .chip, :lang(hi) .slot-group small, :lang(hi) .date small { line-height: 1.5; }

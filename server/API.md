@@ -38,6 +38,8 @@ A route the role cannot use returns 403.
 ```
 Field `type` values: `text`, `textarea`, `number`, `boolean`, `select` (with `options:[{value,label}]` or `optionsFrom:"departments"` meaning use the `name` of each department), `tags` (array of strings, edited as chips/comma list), `list` (array of strings, one per line), `image` (a URL string; pick from media library or upload), `json` (raw JSON value, edit in a monospace textarea; validate before save), `color`.
 Fields may have `group` (section heading inside the form) and `advanced:true` (show inside a collapsed "Advanced" block).
+Hindi fields: `{"name":"bio_hi","label":"About (हिन्दी)","lang":"hi","hiOf":"bio", …}`. Every patient-facing text field has one (`<field>_hi`, same type; Markdown ones carry `markdown:true`). The admin shows them in a collapsed "हिन्दी (Hindi) translations" block. Empty means "show the English on Hindi pages".
+Collections with Hindi fields: doctors (`role, photoAlt, lang, opd, bio, education, awards, conditions, patientReviews`), departments (`name, desc, caption, captionAlt, insetLabel, overview, conditions, treatments, costs` (a list of item names in the order of the English `costs`; amounts come from the English), `faqs`), packages (`name, items`), testimonials (`meta, text`), faqs (`q, a`), symptoms (`label`), chatRules (`k` (Hindi/Hinglish keywords), `a`), articles (`title, category, readTime, summary, body`), pages (`title, summary, imageAlt, body`).
 
 Content collections: `doctors`, `departments`, `packages`, `testimonials`, `faqs`, `symptoms`, `chatRules`, `articles`.
 Every item has `id` (string) and `hidden` (boolean, hides it on the site without deleting).
@@ -61,6 +63,12 @@ Every item has `id` (string) and `hidden` (boolean, hides it on the site without
 ```
 `value:null` means "using the default". `type:"html"` allows only inline tags (a, em, strong, b, i, span, br, small, abbr, sup).
 `PUT /api/admin/texts` body `{values:{ "<key>": "new text" | {src,alt} | null }}` (null resets to default) → `{ok:true}`.
+
+**Hindi**: add `?lang=hi` to both. The values are the Hindi overrides (`db.textsHi`), separate from the English. In the GET response each field also has
+`english` (what the English page shows now), `englishEdited` (the English was changed in the admin), `shipped` (a built-in translation exists) and `stale`
+(the built-in translation was made from English that no longer matches index.html); `default` is the built-in Hindi, or the English when there is none.
+A Hindi image value with an empty `src` keeps following the English image (only the alt text is Hindi).
+Resolution on `/hi/`: Hindi override → built-in translation (`server/i18n/hi-home.json`) → English (override or default).
 
 ## Sections
 `GET /api/admin/sections` → `{items:[{id:"doctors",label:"Doctors",visible:true}]}` (page order)
@@ -107,17 +115,24 @@ Statuses: appointments `new|confirmed|completed|cancelled|no-show`; data request
 ## Activity log
 `GET /api/admin/audit?limit=200` → `{items:[{at,user,action,target}]}`
 
+## Languages (public site)
+English at the existing paths, Hindi under `/hi/`: `/hi/` (and `/hi/index.html`; `/hi` redirects), `/hi/doctors`, `/hi/doctors/:slug`, `/hi/specialities`, `/hi/specialities/:slug`, `/hi/library`, `/hi/library/:slug`, `/hi/<custom page slug>`, `/hi/privacy-policy`, `/hi/terms`, `/hi/patient-rights`, `/hi/data-request`, `/hi/manage-booking`; other `/hi/…` paths get the Hindi 404. `/hi/assets/*` serves the same files as `/assets/*` (page scripts build some image paths relative to the page).
+Every page carries `<html lang>`, `<link rel="alternate" hreflang="en|hi|x-default">` and a header link to the same page in the other language (`[data-lang-switch]`). `sitemap.xml` lists both languages with `xhtml:link` alternates.
+Hindi pages get `window.CMS.lang = "hi"`, `window.CMS.home = "/hi/"` and `window.I18N` (the browser strings, `server/i18n/hi-ui.json`).
+
+**Messages in the page's language**: the public POST endpoints below take an optional `lang: "hi"` in the body (or the header `X-Lang: hi`; without either, a `Referer` under `/hi/` counts as Hindi). Validation errors, booking look-up/cancel/reschedule errors and lock reasons then come back in Hindi, and the booking view has Hindi `dateLabel` and `dept`. Stored data stays the same in both languages (English speciality, package and gender values; cancellation reasons in English); an appointment booked from a Hindi page is marked `lang:"hi"` and its consent `textVersion` is the version of the Hindi consent text. Notification templates are sent in English (a Hindi booking's manage link points to `/hi/manage-booking`).
+
 ## Public endpoints (used by the website)
 - `GET /api/live`
 - `GET /api/slots?doctor=<name>&date=YYYY-MM-DD` → `{taken:["10:30 AM", ...]}`
 - `POST /api/submit/appointment` · `/api/submit/message` · `/api/submit/report` · `/api/submit/package` · `/api/submit/subscribe` · `/api/submit/datarequest` → `{ok:true, token?}` or 400 `{error}`; 429 when rate-limited.
   Every body must include `consent: true` (400 otherwise). Appointment returns `{ok, token, manage:"/manage-booking?token=…", notify:boolean, channel, reminderHours}`.
   Data request body: `{name, phone, email?, requestType, details?, consent:true}`.
-- `GET /api/privacy/config` → `{consentText, consentVersion, privacyUrl, notify:{on, channel, reminderHours}}` (the home page also gets this as `window.CMS_PRIVACY`).
-- `GET /js/data.js` is generated from the database (same `const DEPARTMENTS = …` globals as the static file).
+- `GET /api/privacy/config` → `{consentText, consentVersion, privacyUrl, notify:{on, channel, reminderHours}}` (the home page also gets this as `window.CMS_PRIVACY`). `?lang=hi`: the Hindi consent text and its version, `privacyUrl:"/hi/privacy-policy"`.
+- `GET /js/data.js` is generated from the database (same `const DEPARTMENTS = …` globals as the static file). `GET /js/data.js?lang=hi` (also `/hi/js/data.js`): the Hindi values (`_hi` fields, English where empty). Department and package `name` stay English (identity); their display name is `label` (also present, equal to `name`, in the English file). Chat rules get the Hindi and the English keywords.
 
 ## Privacy and legal pages (HTML, server-rendered with the site header and footer)
-`GET /privacy-policy`, `/terms`, `/patient-rights`, `/data-request` (Markdown from Settings → Privacy and legal, sanitised), `GET /manage-booking` (noindex).
+`GET /privacy-policy`, `/terms`, `/patient-rights`, `/data-request` (Markdown from Settings → Privacy and legal, sanitised), `GET /manage-booking` (noindex). The same under `/hi/…` from the Hindi settings (`legalPrivacyHi` …; English when empty).
 
 ## Manage booking (public, patient self-service)
 All take `{token, phone}`; rate-limited (30 calls / 15 min per IP, and 429 after 8 failed look-ups). A wrong token or phone always returns the same 404 `{error}`.
@@ -151,4 +166,10 @@ A scheduler runs every minute and queues one reminder per appointment when it is
 
 Retention job: runs on start and daily; anonymises appointments older than `retentionAppointments` days, messages/reports/check-up requests older than `retentionEnquiries`, deletes subscribers older than `retentionSubscribers` (0 = keep), anonymises outbox messages older than `retentionAppointments`; logs "Retention job anonymised old records" (user `system`).
 
+Hindi settings (Settings → "Privacy and legal: हिन्दी (Hindi)", "Search engines and sharing", "Announcement bar"): `consentTextHi, dpoNameHi, legalUpdatedHi, legalPrivacyHi, legalTermsHi, legalPatientRightsHi, legalDataRequestHi, seoTitleHi, seoDescriptionHi, announcementTextHi` (defaults: demo Hindi from `server/i18n/hi-legal.js`; empty = English).
+`GET /api/admin/privacy/status` also returns `consentVersionHi`; `db.consentVersions[v].lang` is `"hi"` for Hindi consent texts.
+
 New settings (Settings → Privacy and legal / Patient messages): `dpoName, dpoEmail, dpoPhone, retentionAppointments (365), retentionEnquiries (180), retentionSubscribers (0), consentText, legalUpdated, legalPrivacy, legalTerms, legalPatientRights, legalDataRequest` (Markdown; placeholders {hospital} {dpoName} {dpoEmail} {dpoPhone} {helpdesk} {email} {retention…}), `notifyOn (true), notifyChannel ("sms"), reminderHours (24), siteUrl, tplConfirm, tplReminder, tplCancel, tplReschedule` (placeholders {name} {token} {doctor} {date} {time} {link}). Settings fields may carry `max` (max length saved).
+
+## Migrations
+`db.migrations` records each one-time migration with the time it ran. `pages-v1` (server/pages.js): pages collection and English demo profile/speciality/article text. `i18n-hi-v1` (server/i18n/migrate.js): adds `db.textsHi` and fills empty `<field>_hi` content fields with the Hindi demo translations, only where the English field still equals the demo text the translation was made from (admin edits are never overwritten and never get a stale translation).
