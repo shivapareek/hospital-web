@@ -35,7 +35,7 @@
   const root = document.documentElement;
   const savedTheme = storage.get("cn-theme");
   const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  root.dataset.theme = savedTheme || (prefersDark ? "dark" : "light");
+  root.dataset.theme = savedTheme || root.dataset.theme || (prefersDark ? "dark" : "light");
   $("#themeToggle").addEventListener("click", () => {
     root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
     storage.set("cn-theme", root.dataset.theme);
