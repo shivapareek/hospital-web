@@ -82,9 +82,9 @@ const DEPARTMENTS = [
   },
   {
     name: "General Medicine", icon: "i-steth", desc: "Fever, diabetes, blood pressure, thyroid and preventive care.",
-    view: "image", image: "assets/img/photo-stethoscope-coat-1024.webp", still: "assets/img/specimens/general",
-    caption: "A stethoscope on a white coat. Illustrative photograph.",
-    credit: "Photo: Ryo FUKAsawa, CC BY 2.0", creditId: "photos"
+    // a typographic tile like Pediatrics (the stethoscope stock photo read as generic); caption: client to confirm
+    view: "type", still: null, stillText: "120/80",
+    caption: "Below 120 over 80 counts as normal blood pressure. Our physicians check the basics first: blood pressure, blood sugar and thyroid."
   }
 ];
 

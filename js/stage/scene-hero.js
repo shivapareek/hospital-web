@@ -4,16 +4,24 @@
 import { WebGLRenderTarget, MeshBasicMaterial, Raycaster, LinearSRGBColorSpace } from "three";
 import {
   ModelStage, DragYaw, Loop, LiveStage, readTokens, revealCanvas, watchContextLoss, meshesOf, worldBox, DEG, Vector3,
+  setTurnable,
 } from "./core.js";
 import { HERO, modelPath } from "./specimens.js";
 import { prefersReduced } from "./caps.js";
 
 const desktopMQ = matchMedia("(min-width: 1024px)");
+// the caption sits inside the plate from 1280 px (css/style.css); only then is the heart moved off centre
+const insideMQ = matchMedia("(min-width: 1280px)");
 const finePointer = matchMedia("(pointer: fine)");
+const TAU = Math.PI * 2;
+// the box is a tab stop with turning instructions only while the 3D view is live (§15)
+const LIVE_LABEL = "3D model of the human heart. Use the left and right arrow keys, or drag, to turn it.";
+export const STILL_LABEL = "Model of the human heart. The coronary arteries on its surface are green.";
 
-/** Pose shared with the bake page, so the poster and the first live frame match. */
-export function heroPose(desktop) {
-  return { yawDeg: HERO.yaw, offsetX: desktop ? HERO.offsetX : 0, offsetY: desktop ? HERO.offsetY : 0 };
+/** Pose shared with the bake page, so the poster and the first live frame match.
+    `inside`: the caption is inside the plate (>= 1280 px), so the heart moves right and up to clear it. */
+export function heroPose(inside) {
+  return { yawDeg: HERO.yaw, offsetX: inside ? HERO.offsetX : 0, offsetY: inside ? HERO.offsetY : 0 };
 }
 
 export async function mountHero(figure, opts = {}) {
@@ -44,6 +52,7 @@ export class HeroStage extends LiveStage {
     });
     this.pauseBtn?.addEventListener("click", () => this.togglePause());
     desktopMQ.addEventListener("change", () => this.onLayout());
+    insideMQ.addEventListener("change", () => this.onLayout());
     prefersReduced.addEventListener("change", () => { this.syncPause(); this.loop?.kick(); });
   }
 
@@ -55,12 +64,13 @@ export class HeroStage extends LiveStage {
     this.unwatch = watchContextLoss(st.canvas, () => this.lost(), () => st.disposed);
     const entry = await st.load(HERO, modelPath("hero"));
     if (this.state !== "loading") return;
-    const pose = heroPose(desktopMQ.matches);
+    const pose = heroPose(insideMQ.matches);
     st.setModel(entry, { yawDeg: pose.yawDeg, offsetX: pose.offsetX, offsetY: pose.offsetY });
     if (this.savedYaw != null) st.yaw = this.savedYaw;
     await st.compile();
     if (this.state !== "loading") return;
 
+    this.phase = null;
     this.drag = new DragYaw(this.box, {
       yaw: st.yaw,
       home: HERO.yaw * DEG,
@@ -71,11 +81,19 @@ export class HeroStage extends LiveStage {
     });
     this.loop = new Loop(this, { onGuard: (level) => this.guard(level) });
     this.loop.visible = this.visible;
+    // the box, and the caption and controls the labels keep clear of: a text-size change resizes the caption
+    // without resizing the box, so it has to be watched too
     this.ro = new ResizeObserver(() => {
       if (!this.stage) return;
-      if (this.stage.size()) { this.labels?.measure(); this.loop.invalidate(); }
+      this.stage.size();
+      this.labels?.measure();
+      this.loop?.invalidate();
     });
     this.ro.observe(this.box);
+    for (const sel of ["figcaption", ".stage__ctrl"]) { const n = this.figure.querySelector(sel); if (n) this.ro.observe(n); }
+    // the labels' own font follows --fs-scale (set on <html> by the text-size toggle)
+    this.mo = new MutationObserver(() => { this.labels?.measure(); this.loop?.invalidate(); });
+    this.mo.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
 
     this._pm = (e) => {
       if (e.pointerType === "touch" || !this.lightOn()) return;
@@ -93,8 +111,10 @@ export class HeroStage extends LiveStage {
     await revealCanvas(st.canvas, this.box);
     if (this.state !== "loading") return;
 
+    setTurnable(this.box, LIVE_LABEL);
     if (this.loadEl && !this.loadEl.hidden) {
-      const hadFocus = document.activeElement === this.loadEl;
+      // the tap-tier button stays focusable while loading (aria-disabled), so focus can move on to the stage
+      const hadFocus = document.activeElement === this.loadEl || document.activeElement === document.body;
       this.loadEl.hidden = true;
       if (hadFocus) this.box.focus({ preventScroll: true });
     }
@@ -114,6 +134,9 @@ export class HeroStage extends LiveStage {
     this.loop = null;
     this.ro?.disconnect();
     this.ro = null;
+    this.mo?.disconnect();
+    this.mo = null;
+    setTurnable(this.box, null, STILL_LABEL);
     if (this._pm) {
       this.box.removeEventListener("pointermove", this._pm);
       this.box.removeEventListener("pointerleave", this._pl);
@@ -136,7 +159,7 @@ export class HeroStage extends LiveStage {
 
   onLayout() {
     if (this.state !== "live" || !this.stage) return;
-    const pose = heroPose(desktopMQ.matches);
+    const pose = heroPose(insideMQ.matches);
     this.stage.setOffset(pose.offsetX, pose.offsetY);
     this.syncLabels();
     this.labels?.measure();
@@ -161,9 +184,31 @@ export class HeroStage extends LiveStage {
   update(dt, now) {
     const d = this.drag;
     d.step(now);
-    if (!d.moving && this.autoOn(now)) d.yaw += HERO.turnSpeed * dt;
+    if (!d.moving && this.autoOn(now)) this.sway(dt);
     if (this.lightOn()) this.stage.lights.step();
     this.stage.yaw = d.yaw;
+  }
+
+  /**
+   * The motion on its own is a slow sway of ±HERO.swayDeg round the poster pose (peak speed HERO.turnSpeed),
+   * not a full turn: the front, where the coronary arteries named in the caption are, always stays in view.
+   * After a drag it carries on from where the user left the heart; from far round, it first eases back to
+   * the edge of the sway.
+   */
+  sway(dt) {
+    const d = this.drag, A = HERO.swayDeg * DEG;
+    if (this.phase == null) {
+      const c = d.home + Math.round((d.yaw - d.home) / TAU) * TAU;
+      const o = d.yaw - c;
+      this.swayC = c;
+      if (Math.abs(o) > A) {
+        this.phase = Math.sign(o) * Math.PI / 2;
+        d.easeTo(c + Math.sign(o) * A, Math.min(4000, Math.max(600, ((Math.abs(o) - A) / 0.5) * 1000)), null);
+      } else this.phase = Math.asin(o / A);
+      return;
+    }
+    this.phase += (HERO.turnSpeed / A) * dt;
+    d.yaw = this.swayC + A * Math.sin(this.phase);
   }
 
   draw() {
@@ -174,6 +219,7 @@ export class HeroStage extends LiveStage {
   /** No auto-turn until `ms` from now (4 s after the last drag or key turn). */
   hold(ms = 4000) {
     this.autoAt = performance.now() + ms;
+    this.phase = null;          // the sway restarts from wherever the heart is left
     clearTimeout(this.autoTimer);
     this.autoTimer = setTimeout(() => this.loop?.kick(), ms + 20);
   }
@@ -186,6 +232,9 @@ export class HeroStage extends LiveStage {
       this.stage.lights.rest();
       this.stage.lights.snap();
       this.syncPause();
+      // a slow device stops the sway: rest on the poster pose (300 ms, like Home), never wherever it happened to be
+      const d = this.drag;
+      if (d && !d.drag) d.easeTo(d.home + Math.round((d.yaw - d.home) / TAU) * TAU, 300, null);
     }
     this.loop?.invalidate();
   }
@@ -212,6 +261,9 @@ export class HeroStage extends LiveStage {
     if (want && !this.labels) {
       const st = this.stage;
       // anchors live in model space, so one computation serves every later rebuild of the stage
+      if (!this.anchors && HERO.labels.every((d) => d.at)) {
+        this.anchors = new Map(HERO.labels.map((d) => [d.text, new Vector3(...d.at)]));
+      }
       if (!this.anchors) {
         if (this.anchorsBusy) return;
         this.anchorsBusy = true;
@@ -320,7 +372,7 @@ async function snapToVisible(st, parts, posePose) {
 }
 
 /** Anchors in model space (the turning group's local space), computed once after load (§8.4). */
-async function computeAnchors(st) {
+export async function computeAnchors(st) {
   const turn = st.turn, root = st.root;
   const out = new Map();
   const model = st.model.src;

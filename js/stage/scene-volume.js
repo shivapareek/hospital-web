@@ -10,7 +10,7 @@ import {
 } from "three";
 import { NRRDLoader } from "three/addons/loaders/NRRDLoader.js";
 import { VolumeRenderShader1 } from "three/addons/shaders/VolumeShader.js";
-import { fetchBuffer, compileScene, DragYaw, Loop, LiveStage, revealCanvas, watchContextLoss, DEG } from "./core.js";
+import { fetchBuffer, compileScene, DragYaw, Loop, LiveStage, revealCanvas, watchContextLoss, DEG, setTurnable } from "./core.js";
 import { prefersReduced } from "./caps.js";
 
 export const STENT = {
@@ -244,6 +244,8 @@ export class VolumeStage extends LiveStage {
     this.updateReadout();
     await revealCanvas(view.canvas, this.box);
     if (this.state !== "loading") return;
+    // the poster (and its alt text) is now hidden: the box itself is the labelled, turnable image (§15)
+    setTurnable(this.box, "CT view of a stent inside the aorta, with the spine behind it. Use the left and right arrow keys, or drag, to turn it.");
     this.showSlider(true);
   }
 
@@ -289,5 +291,6 @@ export class VolumeStage extends LiveStage {
     this.view?.dispose();
     this.view = null;
     this.showSlider(false);
+    setTurnable(this.box, null);   // the poster's alt text speaks again
   }
 }

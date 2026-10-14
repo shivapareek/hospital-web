@@ -330,8 +330,11 @@ function initImaging() {
   let userMode = null;           // set by the switch; cleared when the chapter is re-entered
   let last = { m: -1, c: -1 };   // last scroll-derived frames
 
+  const hint = $("#ch-imaging .scrub-hint__state");
   function readout() {
-    if (readTR) readTR.textContent = mode === "ct" ? `Rotation ${ct.frame * 10}°` : `Slice ${mri.frame + 1} of ${MRI_COUNT}`;
+    const t = mode === "ct" ? `Rotation ${ct.frame * 10}°` : `Slice ${mri.frame + 1} of ${MRI_COUNT}`;
+    if (readTR) readTR.textContent = t;
+    if (hint) hint.textContent = t;
   }
   mri.changed = (f) => {
     if (mriRange) { mriRange.value = String(f); mriRange.setAttribute("aria-valuetext", `Slice ${f + 1} of ${MRI_COUNT}`); }
@@ -690,20 +693,25 @@ function initCabinet() {
     if (title) title.textContent = d.name;
     if (text) text.textContent = (alt && d.captionAlt) || d.caption || "";
     setCredit(alt ? d.creditAlt || d.credit : d.credit, alt ? d.creditIdAlt || d.creditId : d.creditId);
+    // the inset and the switch keep their place (visibility only), so the cabinet never changes height
     if (inset) {
-      inset.hidden = !d.inset;
+      inset.hidden = false;
+      inset.classList.toggle("is-off", !d.inset);
       if (d.inset) {
         if (insetImg) insetImg.src = d.inset.src;
         if (insetLabel) insetLabel.textContent = d.inset.label;
       }
     }
     if (sw) {
-      sw.hidden = !(d.alt || d.stillAlt);
+      sw.hidden = false;
+      sw.classList.toggle("is-off", !(d.alt || d.stillAlt));
       for (const b of $$("button[data-alt]", sw)) b.setAttribute("aria-pressed", String(+b.dataset.alt === alt));
     }
 
     if (view === "type") {
-      typeTile().textContent = d.stillText || "";
+      const t = typeTile();
+      t.textContent = d.stillText || "";
+      t.classList.toggle("is-long", (d.stillText || "").length > 4);
       stage.dataset.view = "type";
       for (const l of layers) l.classList.remove("is-on");
     } else {
@@ -727,6 +735,9 @@ function initCabinet() {
     }
     emit("cn:spec", { name: d.name, alt });
   }
+
+  // reserve the switch's room from the start (Neurology, the default, has no switch)
+  if (sw && sw.hidden) { sw.hidden = false; sw.classList.add("is-off"); }
 
   let hoverRow = null, hoverT = 0;
   list.addEventListener("pointerover", (e) => {

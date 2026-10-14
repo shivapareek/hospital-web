@@ -17,6 +17,7 @@ Short line you can paste into the footer:
 - **Licence:** CC BY-SA 2.1 Japan, https://creativecommons.org/licenses/by-sa/2.1/jp/deed.en
 - **Attribution:** "BodyParts3D, © The Database Center for Life Science, licensed under CC Attribution-Share Alike 2.1 Japan"
 - **Changes:** Parts merged and long vessels clipped near the heart. The result was re-oriented to Y-up and simplified. The lite version is a lower level of detail for mobile.
+- **Changes in `heart.mo.glb` and `heart-lite.mo.glb` (the files the site shows):** small loose fragments removed, the inferior vena cava stub left out, and the pulmonary veins and pulmonary arteries shortened to stubs near the heart and closed with flat caps (one-time Python script, then compressed with gltfpack). The `.glb` files are unchanged.
 - **ShareAlike:** These GLB files, as adapted works, are also under CC BY-SA 2.1 JP. The rest of the website is not affected.
 
 ## spine.glb (BodyParts3D)

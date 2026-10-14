@@ -5,6 +5,7 @@
 
 import {
   ModelStage, DragYaw, Loop, LiveStage, readTokens, revealCanvas, hideCanvas, watchContextLoss, disposeTree, DEG,
+  setTurnable,
 } from "./core.js";
 import { SPECIMENS, modelPath, specimenForDept } from "./specimens.js";
 import { prefersReduced } from "./caps.js";
@@ -76,6 +77,7 @@ export class CabinetStage extends LiveStage {
       this.drag.enabled = false;
       hideCanvas(canvas, this.box);
       this.setHint(false);
+      setTurnable(this.box, null);
       return;
     }
     if (key === this.key && canvas.classList.contains("is-on")) return;
@@ -112,6 +114,8 @@ export class CabinetStage extends LiveStage {
     await revealCanvas(canvas, this.box, first ? 400 : SWAP_MS);
     if (my !== this.token) return;
     this.setHint(true);
+    // only now can it be turned: a tab stop for the arrow keys, labelled for screen readers (§15)
+    setTurnable(this.box, `3D model of ${spec.name || "the organ"}. Use the left and right arrow keys, or drag, to turn it.`);
     this.loop?.invalidate();
   }
 
@@ -204,5 +208,6 @@ export class CabinetStage extends LiveStage {
     this.stage = null;
     this.key = null;
     this.setHint(false);
+    setTurnable(this.box, null);
   }
 }

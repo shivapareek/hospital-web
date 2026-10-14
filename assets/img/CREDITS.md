@@ -37,7 +37,7 @@ We still recommend a link from that line to a full credits page or section that 
 |---|---|
 | `ct-chest-axial-1024.webp`, `ct-chest-axial-640.webp` | Axial chest CT at the level of the main bronchi, lung window (W1500/L−600), with the scanner table and air outside the body removed to pure black. Native 512 px; the 1024 version is upscaled about 2× (CT upscales cleanly). |
 | `ct-chest-axial-graded-1024.webp`, `ct-chest-axial-graded-640.webp` | The same slice mapped to the brand palette: deep green `#0D2621`, then `#0F5C4D`, then mint `#7FE0BE`, then near-white. |
-| `ct-chest-coronal-960.webp`, `ct-chest-coronal-640.webp`, `ct-chest-coronal-graded-960.webp` | Coronal (front-view) reformat through the trachea, showing the lungs, airway tree, heart and diaphragm. Natural and graded. |
+| `ct-chest-coronal-960.webp`, `ct-chest-coronal-640.webp`, `ct-chest-coronal-graded-960.webp`, `ct-chest-coronal-graded-640.webp` | Coronal (front-view) reformat through the trachea, showing the lungs, airway tree, heart and diaphragm. Natural (lung window) and graded. The graded version uses a soft-tissue curve rather than the lung window, so soft tissue sits in the mid greens, and it fades out beyond the chest (the scan's field of view cuts the arms off square). |
 | `ct-ribcage-3d/00.webp` … `35.webp` (36 frames, 400×371) | A **real 3D volume rendering** of the same CT. It is front-to-back alpha compositing of bone with gradient lighting and faint mint lung vessels, rotating 360° in 10° steps. Frames are flattened onto brand deep green `#0D2621` (RGB), so place them on a `#0D2621` tile. Suitable for scroll-scrub or autoplay. |
 | `ct-ribcage-3d-poster-640.webp` (RGBA, transparent background) | Frame 0 with a real alpha channel, for placing the rib cage over any background. |
 
@@ -132,7 +132,7 @@ Chosen deliberately: **no identifiable faces.** All of these are empty rooms, eq
 | `photo-emergency-room-1024.webp`, `-640` | New emergency-department patient room, empty | New UPMC East: Emergency patient room | daveynin | https://www.flickr.com/photos/daveynin/7417095278 | train/27c28417c63557e8 |
 | `photo-doctor-tablet-1024.webp`, `-640` | Clinician in a white coat using a tablet; cropped at the chest, face not shown | NEC-Medical-137 | NEC Corporation of America | https://www.flickr.com/photos/neccorp/14445634744 | train/8a6a0d4b309ac55a |
 | `photo-dental-chair-1024.webp`, `-640` | Teal dental chair and unit, empty | dentist appointment | liz west | https://www.flickr.com/photos/calliope/45720519 | train/578e3507e4ffa867 |
-| `photo-xray-hand-768.webp`, `-640` | Real hand radiograph (X-ray) on black. Native 768 px wide. | Hand X-Ray | Trace Meek | https://www.flickr.com/photos/tracemeek/5327224133 | test/178b831fe87baa4e |
+| `photo-xray-hand-768.webp`, `-640` | Real hand radiograph (X-ray) on black. Native 768 px wide; the dark grey film background levelled to black. | Hand X-Ray | Trace Meek | https://www.flickr.com/photos/tracemeek/5327224133 | test/178b831fe87baa4e |
 
 Author profile URLs: `https://www.flickr.com/people/<id>/`, where `<id>` is the path segment after `/photos/` in each link above.
 

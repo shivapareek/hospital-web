@@ -8,7 +8,10 @@ const doc = document;
 const root = doc.documentElement;
 const desktopMQ = matchMedia("(min-width: 1024px)");
 
-/* Stage internals only; zero specificity (:where) so css/style.css can override any of it. */
+/* Stage internals only; zero specificity (:where) so css/style.css can override any of it.
+   Leaders and rings carry a 1 px paper halo (light in the light theme, near-black in dark), so they read over
+   white porcelain and over the plate alike; chips are slightly translucent so they do not sit on the model
+   like stickers. */
 const CSS = `
 :where(.stage__box){position:relative}
 :where(.stage__box)>.stage__canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;
@@ -25,9 +28,10 @@ const CSS = `
   transition:opacity .16s linear}
 :where(.stage__label.is-flip){flex-direction:row-reverse}
 :where(.stage__label.is-off){opacity:0}
-:where(.stage__ring){flex:none;box-sizing:border-box;width:6px;height:6px;border-radius:50%;border:1.5px solid var(--ink-2, #3D4843)}
-:where(.stage__leader){flex:none;width:32px;height:1px;background:var(--rule-strong, #7A8680)}
-:where(.stage__label-text){padding:1px 6px;background:var(--paper-2, #E8EBE6);border-radius:4px}
+:where(.stage__ring){flex:none;box-sizing:border-box;width:6px;height:6px;border-radius:50%;border:1.5px solid var(--ink-2, #3D4843);
+  box-shadow:0 0 0 1px var(--paper, #F4F5F2)}
+:where(.stage__leader){flex:none;width:32px;height:1px;background:var(--ink-2, #3D4843);box-shadow:0 0 0 1px var(--paper, #F4F5F2)}
+:where(.stage__label-text){padding:1px 6px;background:color-mix(in srgb, var(--paper-2, #E8EBE6) 78%, transparent);border-radius:4px}
 @media (prefers-reduced-motion: reduce){
   :where(.stage__box)>.stage__canvas,:where(.stage__label){transition-duration:1ms}
 }`;
@@ -91,6 +95,21 @@ function setupHero(tier) {
   const load = fig.querySelector(".stage__load");
   if (tier === "poster") { if (load) load.hidden = true; return; }
 
+  /** The 3D view could not start: the still stays. If the load button had focus, say so and keep focus nearby. */
+  const failed = () => {
+    if (!load || load.dataset.failed) return;
+    load.dataset.failed = "1";
+    const lost = doc.activeElement === load || doc.activeElement === doc.body;
+    load.hidden = true;
+    if (load.dataset.label === undefined) return;          // never pressed (live tier): nothing to announce
+    const msg = doc.createElement("p");
+    msg.className = "stage__status";
+    msg.setAttribute("role", "status");
+    load.after(msg);
+    setTimeout(() => { msg.textContent = "3D view unavailable. The still image stays."; }, 50);
+    if (lost) { box.setAttribute("tabindex", "-1"); box.focus({ preventScroll: true }); }
+  };
+
   let started = false;
   const go = async () => {
     if (started) return;
@@ -98,10 +117,10 @@ function setupHero(tier) {
     try {
       const mod = await import("./scene-hero.js");
       const hero = await mod.mountHero(fig, { tier, budget });
-      if (hero.state === "failed" && load) load.hidden = true;
+      if (hero.state === "failed") failed();
     } catch (e) {
       console.warn("[stage] cover heart unavailable, keeping the poster.", e && e.message ? e.message : e);
-      if (load) load.hidden = true;
+      failed();
     }
   };
 
@@ -109,7 +128,8 @@ function setupHero(tier) {
     if (!load) return;
     load.hidden = false;
     load.addEventListener("click", () => {
-      load.disabled = true;
+      // aria-disabled rather than disabled: a disabled button drops keyboard focus to <body>
+      load.setAttribute("aria-disabled", "true");
       load.setAttribute("aria-busy", "true");
       load.dataset.label = load.textContent;
       load.textContent = "Loading the 3D model";
@@ -190,7 +210,16 @@ function setupVolume(tier) {
     clearTimeout(idle);
     idle = setTimeout(() => vol?.sleep(), 10000);
   };
-  onEvent("cn:plate", (e) => { if (e.detail?.id === "cath") activate(); else deactivate(); });
+  // Load once cath has stayed active for a moment (a reader stopping there, or a click), not while the page is
+  // merely scrolled past it: the volume (about 0.7 MB) belongs to the "everything opened" budget (§12), and the
+  // baked poster is already on screen. Once loaded, it wakes at once.
+  let dwell = 0;
+  onEvent("cn:plate", (e) => {
+    clearTimeout(dwell);
+    if (e.detail?.id !== "cath") { deactivate(); return; }
+    if (vol) activate();
+    else dwell = setTimeout(activate, 1200);
+  });
   if (doc.querySelector('#ch-cath.is-active, .chapter.is-active[data-plate="cath"]')) whenNear(box, activate, "0px");
 }
 

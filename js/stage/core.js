@@ -711,6 +711,28 @@ export function watchContextLoss(canvas, onLost, isOurs = () => false) {
   return () => canvas.removeEventListener("webglcontextlost", h, false);
 }
 
+/* ---------------------------------------------------------------- turnable box (§15) */
+
+/**
+ * A stage box is a tab stop with turning instructions only while it can really be turned (live 3D):
+ * role="img", tabindex="0", aria-label. With `label` null it stops being a tab stop; it keeps a
+ * programmatic tabindex of -1 only if it holds focus right now, so focus never drops to <body>.
+ * `still` is the label (or null to remove role and label) for the box when it is not live.
+ */
+export function setTurnable(box, label, still = null) {
+  if (!box) return;
+  if (label) {
+    box.setAttribute("role", "img");
+    box.setAttribute("tabindex", "0");
+    box.setAttribute("aria-label", label);
+    return;
+  }
+  if (document.activeElement === box) box.setAttribute("tabindex", "-1");
+  else box.removeAttribute("tabindex");
+  if (still) { box.setAttribute("role", "img"); box.setAttribute("aria-label", still); }
+  else { box.removeAttribute("role"); box.removeAttribute("aria-label"); }
+}
+
 /* ---------------------------------------------------------------- LiveStage base */
 
 /**

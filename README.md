@@ -34,5 +34,7 @@ Deploy the folder as-is to any static host (GitHub Pages, Netlify, Vercel). Enab
 - **Colours and type**: CSS custom properties at the top of `css/style.css`
 - **Doctor photos**: add `photo` (an 800×1000 WebP) and `photoAlt` to a doctor in `js/data.js`. Use real, consented photographs only.
 - **Map**: replace the `iframe` `src` in the Contact section
+- **3D framing**: `js/stage/specimens.js`. The hero posters (`assets/img/specimens/heart-cover-*.webp`) and the leader-label anchors (`HERO.labels[].at`) match the hero's yaw and offsets. If you change those, re-render the posters and recompute the anchors, or the 3D view will jump when it fades in over the poster. The heart's `.mo.glb` files are cleaned copies (loose fragments, the inferior vena cava stub and the outer lung vessels removed; see `assets/models/CREDITS.md`). If you re-compress from `heart.glb`, clean it again, then re-render the heart posters and stills.
+- **Photographs to replace**: the patient care photo (a doctor with a tablet), the operating theatre and the two scanner photos are illustrative stock from other facilities. Swap in CareNova's own photographs when they exist.
 
 > Forms, live status, OTP and booking are front-end demos. Connect them to your backend or CRM before going live.

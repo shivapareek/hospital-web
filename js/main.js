@@ -70,9 +70,9 @@
       if (e.isIntersecting) navLinks.forEach((l) => l.classList.toggle("is-active", l.getAttribute("href") === "#" + e.target.id));
     });
   }, { rootMargin: "-45% 0px -50% 0px" });
-  navLinks.forEach((l) => { const s = $(l.getAttribute("href")); if (s) navObserver.observe(s); });
-  // back at the hero, no section link is current (no link has href="#top", so all are cleared)
-  if ($("#top")) navObserver.observe($("#top"));
+  // every section is observed: one without a nav link (the hero, finder, booking, tools, stories, FAQ,
+  // library, the "Look closer" band) clears the underline, so a link is current only over its own section
+  $$("main > section[id]").forEach((sec) => navObserver.observe(sec));
 
   /* ---------- Counters (numbers are already correct at rest) ---------- */
   const counterObserver = new IntersectionObserver((entries) => {
@@ -134,28 +134,35 @@
     SYMPTOMS.forEach((s) => { if (s.label.toLowerCase().includes(q)) out.push({ label: s.label, kind: "→ " + s.dept, run: () => showDoctors({ dept: s.dept }) }); });
     return out.slice(0, 7);
   }
+  function setDrop(open) {
+    drop.hidden = !open;
+    searchInput.setAttribute("aria-expanded", String(open));
+    if (!open) searchInput.removeAttribute("aria-activedescendant");
+  }
   function renderDrop() {
-    if (!suggestions.length) { drop.hidden = true; return; }
-    drop.hidden = false;
-    drop.innerHTML = suggestions.map((s, i) => `<button type="button" role="option" data-i="${i}" class="${i === activeIdx ? "is-active" : ""}"><span>${esc(s.label)}</span><small>${esc(s.kind)}</small></button>`).join("");
+    if (!suggestions.length) { setDrop(false); return; }
+    setDrop(true);
+    drop.innerHTML = suggestions.map((s, i) => `<button type="button" role="option" id="searchOpt-${i}" data-i="${i}" aria-selected="${i === activeIdx}" tabindex="-1" class="${i === activeIdx ? "is-active" : ""}"><span>${esc(s.label)}</span><small>${esc(s.kind)}</small></button>`).join("");
+    if (activeIdx >= 0) searchInput.setAttribute("aria-activedescendant", `searchOpt-${activeIdx}`);
+    else searchInput.removeAttribute("aria-activedescendant");
   }
   searchInput.addEventListener("input", () => { suggestions = buildSuggestions(searchInput.value); activeIdx = -1; renderDrop(); });
   searchInput.addEventListener("keydown", (e) => {
     if (drop.hidden) return;
     if (e.key === "ArrowDown") { e.preventDefault(); activeIdx = (activeIdx + 1) % suggestions.length; renderDrop(); }
     if (e.key === "ArrowUp") { e.preventDefault(); activeIdx = (activeIdx - 1 + suggestions.length) % suggestions.length; renderDrop(); }
-    if (e.key === "Escape") drop.hidden = true;
+    if (e.key === "Escape") setDrop(false);
   });
   drop.addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if (!b) return;
+    setDrop(false);
     suggestions[+b.dataset.i].run();
-    drop.hidden = true;
   });
-  document.addEventListener("click", (e) => { if (!e.target.closest("#heroSearch")) drop.hidden = true; });
+  document.addEventListener("click", (e) => { if (!e.target.closest("#heroSearch") && !drop.hidden) setDrop(false); });
   $("#heroSearch").addEventListener("submit", (e) => {
     e.preventDefault();
-    drop.hidden = true;
+    setDrop(false);
     if (activeIdx >= 0 && suggestions[activeIdx]) { suggestions[activeIdx].run(); return; }
     const q = searchInput.value.trim();
     if (suggestions[0]) { suggestions[0].run(); return; }
@@ -167,7 +174,7 @@
     const n = DOCTORS.filter((x) => x.dept === d.name).length;
     const thumb = d.still
       ? `<img class="spec__still" src="${d.still}-128.webp" width="64" height="64" alt="" loading="lazy" decoding="async">`
-      : `<span class="spec__still spec__still--type" aria-hidden="true">${d.stillText || ""}</span>`;
+      : `<span class="spec__still spec__still--type${(d.stillText || "").length > 4 ? " is-long" : ""}" aria-hidden="true">${d.stillText || ""}</span>`;
     return `<li><button type="button" class="spec" data-find-dept="${d.name}">
       ${thumb}
       <span class="spec__text"><span class="spec__name">${d.name}</span><span class="spec__desc">${d.desc}</span></span>
@@ -193,18 +200,25 @@
     renderDoctors();
   });
 
+  /** "Mon, Wed, Fri · 10 AM – 4 PM, 5 – 7 PM": lines break only between days, at the dot or between ranges. */
+  function opdHtml(opd) {
+    const [days, hours] = String(opd).split(" · ");
+    if (!hours) return esc(opd);
+    return `${esc(days)} · ${hours.split(", ").map((r) => `<span class="nowrap">${esc(r)}</span>`).join(", ")}`;
+  }
+
   function docCard(d) {
     return `<article class="doc">
       <p class="doc__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? "In today" : "Next: tomorrow"}${d.room ? `<span class="doc__room">Room ${esc(d.room)}</span>` : ""}</p>
       ${d.photo ? `<img class="doc__photo" src="${esc(d.photo)}" alt="${esc(d.photoAlt || d.name)}" width="800" height="1000" loading="lazy" decoding="async">` : ""}
       <div class="doc__id">
         ${d.photo ? "" : `<span class="avatar avatar--lg" aria-hidden="true">${initials(d.name)}</span>`}
-        <div><h3>${d.name}</h3><p class="doc__role">${d.role} · ${d.dept}</p></div>
+        <div><h3>${d.name}</h3><p class="doc__role">${d.role}</p>${d.role.toLowerCase().includes(d.dept.toLowerCase()) ? "" : `<p class="doc__dept">${d.dept}</p>`}</div>
       </div>
       <p class="doc__deg">${d.deg}</p>
       <dl class="doc__facts">
         <div><dt>Speaks</dt><dd>${d.lang}</dd></div>
-        ${d.opd ? `<div><dt>OPD</dt><dd class="mono">${esc(d.opd)}</dd></div>` : ""}
+        ${d.opd ? `<div><dt>OPD</dt><dd class="num">${opdHtml(d.opd)}</dd></div>` : ""}
       </dl>
       <p class="doc__meta num"><span><b>${d.exp}</b> yrs</span> · <span>★ <b>${d.rating}</b> (${d.reviews.toLocaleString("en-IN")})</span></p>
       <div class="doc__foot">
@@ -328,23 +342,28 @@
     setRow("#tFee", d ? inr(d.fee) : "—", d);
   }
 
+  /** A video consult needs a doctor who offers video. Called wherever the doctor or the visit type is set,
+      including in code (startBooking) where no change event fires. Returns true when it switched the type. */
+  function enforceVideo() {
+    const d = currentDoctor();
+    if (d && !d.video && consultType() === "Video") {
+      $("input[name=bType][value='In-clinic']", form).checked = true;
+      toast(`${d.name} sees patients at the hospital only.`);
+      updateTicket();
+      return true;
+    }
+    return false;
+  }
+
   bDept.addEventListener("change", () => { fillDoctors(bDept.value); bDept.classList.remove("invalid"); booking.slot = null; updateTicket(); });
   bDoctor.addEventListener("change", () => {
     bDoctor.classList.remove("invalid");
     booking.slot = null;
-    const d = currentDoctor();
-    if (d && !d.video && consultType() === "Video") {
-      $("input[name=bType][value='In-clinic']", form).checked = true;
-      toast(`${d.name} sees patients at the hospital only.`);
-    }
+    enforceVideo();
     updateTicket();
   });
   $$("input[name=bType]", form).forEach((r) => r.addEventListener("change", () => {
-    const d = currentDoctor();
-    if (d && !d.video && consultType() === "Video") {
-      $("input[name=bType][value='In-clinic']", form).checked = true;
-      toast(`${d.name} sees patients at the hospital only.`);
-    }
+    enforceVideo();
     updateTicket();
   }));
 
@@ -354,7 +373,7 @@
       const closed = d.getDay() === 0;
       const label = i === 0 ? "Today" : DAY[d.getDay()];
       const active = booking.date && dateKey(booking.date) === dateKey(d);
-      return `<button type="button" class="date${active ? " is-active" : ""}" data-i="${i}" ${closed ? "disabled title=\"OPD is closed on Sundays\"" : ""}><small>${label}</small><b>${d.getDate()}</b><small>${MON[d.getMonth()]}</small></button>`;
+      return `<button type="button" class="date${active ? " is-active" : ""}" data-i="${i}" aria-pressed="${active ? "true" : "false"}" ${closed ? "disabled title=\"OPD is closed on Sundays\"" : ""}><small>${label}</small><b>${d.getDate()}</b><small>${MON[d.getMonth()]}</small></button>`;
     }).join("");
   }
   $("#dateStrip").addEventListener("click", (e) => {
@@ -363,6 +382,8 @@
     booking.date = dates[+b.dataset.i];
     booking.slot = null;
     renderDates(); renderSlots(); updateTicket();
+    // the strip was re-rendered: put focus back on the tile that was picked
+    $(`#dateStrip .date[data-i="${b.dataset.i}"]`)?.focus({ preventScroll: true });
   });
 
   function hash(str) { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0; return Math.abs(h); }
@@ -380,7 +401,7 @@
       const past = isToday && m <= now.getHours() * 60 + now.getMinutes() + 30;
       const taken = ((seed >> (i % 28)) & 1) === 1 && i % 3 !== 0;
       const g = h < 12 ? "Morning" : h < 16 ? "Afternoon" : "Evening";
-      groups[g].push(`<button type="button" class="slot${booking.slot === label ? " is-active" : ""}" data-slot="${label}" ${past || taken ? "disabled" : ""}>${label}</button>`);
+      groups[g].push(`<button type="button" class="slot${booking.slot === label ? " is-active" : ""}" data-slot="${label}" aria-pressed="${booking.slot === label ? "true" : "false"}" ${past || taken ? "disabled" : ""}>${label}</button>`);
       i++;
     }
     wrap.innerHTML = Object.entries(groups).map(([g, s]) => `<div class="slot-group"><small>${g}</small><div>${s.join("")}</div></div>`).join("");
@@ -389,12 +410,18 @@
     const b = e.target.closest(".slot");
     if (!b || b.disabled) return;
     booking.slot = b.dataset.slot;
-    $$(".slot", $("#slots")).forEach((s) => s.classList.toggle("is-active", s === b));
+    $$(".slot", $("#slots")).forEach((s) => { s.classList.toggle("is-active", s === b); s.setAttribute("aria-pressed", String(s === b)); });
     bError.textContent = "";
     updateTicket();
   });
 
-  function goStep(n) {
+  /** First control of the active step: the picked (or first open) date tile in step 2. */
+  function stepFocus() {
+    if (step === 1) return bDept;
+    if (step === 2) return $("#dateStrip .date.is-active") || $("#dateStrip .date:not(:disabled)");
+    return $("#bName");
+  }
+  function goStep(n, { focus = true } = {}) {
     step = n;
     $$(".bstep", form).forEach((f) => f.classList.toggle("is-active", +f.dataset.step === n));
     $$(".steps__item", form).forEach((s) => {
@@ -407,10 +434,13 @@
       if (!booking.date) booking.date = dates.find((d) => d.getDay() !== 0);
       renderDates(); renderSlots(); updateTicket();
     }
+    // the old step's fieldset is now hidden, so focus would fall to <body>
+    if (focus) stepFocus()?.focus({ preventScroll: true });
   }
   function markInvalid(el) { el.classList.add("invalid"); el.addEventListener("input", () => el.classList.remove("invalid"), { once: true }); }
   function validate(n) {
     if (n === 1) {
+      enforceVideo();   // safety net: never carry Video forward with a doctor who has no video
       if (!bDept.value) { markInvalid(bDept); bError.textContent = "Choose a speciality to continue."; return false; }
       if (!bDoctor.value) { markInvalid(bDoctor); bError.textContent = "Choose a doctor to continue."; return false; }
     }
@@ -428,13 +458,17 @@
     return true;
   }
   form.addEventListener("click", (e) => {
-    if (e.target.closest("[data-next]") && validate(step)) goStep(step + 1);
+    if (e.target.closest("[data-next]")) {
+      if (validate(step)) goStep(step + 1);
+      else $(".bstep.is-active .invalid", form)?.focus();
+    }
     if (e.target.closest("[data-prev]")) goStep(step - 1);
   });
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!validate(3)) return;
+    if (!validate(3)) { $(".bstep.is-active .invalid", form)?.focus(); return; }
+    bError.textContent = "";   // a fix after a failed submit must not leave the old error under the confirmation
     const d = currentDoctor();
     const token = d.dept.slice(0, 2).toUpperCase() + "-" + rand(100, 999);
     const phone = $("#bPhone").value.trim();
@@ -450,6 +484,8 @@
     $("#bookingDone").hidden = false;
     $("#tToken").textContent = token;
     ticket.classList.add("is-confirmed");
+    // the confirmation replaces the form: take focus there, so it is announced and Tab continues from it
+    $("#doneTitle").focus({ preventScroll: true });
   });
 
   $("#bookAgain").addEventListener("click", () => {
@@ -486,7 +522,7 @@
   function startBooking({ dept, doctor, video } = {}) {
     closeAllModals();
     if (!$("#bookingDone").hidden) $("#bookAgain").click();
-    goStep(1);
+    goStep(1, { focus: false });
     if (doctor) {
       const d = DOCTORS.find((x) => x.name === doctor);
       if (d) { bDept.value = d.dept; fillDoctors(d.dept, d.name); }
@@ -494,12 +530,24 @@
       bDept.value = dept;
       fillDoctors(dept);
     }
-    if (video) $("input[name=bType][value='Video']", form).checked = true;
+    if (video) {
+      $("input[name=bType][value='Video']", form).checked = true;
+      // asked for a video consult, but a doctor chosen earlier sees patients at the hospital only:
+      // keep the video consult and let the patient choose a doctor who offers it
+      const d = currentDoctor();
+      if (d && !d.video && !doctor) {
+        bDoctor.value = "";
+        toast(`${d.name} sees patients at the hospital only. Choose a doctor who offers video.`);
+      }
+    }
+    enforceVideo();   // a doctor without video (from a Book button or the search) turns Video back to At the hospital
     booking.slot = null;
     updateTicket();
     $("#book").scrollIntoView({ behavior: "smooth" });
     const box = $("#booking");
     box.classList.remove("flash-ring"); void box.offsetWidth; box.classList.add("flash-ring");
+    // keyboard and screen-reader users continue in the form, not back where they pressed Book
+    (bDoctor.value ? bDoctor : bDept).focus({ preventScroll: true });
   }
   updateTicket();
 
@@ -509,7 +557,7 @@
     $("#pkgGrid").innerHTML = PACKAGES.filter((p) => p.tag.includes(filter)).map((p) => `
       <article class="pkg${p.popular ? " pkg--featured" : ""}">
         <div class="pkg__head"><div><h3>${p.name}</h3><small>${p.tests} tests</small></div>${p.popular ? `<span class="pkg__flag">Most chosen</span>` : ""}</div>
-        ${p.covers ? `<ul class="pkg__covers" aria-label="Looks at">${p.covers.map((o) => `<li><img src="assets/img/specimens/${o}-128.webp" width="32" height="32" alt="" loading="lazy" decoding="async"><span>${ORGAN[o]}</span></li>`).join("")}</ul>` : ""}
+        ${p.covers ? `<ul class="pkg__covers" aria-label="Looks at">${p.covers.map((o) => `<li><img src="assets/img/specimens/${o}-64.webp" width="36" height="36" alt="" loading="lazy" decoding="async"><span>${ORGAN[o]}</span></li>`).join("")}</ul>` : ""}
         <div class="pkg__price"><b>${inr(p.price)}</b><s>${inr(p.mrp)}</s><span>save ${Math.round((1 - p.price / p.mrp) * 100)}%</span></div>
         <ul>${p.items.map((it) => `<li>${icon("i-check")}${it}</li>`).join("")}</ul>
         <button class="btn btn--line btn--block" data-pkg="${esc(p.name)}">Book this check-up</button>
@@ -529,9 +577,9 @@
     const out = $("#bmiOut"), pin = $("#bmiPin");
     if (!(h > 50 && w > 10)) { out.textContent = "Enter your height and weight."; return; }
     const v = w / Math.pow(h / 100, 2);
-    const [cat, tip] = v < 18.5 ? ["underweight", "A nutrition consult can help."] : v < 25 ? ["in the healthy range", "Keep it up."] : v < 30 ? ["overweight", "Small daily changes add up."] : ["in the obese range", "We'd suggest a doctor's review."];
+    const [cat, tip] = v < 18.5 ? ["in the underweight range", "A nutrition consult can help."] : v < 25 ? ["in the healthy range", "Keep it up."] : v < 30 ? ["in the overweight range", "Small daily changes add up."] : ["in the obese range", "We'd suggest a doctor's review."];
     pin.style.left = Math.max(2, Math.min(98, ((v - 12) / (40 - 12)) * 100)) + "%";
-    out.innerHTML = `<b>${v.toFixed(1)}</b> — ${cat}. ${tip}`;
+    out.innerHTML = `<b>${v.toFixed(1)}</b>Your BMI is ${cat}. ${tip}`;
   }
   ["#bmiH", "#bmiW"].forEach((s) => $(s).addEventListener("input", bmi));
   bmi();
@@ -543,7 +591,7 @@
     const litres = w * 0.033 + a;
     const glasses = Math.round((litres * 1000) / 250);
     g.innerHTML = Array.from({ length: Math.min(glasses, 20) }, () => `<span class="glass"></span>`).join("");
-    out.innerHTML = `About <b>${litres.toFixed(1)} L</b> a day, or ${glasses} glasses.`;
+    out.innerHTML = `<b>${litres.toFixed(1)} L</b>About ${glasses} glasses of water a day.`;
   }
   ["#waterW", "#waterA"].forEach((s) => $(s).addEventListener("input", water));
   water();
@@ -559,7 +607,7 @@
     const d = new Date(start); d.setDate(d.getDate() + 280);
     const weeks = Math.floor((Date.now() - start) / (7 * 864e5));
     if (weeks < 0 || weeks > 42) { out.textContent = "Choose a date within the last 42 weeks."; return; }
-    out.innerHTML = `Due around <b>${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}</b>. You're about ${weeks} weeks along, trimester ${weeks < 13 ? 1 : weeks < 27 ? 2 : 3}.`;
+    out.innerHTML = `<b>${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}</b>Your estimated due date. You're about ${weeks} weeks along, in trimester ${weeks < 13 ? 1 : weeks < 27 ? 2 : 3}.`;
   }
   lmp.addEventListener("input", due);
   due();
@@ -617,21 +665,51 @@
 
   /* ---------- Modals ---------- */
   let lastFocus = null;
+  // everything outside an open modal: inert, so neither Tab nor a screen reader reaches the page behind
+  const behind = () => $$("body > header, body > main, body > footer, body > .float-sos, body > .float-chat, body > #chat, body > .skip-link");
+  const shown = (el) => !!el && el.isConnected && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
   function openModal(id) {
     const m = document.getElementById(id);
     if (!m) return;
-    lastFocus = document.activeElement;
+    if (!m.classList.contains("open")) lastFocus = document.activeElement;
     m.classList.add("open");
     m.setAttribute("aria-hidden", "false");
     document.body.classList.add("no-scroll");
-    setTimeout(() => $(".modal__close", m)?.focus(), 50);
+    behind().forEach((el) => { el.inert = true; });
+    // .modal.open is visible at once (CSS); still, retry shortly if the first focus() did not take
+    const close = $(".modal__close", m);
+    const from = document.activeElement;
+    let tries = 0;
+    const focusClose = () => {
+      const a = document.activeElement;
+      // stop once focus is in the modal, or the user has moved it somewhere else meanwhile
+      if (!m.classList.contains("open") || m.contains(a) || (a !== from && a !== document.body)) return;
+      close?.focus();
+      if (document.activeElement !== close && ++tries < 10) setTimeout(focusClose, 40);
+    };
+    focusClose();
   }
   function closeModal(m) {
     m.classList.remove("open");
     m.setAttribute("aria-hidden", "true");
-    if (!$(".modal.open")) document.body.classList.remove("no-scroll");
-    lastFocus?.focus?.();
+    if (!$(".modal.open")) {
+      document.body.classList.remove("no-scroll");
+      behind().forEach((el) => { el.inert = false; });
+    }
+    // back to the opener; if it is gone or hidden (a link in the closed chat), to the chat button
+    (shown(lastFocus) ? lastFocus : chatBtn).focus?.();
   }
+  // Tab and Shift+Tab wrap inside the open modal (a fallback where inert is not supported)
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const m = $(".modal.open");
+    if (!m) return;
+    const items = $$("a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex='-1'])", m).filter(shown);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  });
   function closeAllModals() { $$(".modal.open").forEach(closeModal); }
   $$(".modal").forEach((m) => m.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeModal(m); }));
 
@@ -702,11 +780,26 @@
     }, 600 + Math.random() * 400);
   }
   function toggleChat(open) {
+    const had = !open && chat.contains(document.activeElement);
     chat.classList.toggle("open", open);
     chat.setAttribute("aria-hidden", String(!open));
     chatBtn.setAttribute("aria-expanded", String(open));
     if (open && !chatStarted) { chatStarted = true; addMsg("Namaste. I'm Nova, CareNova's assistant. What can I help you with?"); }
-    if (open) setTimeout(() => $("#chatInput").focus(), 250);
+    if (open) {
+      // .chat.open is visible at once (CSS); retry shortly if the first focus() did not take,
+      // but never pull focus out of a modal opened in the meantime
+      const inp = $("#chatInput");
+      const from = document.activeElement;
+      let tries = 0;
+      const focusInput = () => {
+        const a = document.activeElement;
+        if (!chat.classList.contains("open") || $(".modal.open") || chat.contains(a) || (a !== from && a !== document.body)) return;
+        inp.focus();
+        if (document.activeElement !== inp && ++tries < 10) setTimeout(focusInput, 40);
+      };
+      focusInput();
+    }
+    if (had) chatBtn.focus();   // closing with focus inside: back to the chat button, not <body>
   }
   chatBtn.addEventListener("click", () => toggleChat(!chat.classList.contains("open")));
   $("#chatQuick").innerHTML = ["Book appointment", "Emergency", "Health packages", "Insurance", "OPD timings", "WhatsApp"].map((q) => `<button type="button">${q}</button>`).join("");
@@ -722,9 +815,14 @@
 
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    // one Escape closes everything; focus goes back to the opener, or to the chat or menu button
     closeAllModals();
     if (chat.classList.contains("open")) toggleChat(false);
-    if (!menu.hidden) setMenu(false);
+    if (!menu.hidden) {
+      const inMenu = menu.contains(document.activeElement);
+      setMenu(false);
+      if (inMenu) burger.focus();
+    }
   });
 
   /* ---------- Delegated actions ---------- */
