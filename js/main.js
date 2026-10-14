@@ -71,6 +71,8 @@
     });
   }, { rootMargin: "-45% 0px -50% 0px" });
   navLinks.forEach((l) => { const s = $(l.getAttribute("href")); if (s) navObserver.observe(s); });
+  // back at the hero, no section link is current (no link has href="#top", so all are cleared)
+  if ($("#top")) navObserver.observe($("#top"));
 
   /* ---------- Counters (numbers are already correct at rest) ---------- */
   const counterObserver = new IntersectionObserver((entries) => {

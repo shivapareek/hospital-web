@@ -419,7 +419,11 @@ b, strong { font-weight: 700; }
 .stage__box { position: relative; overflow: hidden; }
 .cover .stage__box { background: var(--paper-2); aspect-ratio: 1296 / 960; }
 .stage__box picture { display: contents; }
-.stage__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.stage__poster { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: contain; }
+/* CSS contact shadow under the baked heart (posters are baked without one); matches the shadow the live
+   scene draws, and boot.js hides it (opacity 0) once the canvas has faded in. Mobile poster: centred. */
+.cover .stage__box::after { content: ""; position: absolute; z-index: 0; left: 24.5%; width: 47%; top: 86%; height: 5%; background: radial-gradient(closest-side, var(--still-shadow), transparent); pointer-events: none; }
+@media (min-width: 1024px) { .cover .stage__box::after { left: 45%; width: 43.5%; top: 80.5%; height: 5%; } }
 .stage__canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; display: block; touch-action: pan-y; z-index: 2; transition: opacity 400ms var(--ease); }
 .stage__labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 /* .stage__label, .stage__ring, .stage__leader, .stage__label-text: styled by js/stage/boot.js (zero-specificity :where rules) */
@@ -848,7 +852,9 @@ html:not(.has-plates) [data-plate="imaging"] .seq--ct { grid-area: 2 / 1; }
 .loc__line { position: absolute; left: -6px; right: -6px; height: 1px; background: var(--mint); top: calc((var(--top) + (var(--bottom) - var(--top)) * var(--f)) * 100%); }
 .lb-plate:has(.seq--mri[hidden]) .loc { display: none; }
 html:not(.has-plates) .loc { display: none; }
-@container (max-width: 399px) { .loc { display: none; } }
+/* smaller where the screen is narrow, so it stays in the scan's dark corner and the caption's "line" is always there */
+@container (max-width: 559px) { .loc { width: 112px; } }
+@container (max-width: 399px) { .loc { width: 88px; left: 12px; bottom: 10px; } }
 
 /* captions and ranges per mode */
 .cap__mode { display: block; }
@@ -879,8 +885,9 @@ input[type="range"] { flex: 1; min-width: 0; height: 32px; accent-color: var(--a
 .read-line--1 .read-line__label { color: var(--deep-ink); }
 .read-line--2 .read-line__label { color: var(--mint); left: 0; right: auto; }
 @media (prefers-reduced-motion: no-preference) {
-  .is-reading .read-line { animation: read 7.5s linear both; }
-  .is-reading .read-line--2 { animation-delay: .5s; }
+  /* one pass, finished within 5 s (WCAG 2.2.2: no pause control needed); the lines then rest at 35% / 62% */
+  .is-reading .read-line { animation: read 4.5s linear both; }
+  .is-reading .read-line--2 { animation-delay: .3s; }
 }
 @keyframes read {
   0% { top: 0; opacity: 1; }
@@ -908,8 +915,9 @@ input[type="range"] { flex: 1; min-width: 0; height: 32px; accent-color: var(--a
   html.has-plates .lightbox .lb-plate__screen:has(.seq__switch:not([hidden])) { padding-bottom: 76px; }
   html.has-plates .lightbox .lb-plate__screen > .stage__box { width: auto; height: 100%; max-width: 100%; max-height: 560px; }
   html.has-plates .chapter { padding: 40px 0; }
-  html.has-plates .chapter.is-active .chapter__h { box-shadow: inset 2px 0 0 var(--accent); padding-left: 20px; }
-  html.has-plates .chapter.is-active .chapter__body { padding-left: 20px; }
+  /* constant indent, so activating a chapter never re-wraps its text or shifts the chapters below */
+  html.has-plates .chapter .chapter__h, html.has-plates .chapter .chapter__body { padding-left: 20px; }
+  html.has-plates .chapter.is-active .chapter__h { box-shadow: inset 2px 0 0 var(--accent); }
   html.has-plates #ch-imaging { min-height: 90vh; }
   /* the last chapter must be able to reach the middle line while the light box is still fully stuck */
   html.has-plates .chapter:last-child { min-height: calc(var(--header-h) + 24px + min(640px, 100vh - var(--header-h) - 64px) - 50vh); }
@@ -929,6 +937,13 @@ input[type="range"] { flex: 1; min-width: 0; height: 32px; accent-color: var(--a
   .lb-plate__screen > .stage__box { width: auto; height: 100%; max-width: 100%; }
 }
 @media (max-width: 599px) {
+  /* the scan screen is taller than wide on phones, so the MRI and CT use the full width (326 px at 390) */
+  .lb-plate[data-plate="imaging"] .lb-plate__screen { aspect-ratio: auto; padding: 60px 12px 64px; }
+  .lb-plate[data-plate="imaging"] .seq { height: auto; aspect-ratio: 1; }
+  .lb-plate[data-plate="imaging"] .lb-read { top: 14px; }
+  .lb-plate[data-plate="imaging"] .lb-read--tl { left: 14px; }
+  .lb-plate[data-plate="imaging"] .lb-read--tr { right: 14px; }
+  .lb-plate[data-plate="imaging"] .seq__switch { right: 12px; bottom: 10px; }
   .prints { gap: 12px; }
   .print { width: calc(50% - 6px); }
   .print img { width: 100%; height: auto; aspect-ratio: 4 / 3; }
@@ -1208,6 +1223,7 @@ input[type="range"] { flex: 1; min-width: 0; height: 32px; accent-color: var(--a
   .footer__tag { font-size: 2rem; }
   .footer__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .newsletter { flex-direction: column; }
+  .newsletter input { flex: none; }   /* a column flexbox would otherwise squash the 56 px field to its flex-basis */
 }
 
 /* ---------- 23. Persistent UI ---------- */
