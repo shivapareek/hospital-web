@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareNova Hospitals | Advanced Care. Human Touch.</title>
+  <meta name="description" content="CareNova Hospitals – NABH & JCI accredited multi-speciality hospital with 40+ specialities, 250+ expert doctors, 24x7 emergency, online appointments, video consultation and health check-up packages." />
+  <meta name="theme-color" content="#0A2540" />
+  <meta property="og:title" content="CareNova Hospitals | Advanced Care. Human Touch." />
+  <meta property="og:description" content="24x7 Emergency • 40+ Specialities • Online Appointments • Video Consultation" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Hospital",
+    "name": "CareNova Hospitals",
+    "telephone": "+91-98765-43210",
+    "email": "care@carenovahospitals.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Plot 21, Health City, NH-48, Sector 44",
+      "addressLocality": "Gurugram",
+      "addressRegion": "Haryana",
+      "postalCode": "122003",
+      "addressCountry": "IN"
+    },
+    "openingHours": "Mo-Su 00:00-23:59",
+    "medicalSpecialty": ["Cardiology", "Neurology", "Orthopedics", "Oncology", "Pediatrics", "Gynecology"]
+  }
+  </script>
+</head>
+<body>
+
+<!-- ============ ICON SPRITE ============ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <defs>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-heart-pulse" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-steth" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></symbol>
+    <symbol id="i-ambulance" viewBox="0 0 24 24"><path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5"/><path d="M14 17h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/><path d="M6 8v4M4 10h4"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 2v7.31L4.2 19.4A1.75 1.75 0 0 0 5.7 22h12.6a1.75 1.75 0 0 0 1.5-2.6L14 9.31V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></symbol>
+    <symbol id="i-bone" viewBox="0 0 24 24"><path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z"/></symbol>
+    <symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01M15 12h.01M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-lungs" viewBox="0 0 24 24"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-6 .13 4 4 0 0 0-2.52 5.77 4 4 0 0 0 .55 6.59A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 6 .13 4 4 0 0 1 2.52 5.77 4 4 0 0 1-.55 6.59A4 4 0 1 1 12 18Z"/><path d="M12 5v13"/></symbol>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></symbol>
+    <symbol id="i-ribbon" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4c0 2 1 4 4 8 3-4 4-6 4-8a4 4 0 0 0-4-4Z"/><path d="M9.2 11 5 21l3-1 1.5 3 2.5-9"/><path d="M14.8 11 19 21l-3-1-1.5 3-2.5-9"/></symbol>
+    <symbol id="i-tooth" viewBox="0 0 24 24"><path d="M7 3c-2 0-4 1.5-4 4.5 0 2.5 1 4 1.5 6S5 21 7 21c1.5 0 1.5-4 2-5.5S10.5 13 12 13s2.5 1 3 2.5.5 5.5 2 5.5c2 0 2-5.5 2.5-7.5S21 10 21 7.5C21 4.5 19 3 17 3c-2 0-3 1-5 1S9 3 7 3Z"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-2.93 1.41-1.41m11.32-11.32 1.41-1.41M2 12h2m16 0h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20M2 12h20"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+    <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.76-2-2-2H4c-1.25 0-2 .75-2 1.97V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 0-1 1.03V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.76-2-2-2h-4c-1.25 0-2 .75-2 1.97V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></symbol>
+    <symbol id="i-sos" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24"><path d="M3 21l1.65-4.8A9 9 0 1 1 7.9 19.6Z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8c-1-.4-2.4-1.8-2.8-2.8l.8-1-1-2Z"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol>
+  </defs>
+</svg>
+
+<!-- ============ PRELOADER ============ -->
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="preloader__inner">
+    <svg viewBox="0 0 200 60" class="preloader__ecg"><polyline points="0,30 50,30 62,30 70,10 80,52 90,20 98,30 120,30 132,30 140,14 148,44 156,30 200,30"/></svg>
+    <span>CareNova</span>
+  </div>
+</div>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ============ TOP BAR ============ -->
+<div class="topbar">
+  <div class="container topbar__inner">
+    <div class="topbar__info">
+      <span><svg class="ic"><use href="#i-clock"/></svg> OPD: Mon–Sat 8:00 AM – 8:00 PM</span>
+      <span class="hide-sm"><svg class="ic"><use href="#i-mail"/></svg> care@carenovahospitals.com</span>
+      <span class="hide-md"><svg class="ic"><use href="#i-pin"/></svg> Health City, Sector 44, Gurugram</span>
+    </div>
+    <div class="topbar__tools">
+      <div class="fontsize" role="group" aria-label="Text size">
+        <button data-fs="-1" aria-label="Decrease text size">A-</button>
+        <button data-fs="0" aria-label="Reset text size">A</button>
+        <button data-fs="1" aria-label="Increase text size">A+</button>
+      </div>
+      <a href="tel:18001234567" class="topbar__emergency"><span class="pulse-dot"></span> Emergency: 1800-123-4567</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="header" id="header">
+  <div class="container header__inner">
+    <a href="#home" class="logo" aria-label="CareNova Hospitals home">
+      <span class="logo__mark">
+        <svg viewBox="0 0 40 40"><rect width="40" height="40" rx="12" fill="url(#lg)"/><path d="M16 9h8v7h7v8h-7v7h-8v-7H9v-8h7z" fill="#fff"/><path d="M9 21h6l2-4 3 8 2-5h9" stroke="#0A2540" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><defs><linearGradient id="lg" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#14B8A6"/><stop offset="1" stop-color="#0A6DD8"/></linearGradient></defs></svg>
+      </span>
+      <span class="logo__text">CareNova<small>Hospitals</small></span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="Primary">
+      <a href="#home" class="nav__link active">Home</a>
+      <a href="#about" class="nav__link">About</a>
+      <a href="#departments" class="nav__link">Specialities</a>
+      <a href="#doctors" class="nav__link">Doctors</a>
+      <a href="#packages" class="nav__link">Health Packages</a>
+      <a href="#patients" class="nav__link">Patient Care</a>
+      <a href="#contact" class="nav__link">Contact</a>
+      <a href="#appointment" class="btn btn--primary nav__cta-mobile">Book Appointment</a>
+    </nav>
+
+    <div class="header__actions">
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <svg class="ic ic-moon"><use href="#i-moon"/></svg>
+        <svg class="ic ic-sun"><use href="#i-sun"/></svg>
+      </button>
+      <a href="#appointment" class="btn btn--primary hide-sm"><svg class="ic"><use href="#i-calendar"/></svg> Book Appointment</a>
+      <button class="icon-btn burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="nav">
+        <svg class="ic"><use href="#i-menu"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="home">
+  <div class="hero__bg" aria-hidden="true">
+    <div class="blob blob--1"></div>
+    <div class="blob blob--2"></div>
+    <div class="grid-pattern"></div>
+  </div>
+  <div class="container hero__inner">
+    <div class="hero__content">
+      <span class="eyebrow reveal"><span class="eyebrow__dot"></span> NABH &amp; JCI Accredited • Ranked #1 in North India 2026</span>
+      <h1 class="hero__title reveal">
+        Advanced care,<br />
+        <em>delivered with a</em><br />
+        <span class="gradient-text">human touch.</span>
+      </h1>
+      <p class="hero__text reveal">
+        40+ specialities, 250+ senior consultants and world-class technology under one roof —
+        so you and your family get the right diagnosis, the right treatment, at the right time.
+      </p>
+      <div class="hero__ctas reveal">
+        <a href="#appointment" class="btn btn--primary btn--lg"><svg class="ic"><use href="#i-calendar"/></svg> Book an Appointment</a>
+        <a href="#doctors" class="btn btn--ghost btn--lg"><svg class="ic"><use href="#i-search"/></svg> Find a Doctor</a>
+      </div>
+
+      <form class="hero-search reveal" id="heroSearch" role="search">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <input type="search" id="heroSearchInput" placeholder="Search doctors, specialities, treatments…" aria-label="Search doctors and specialities" />
+        <button type="submit" class="btn btn--dark">Search</button>
+      </form>
+      <div class="hero__tags reveal">
+        <span>Popular:</span>
+        <button data-q="Cardiology">Cardiology</button>
+        <button data-q="Orthopedics">Knee Replacement</button>
+        <button data-q="Pediatrics">Child Specialist</button>
+        <button data-q="Gynecology">Maternity</button>
+      </div>
+    </div>
+
+    <div class="hero__visual reveal" aria-hidden="true">
+      <div class="hv-main">
+        <div class="hv-main__glow"></div>
+        <svg class="hv-building" viewBox="0 0 400 420">
+          <defs>
+            <linearGradient id="bgA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".95"/><stop offset="1" stop-color="#ffffff" stop-opacity=".65"/></linearGradient>
+            <linearGradient id="bgB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E0F7F5"/><stop offset="1" stop-color="#C7E7F7"/></linearGradient>
+          </defs>
+          <!-- main tower -->
+          <rect x="120" y="70" width="160" height="330" rx="10" fill="url(#bgA)"/>
+          <rect x="60" y="170" width="80" height="230" rx="8" fill="url(#bgB)"/>
+          <rect x="260" y="140" width="90" height="260" rx="8" fill="url(#bgB)"/>
+          <!-- cross sign -->
+          <rect x="176" y="88" width="48" height="48" rx="12" fill="#E5484D"/>
+          <path d="M194 98h12v10h10v12h-10v10h-12v-10h-10v-12h10z" fill="#fff"/>
+          <!-- windows -->
+          <g fill="#0A6DD8" opacity=".18">
+            <rect x="140" y="156" width="28" height="18" rx="3"/><rect x="186" y="156" width="28" height="18" rx="3"/><rect x="232" y="156" width="28" height="18" rx="3"/>
+            <rect x="140" y="190" width="28" height="18" rx="3"/><rect x="186" y="190" width="28" height="18" rx="3"/><rect x="232" y="190" width="28" height="18" rx="3"/>
+            <rect x="140" y="224" width="28" height="18" rx="3"/><rect x="186" y="224" width="28" height="18" rx="3"/><rect x="232" y="224" width="28" height="18" rx="3"/>
+            <rect x="140" y="258" width="28" height="18" rx="3"/><rect x="186" y="258" width="28" height="18" rx="3"/><rect x="232" y="258" width="28" height="18" rx="3"/>
+            <rect x="140" y="292" width="28" height="18" rx="3"/><rect x="232" y="292" width="28" height="18" rx="3"/>
+            <rect x="76" y="196" width="20" height="14" rx="2"/><rect x="104" y="196" width="20" height="14" rx="2"/>
+            <rect x="76" y="226" width="20" height="14" rx="2"/><rect x="104" y="226" width="20" height="14" rx="2"/>
+            <rect x="76" y="256" width="20" height="14" rx="2"/><rect x="104" y="256" width="20" height="14" rx="2"/>
+            <rect x="76" y="286" width="20" height="14" rx="2"/><rect x="104" y="286" width="20" height="14" rx="2"/>
+            <rect x="276" y="166" width="22" height="14" rx="2"/><rect x="312" y="166" width="22" height="14" rx="2"/>
+            <rect x="276" y="196" width="22" height="14" rx="2"/><rect x="312" y="196" width="22" height="14" rx="2"/>
+            <rect x="276" y="226" width="22" height="14" rx="2"/><rect x="312" y="226" width="22" height="14" rx="2"/>
+            <rect x="276" y="256" width="22" height="14" rx="2"/><rect x="312" y="256" width="22" height="14" rx="2"/>
+            <rect x="276" y="286" width="22" height="14" rx="2"/><rect x="312" y="286" width="22" height="14" rx="2"/>
+          </g>
+          <!-- entrance -->
+          <rect x="178" y="330" width="44" height="70" rx="6" fill="#0A2540" opacity=".85"/>
+          <rect x="150" y="320" width="100" height="10" rx="4" fill="#14B8A6"/>
+          <!-- helipad -->
+          <ellipse cx="200" cy="70" rx="44" ry="7" fill="#0A2540" opacity=".12"/>
+          <text x="200" y="74" text-anchor="middle" font-size="10" font-weight="800" fill="#0A2540" opacity=".45" font-family="sans-serif">H</text>
+          <!-- ground -->
+          <rect x="20" y="398" width="360" height="6" rx="3" fill="#0A2540" opacity=".1"/>
+          <!-- trees -->
+          <circle cx="40" cy="378" r="20" fill="#14B8A6" opacity=".5"/><circle cx="364" cy="372" r="24" fill="#14B8A6" opacity=".45"/>
+        </svg>
+      </div>
+
+      <div class="float-card fc-doctor">
+        <div class="avatar avatar--sm" style="--h:190">AR</div>
+        <div>
+          <strong>Dr. Ananya Rao</strong>
+          <small>Sr. Cardiologist</small>
+          <span class="badge badge--green"><span class="dot"></span> Available today</span>
+        </div>
+      </div>
+
+      <div class="float-card fc-ecg">
+        <div class="fc-ecg__head"><svg class="ic"><use href="#i-heart-pulse"/></svg> Heart Rate <b><span id="bpm">72</span> bpm</b></div>
+        <svg viewBox="0 0 220 60" class="ecg-line"><polyline points="0,30 30,30 40,30 48,10 58,52 68,18 76,30 110,30 120,30 128,12 136,48 144,30 180,30 190,30 198,14 206,46 214,30 220,30"/></svg>
+      </div>
+
+      <div class="float-card fc-rating">
+        <div class="stars"><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></div>
+        <strong>4.9/5</strong>
+        <small>from 18,400+ patient reviews</small>
+      </div>
+
+      <div class="float-card fc-emergency">
+        <span class="fc-emergency__icon"><svg class="ic"><use href="#i-ambulance"/></svg></span>
+        <div><strong>Ambulance in</strong><small>avg. 12 min response</small></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="container">
+    <div class="quick-actions reveal">
+      <a href="#appointment" class="qa">
+        <span class="qa__icon"><svg class="ic"><use href="#i-calendar"/></svg></span>
+        <span><strong>Book Appointment</strong><small>Confirm a slot in 60 sec</small></span>
+      </a>
+      <a href="#doctors" class="qa">
+        <span class="qa__icon"><svg class="ic"><use href="#i-steth"/></svg></span>
+        <span><strong>Find a Doctor</strong><small>250+ specialists</small></span>
+      </a>
+      <a href="#teleconsult" class="qa">
+        <span class="qa__icon"><svg class="ic"><use href="#i-video"/></svg></span>
+        <span><strong>Video Consult</strong><small>From home, in 15 min</small></span>
+      </a>
+      <button type="button" class="qa" data-open="reportsModal">
+        <span class="qa__icon"><svg class="ic"><use href="#i-file"/></svg></span>
+        <span><strong>Download Reports</strong><small>Lab &amp; radiology</small></span>
+      </button>
+      <button type="button" class="qa qa--danger" data-open="sosModal">
+        <span class="qa__icon"><svg class="ic"><use href="#i-ambulance"/></svg></span>
+        <span><strong>Emergency 24x7</strong><small>Call an ambulance</small></span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIVE STATUS ============ -->
+<section class="live" aria-label="Live hospital status">
+  <div class="container">
+    <div class="live__card reveal">
+      <div class="live__title">
+        <span class="live__badge"><span class="pulse-dot pulse-dot--green"></span> LIVE</span>
+        <div>
+          <strong>Hospital status right now</strong>
+          <small>Updated <span id="liveUpdated">just now</span></small>
+        </div>
+      </div>
+      <div class="live__stats">
+        <div class="live__stat"><svg class="ic"><use href="#i-clock"/></svg><div><b id="liveEr">8 min</b><small>ER wait time</small></div></div>
+        <div class="live__stat"><svg class="ic"><use href="#i-bed"/></svg><div><b id="liveBeds">42</b><small>Beds available</small></div></div>
+        <div class="live__stat"><svg class="ic"><use href="#i-heart-pulse"/></svg><div><b id="liveIcu">7</b><small>ICU beds free</small></div></div>
+        <div class="live__stat"><svg class="ic"><use href="#i-users"/></svg><div><b id="liveToken">A-114</b><small>OPD token serving</small></div></div>
+        <div class="live__stat"><svg class="ic"><use href="#i-steth"/></svg><div><b id="liveDocs">68</b><small>Doctors on duty</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="section about" id="about">
+  <div class="container about__grid">
+    <div class="about__visual reveal">
+      <div class="about__card about__card--main">
+        <div class="about__years"><b>28</b><span>Years of<br />healing lives</span></div>
+        <ul class="about__list">
+          <li><svg class="ic"><use href="#i-check"/></svg> 1,200-bed super-speciality campus</li>
+          <li><svg class="ic"><use href="#i-check"/></svg> 32 modular OTs &amp; 300 critical-care beds</li>
+          <li><svg class="ic"><use href="#i-check"/></svg> 24x7 pharmacy, blood bank &amp; diagnostics</li>
+          <li><svg class="ic"><use href="#i-check"/></svg> Paperless, cashless, queue-less experience</li>
+        </ul>
+      </div>
+      <div class="about__card about__card--accent">
+        <svg class="ic"><use href="#i-award"/></svg>
+        <div><strong>Best Multi-Speciality Hospital</strong><small>National Healthcare Awards 2025</small></div>
+      </div>
+    </div>
+    <div class="about__content">
+      <span class="kicker reveal">About CareNova</span>
+      <h2 class="section-title reveal">A hospital built around <em>you</em>, not the other way round.</h2>
+      <p class="reveal">Since 1998, CareNova has combined clinical excellence with genuine compassion. Every protocol, every room and every
+        process is designed to make your recovery faster, safer and more comfortable — from your first call to your follow-up.</p>
+      <div class="pillars reveal">
+        <div class="pillar"><span class="pillar__icon"><svg class="ic"><use href="#i-shield"/></svg></span><strong>Patient Safety First</strong><p>Global infection-control standards with 0.3% hospital-acquired infection rate.</p></div>
+        <div class="pillar"><span class="pillar__icon"><svg class="ic"><use href="#i-cpu"/></svg></span><strong>Advanced Technology</strong><p>Robotic surgery, 3T MRI, PET-CT and AI-assisted diagnostics.</p></div>
+        <div class="pillar"><span class="pillar__icon"><svg class="ic"><use href="#i-heart"/></svg></span><strong>Compassionate Care</strong><p>Dedicated patient care managers for every in-patient.</p></div>
+        <div class="pillar"><span class="pillar__icon"><svg class="ic"><use href="#i-spark"/></svg></span><strong>Transparent Pricing</strong><p>Upfront estimates, no hidden charges, 150+ insurance tie-ups.</p></div>
+      </div>
+      <div class="accreditations reveal">
+        <span>Accredited by</span>
+        <div class="acc-badge">NABH</div>
+        <div class="acc-badge">JCI</div>
+        <div class="acc-badge">NABL</div>
+        <div class="acc-badge">ISO 9001</div>
+        <div class="acc-badge">Green OT</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATS ============ -->
+<section class="stats">
+  <div class="container stats__grid">
+    <div class="stat reveal"><b class="counter" data-to="250" data-suffix="+">0</b><span>Expert Doctors</span></div>
+    <div class="stat reveal"><b class="counter" data-to="40" data-suffix="+">0</b><span>Specialities</span></div>
+    <div class="stat reveal"><b class="counter" data-to="1200">0</b><span>Beds</span></div>
+    <div class="stat reveal"><b class="counter" data-to="15" data-suffix=" Lakh+">0</b><span>Happy Patients</span></div>
+    <div class="stat reveal"><b class="counter" data-to="98.6" data-decimals="1" data-suffix="%">0</b><span>Surgery Success Rate</span></div>
+  </div>
+</section>
+
+<!-- ============ DEPARTMENTS ============ -->
+<section class="section departments" id="departments">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="kicker reveal">Centres of Excellence</span>
+        <h2 class="section-title reveal">Specialised care for <em>every</em> stage of life</h2>
+      </div>
+      <p class="section-sub reveal">Each centre is led by nationally recognised clinicians and backed by dedicated ICUs, OTs and rehab teams.</p>
+    </div>
+    <div class="dept-grid" id="deptGrid"><!-- rendered by JS --></div>
+  </div>
+</section>
+
+<!-- ============ SYMPTOM CHECKER ============ -->
+<section class="section symptom" id="symptom">
+  <div class="container">
+    <div class="symptom__card reveal">
+      <div class="symptom__left">
+        <span class="kicker kicker--light">Smart Specialist Finder</span>
+        <h2 class="section-title section-title--light">Not sure which doctor to see?</h2>
+        <p>Select what you're feeling and we'll recommend the right speciality and available doctors — instantly.</p>
+        <p class="disclaimer">This tool guides you to a speciality and is not a medical diagnosis. In an emergency call <a href="tel:18001234567">1800-123-4567</a>.</p>
+      </div>
+      <div class="symptom__right">
+        <div class="chips" id="symptomChips"><!-- JS --></div>
+        <div class="symptom__result" id="symptomResult">
+          <div class="symptom__empty"><svg class="ic"><use href="#i-spark"/></svg> Choose one or more symptoms to see a recommendation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DOCTORS ============ -->
+<section class="section doctors" id="doctors">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="kicker reveal">Our Specialists</span>
+        <h2 class="section-title reveal">Meet doctors you can <em>trust</em></h2>
+      </div>
+      <p class="section-sub reveal">Search by name or speciality, check today's availability and book in one tap.</p>
+    </div>
+
+    <div class="doc-filters reveal">
+      <div class="input-icon">
+        <svg class="ic"><use href="#i-search"/></svg>
+        <input type="search" id="docSearch" placeholder="Search doctor or speciality" aria-label="Search doctors" />
+      </div>
+      <select id="docDept" aria-label="Filter by speciality"><option value="">All specialities</option></select>
+      <label class="toggle">
+        <input type="checkbox" id="docToday" />
+        <span class="toggle__track"><span class="toggle__thumb"></span></span>
+        Available today
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="docVideo" />
+        <span class="toggle__track"><span class="toggle__thumb"></span></span>
+        Video consult
+      </label>
+    </div>
+
+    <div class="doc-grid" id="docGrid"><!-- JS --></div>
+    <p class="doc-empty" id="docEmpty" hidden>No doctors match your filters. Try clearing a filter.</p>
+  </div>
+</section>
+
+<!-- ============ APPOINTMENT ============ -->
+<section class="section appointment" id="appointment">
+  <div class="container appointment__grid">
+    <div class="appointment__info">
+      <span class="kicker reveal">Book in 60 seconds</span>
+      <h2 class="section-title reveal">Skip the queue. <em>Book online.</em></h2>
+      <p class="reveal">Pick a speciality, choose your doctor and a time that suits you. You'll get an instant token number and an SMS reminder before your visit.</p>
+      <ul class="steps-list reveal">
+        <li><span>1</span><div><strong>Choose speciality &amp; doctor</strong><small>See real-time availability</small></div></li>
+        <li><span>2</span><div><strong>Pick date &amp; slot</strong><small>In-clinic or video consultation</small></div></li>
+        <li><span>3</span><div><strong>Get your digital token</strong><small>Walk in at your time — no waiting</small></div></li>
+      </ul>
+      <div class="help-box reveal">
+        <svg class="ic"><use href="#i-phone"/></svg>
+        <div><small>Prefer to talk? Call our helpdesk</small><a href="tel:+919876543210">+91 98765 43210</a></div>
+      </div>
+    </div>
+
+    <div class="booking reveal" id="booking">
+      <div class="booking__progress">
+        <div class="bp-step active" data-step="1"><span>1</span>Doctor</div>
+        <div class="bp-line"></div>
+        <div class="bp-step" data-step="2"><span>2</span>Schedule</div>
+        <div class="bp-line"></div>
+        <div class="bp-step" data-step="3"><span>3</span>Details</div>
+      </div>
+
+      <form id="bookingForm" novalidate>
+        <!-- step 1 -->
+        <fieldset class="bstep active" data-step="1">
+          <legend class="sr-only">Choose doctor</legend>
+          <label class="field">
+            <span>Speciality</span>
+            <select id="bDept" required><option value="">Select speciality</option></select>
+          </label>
+          <label class="field">
+            <span>Doctor</span>
+            <select id="bDoctor" required disabled><option value="">Select speciality first</option></select>
+          </label>
+          <div class="field">
+            <span>Consultation type</span>
+            <div class="seg">
+              <label><input type="radio" name="bType" value="In-clinic" checked /><span><svg class="ic"><use href="#i-home"/></svg> In-clinic</span></label>
+              <label><input type="radio" name="bType" value="Video" /><span><svg class="ic"><use href="#i-video"/></svg> Video</span></label>
+            </div>
+          </div>
+          <div class="booking__fee" id="bFee" hidden></div>
+          <div class="booking__nav">
+            <span></span>
+            <button type="button" class="btn btn--primary" data-next>Continue <svg class="ic"><use href="#i-arrow"/></svg></button>
+          </div>
+        </fieldset>
+
+        <!-- step 2 -->
+        <fieldset class="bstep" data-step="2">
+          <legend class="sr-only">Choose schedule</legend>
+          <div class="field">
+            <span>Select date</span>
+            <div class="date-strip" id="dateStrip"></div>
+          </div>
+          <div class="field">
+            <span>Available slots</span>
+            <div class="slots" id="slots"></div>
+          </div>
+          <div class="booking__nav">
+            <button type="button" class="btn btn--ghost" data-prev><svg class="ic flip"><use href="#i-arrow"/></svg> Back</button>
+            <button type="button" class="btn btn--primary" data-next>Continue <svg class="ic"><use href="#i-arrow"/></svg></button>
+          </div>
+        </fieldset>
+
+        <!-- step 3 -->
+        <fieldset class="bstep" data-step="3">
+          <legend class="sr-only">Patient details</legend>
+          <div class="field-row">
+            <label class="field"><span>Full name</span><input type="text" id="bName" placeholder="Patient's full name" required /></label>
+            <label class="field"><span>Mobile number</span><input type="tel" id="bPhone" placeholder="10-digit mobile" pattern="[6-9][0-9]{9}" maxlength="10" required /></label>
+          </div>
+          <div class="field-row">
+            <label class="field"><span>Age</span><input type="number" id="bAge" min="0" max="120" placeholder="Age" required /></label>
+            <label class="field"><span>Gender</span>
+              <select id="bGender" required><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option></select>
+            </label>
+          </div>
+          <label class="field"><span>Reason for visit <small>(optional)</small></span><textarea id="bNote" rows="2" placeholder="Briefly describe your concern"></textarea></label>
+          <div class="booking__summary" id="bSummary"></div>
+          <div class="booking__nav">
+            <button type="button" class="btn btn--ghost" data-prev><svg class="ic flip"><use href="#i-arrow"/></svg> Back</button>
+            <button type="submit" class="btn btn--primary">Confirm Booking <svg class="ic"><use href="#i-check"/></svg></button>
+          </div>
+        </fieldset>
+        <p class="form-error" id="bError" role="alert"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TECHNOLOGY ============ -->
+<section class="section tech" id="technology">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="kicker kicker--light reveal">Technology</span>
+      <h2 class="section-title section-title--light reveal">Precision medicine, powered by <em>innovation</em></h2>
+      <p class="section-sub section-sub--light reveal">We invest in the same technology used by the world's leading medical centres — so you don't have to travel abroad for it.</p>
+    </div>
+    <div class="tech-grid">
+      <article class="tech-card reveal"><span class="tech-card__icon"><svg class="ic"><use href="#i-cpu"/></svg></span><h3>Da Vinci Xi Robotic Surgery</h3><p>Smaller incisions, less pain, faster discharge for urology, gynae and cancer surgeries.</p><span class="tech-card__tag">4,000+ robotic procedures</span></article>
+      <article class="tech-card reveal"><span class="tech-card__icon"><svg class="ic"><use href="#i-scan"/></svg></span><h3>3 Tesla MRI &amp; 256-Slice CT</h3><p>Ultra-high-resolution imaging with low radiation dose and quicker scan times.</p><span class="tech-card__tag">Reports in 4 hours</span></article>
+      <article class="tech-card reveal"><span class="tech-card__icon"><svg class="ic"><use href="#i-ribbon"/></svg></span><h3>TrueBeam Radiotherapy</h3><p>Image-guided, high-precision radiation that spares healthy tissue.</p><span class="tech-card__tag">Sub-millimetre accuracy</span></article>
+      <article class="tech-card reveal"><span class="tech-card__icon"><svg class="ic"><use href="#i-heart-pulse"/></svg></span><h3>Hybrid Cath Lab</h3><p>Complex cardiac &amp; neuro interventions with 24x7 primary angioplasty for heart attacks.</p><span class="tech-card__tag">Door-to-balloon &lt; 60 min</span></article>
+      <article class="tech-card reveal"><span class="tech-card__icon"><svg class="ic"><use href="#i-spark"/></svg></span><h3>AI-assisted Diagnostics</h3><p>AI second-read for X-rays, mammograms and ECGs to catch what the eye can miss.</p><span class="tech-card__tag">Faster, safer reporting</span></article>
+      <article class="tech-card reveal"><span class="tech-card__icon"><svg class="ic"><use href="#i-flask"/></svg></span><h3>NABL Fully-Automated Lab</h3><p>3,500+ tests with barcode tracking and results on your phone.</p><span class="tech-card__tag">Home sample collection</span></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PACKAGES ============ -->
+<section class="section packages" id="packages">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="kicker reveal">Preventive Health</span>
+        <h2 class="section-title reveal">Health check-up <em>packages</em></h2>
+      </div>
+      <div class="tabs reveal" role="tablist" id="pkgTabs">
+        <button role="tab" class="active" data-filter="all">All</button>
+        <button role="tab" data-filter="women">Women</button>
+        <button role="tab" data-filter="men">Men</button>
+        <button role="tab" data-filter="senior">Senior Citizen</button>
+        <button role="tab" data-filter="heart">Heart</button>
+      </div>
+    </div>
+    <div class="pkg-grid" id="pkgGrid"><!-- JS --></div>
+    <p class="pkg-note reveal"><svg class="ic"><use href="#i-home"/></svg> Free home sample collection on all packages above ₹1,999 • Reports in 24 hours • Doctor consultation included</p>
+  </div>
+</section>
+
+<!-- ============ TELECONSULT ============ -->
+<section class="section tele" id="teleconsult">
+  <div class="container tele__grid">
+    <div class="tele__content">
+      <span class="kicker reveal">CareNova Anywhere</span>
+      <h2 class="section-title reveal">Consult top doctors <em>from home</em></h2>
+      <p class="reveal">HD video consultations with the same senior doctors you'd meet in the hospital. Get e-prescriptions, lab bookings and medicine delivery — all in one app.</p>
+      <div class="tele__features reveal">
+        <div><svg class="ic"><use href="#i-video"/></svg> HD secure video calls</div>
+        <div><svg class="ic"><use href="#i-file"/></svg> Digital prescriptions</div>
+        <div><svg class="ic"><use href="#i-pill"/></svg> Medicine home delivery</div>
+        <div><svg class="ic"><use href="#i-clock"/></svg> Consult in 15 minutes</div>
+      </div>
+      <div class="tele__ctas reveal">
+        <a href="#appointment" class="btn btn--primary btn--lg" data-video-book><svg class="ic"><use href="#i-video"/></svg> Start Video Consult</a>
+        <div class="store-btns">
+          <a href="#" class="store-btn" aria-label="Get it on Google Play"><svg viewBox="0 0 24 24"><path d="M4 3l10 9-10 9z" fill="currentColor"/><path d="M14 12l3-3 3.5 2c.7.4.7 1.6 0 2L17 15z" fill="currentColor" opacity=".7"/></svg><span><small>GET IT ON</small>Google Play</span></a>
+          <a href="#" class="store-btn" aria-label="Download on the App Store"><svg viewBox="0 0 24 24"><path d="M16 2c0 1.5-1 3-2.5 3.2C13.3 3.7 14.5 2.2 16 2zM19 16.5c-.6 1.4-1.9 3.5-3.4 3.5-1.3 0-1.7-.8-3.2-.8s-2 .8-3.2.8C7.6 20 5 16.4 5 12.8 5 10 6.8 8 9 8c1.3 0 2.2.8 3.2.8S14 8 15.5 8c1.2 0 2.5.6 3.3 1.8-2.9 1.6-2.4 5.7.2 6.7z" fill="currentColor"/></svg><span><small>Download on the</small>App Store</span></a>
+        </div>
+      </div>
+    </div>
+    <div class="tele__visual reveal" aria-hidden="true">
+      <div class="phone">
+        <div class="phone__notch"></div>
+        <div class="phone__screen">
+          <div class="vc">
+            <div class="vc__main">
+              <div class="avatar avatar--xl" style="--h:200">SK</div>
+              <span class="vc__name">Dr. Sameer Khanna<small>Neurologist • 12:04</small></span>
+              <div class="vc__self"><div class="avatar avatar--sm" style="--h:20">You</div></div>
+            </div>
+            <div class="vc__controls">
+              <span><svg class="ic"><use href="#i-video"/></svg></span>
+              <span class="end"><svg class="ic"><use href="#i-phone"/></svg></span>
+              <span><svg class="ic"><use href="#i-chat"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="float-card fc-rx">
+        <svg class="ic"><use href="#i-clip"/></svg>
+        <div><strong>e-Prescription ready</strong><small>Sent to your phone</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PATIENT CARE / SERVICES ============ -->
+<section class="section services" id="patients">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="kicker reveal">Patient &amp; Visitor Services</span>
+      <h2 class="section-title reveal">Everything you need, <em>under one roof</em></h2>
+    </div>
+    <div class="svc-grid">
+      <div class="svc reveal"><svg class="ic"><use href="#i-ambulance"/></svg><h3>24x7 Emergency &amp; Trauma</h3><p>Level-1 trauma centre with ALS ambulances and GPS tracking.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-home"/></svg><h3>Home Healthcare</h3><p>Nursing, physiotherapy, ICU-at-home and elder care.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-flask"/></svg><h3>Home Sample Collection</h3><p>Certified phlebotomists at your doorstep from 6 AM.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-pill"/></svg><h3>24x7 Pharmacy</h3><p>Genuine medicines with doorstep delivery within 2 hours.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-shield"/></svg><h3>Cashless Insurance</h3><p>150+ insurers &amp; TPAs, pre-authorisation in 30 minutes.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-plane"/></svg><h3>International Patients</h3><p>Visa assistance, airport pickup, interpreters &amp; stay.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-drop"/></svg><h3>Blood Bank</h3><p>Component therapy and apheresis available round the clock.</p></div>
+      <div class="svc reveal"><svg class="ic"><use href="#i-file"/></svg><h3>Second Opinion</h3><p>Get your reports reviewed by our expert panel in 48 hours.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HEALTH TOOLS ============ -->
+<section class="section tools" id="tools">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="kicker reveal">Health Tools</span>
+        <h2 class="section-title reveal">Know your numbers</h2>
+      </div>
+      <p class="section-sub reveal">Quick, private calculators — nothing you enter leaves your device.</p>
+    </div>
+    <div class="tools__grid">
+      <div class="tool reveal">
+        <div class="tool__head"><span class="tool__icon"><svg class="ic"><use href="#i-activity"/></svg></span><h3>BMI Calculator</h3></div>
+        <div class="field-row">
+          <label class="field"><span>Height (cm)</span><input type="number" id="bmiH" placeholder="170" min="50" max="250" /></label>
+          <label class="field"><span>Weight (kg)</span><input type="number" id="bmiW" placeholder="68" min="10" max="300" /></label>
+        </div>
+        <div class="bmi-meter"><div class="bmi-meter__bar"><span class="bmi-meter__pin" id="bmiPin"></span></div><div class="bmi-meter__labels"><span>Under</span><span>Healthy</span><span>Over</span><span>Obese</span></div></div>
+        <div class="tool__result" id="bmiOut">Enter your height and weight.</div>
+      </div>
+      <div class="tool reveal">
+        <div class="tool__head"><span class="tool__icon"><svg class="ic"><use href="#i-drop"/></svg></span><h3>Daily Water Intake</h3></div>
+        <div class="field-row">
+          <label class="field"><span>Weight (kg)</span><input type="number" id="waterW" placeholder="68" min="10" max="300" /></label>
+          <label class="field"><span>Activity</span>
+            <select id="waterA"><option value="0">Light</option><option value="0.35">Moderate</option><option value="0.7">Very active</option></select>
+          </label>
+        </div>
+        <div class="water-glasses" id="waterGlasses"></div>
+        <div class="tool__result" id="waterOut">Enter your weight.</div>
+      </div>
+      <div class="tool reveal">
+        <div class="tool__head"><span class="tool__icon"><svg class="ic"><use href="#i-baby"/></svg></span><h3>Pregnancy Due Date</h3></div>
+        <label class="field"><span>First day of last period</span><input type="date" id="lmp" /></label>
+        <div class="tool__result" id="dueOut">Select a date to estimate your due date.</div>
+        <a href="#appointment" class="link-arrow" data-book-dept="Gynecology">Book with a gynaecologist <svg class="ic"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="section testimonials" id="testimonials">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="kicker reveal">Patient Stories</span>
+        <h2 class="section-title reveal">Real people. <em>Real recoveries.</em></h2>
+      </div>
+      <div class="slider-nav reveal">
+        <button class="icon-btn icon-btn--outline" id="tPrev" aria-label="Previous story"><svg class="ic"><use href="#i-left"/></svg></button>
+        <button class="icon-btn icon-btn--outline" id="tNext" aria-label="Next story"><svg class="ic"><use href="#i-right"/></svg></button>
+      </div>
+    </div>
+    <div class="t-slider reveal">
+      <div class="t-track" id="tTrack"><!-- JS --></div>
+    </div>
+    <div class="t-dots" id="tDots"></div>
+  </div>
+</section>
+
+<!-- ============ INSURANCE ============ -->
+<section class="insurance" aria-label="Insurance partners">
+  <div class="container"><p class="insurance__title">Cashless treatment with 150+ insurance &amp; TPA partners</p></div>
+  <div class="marquee">
+    <div class="marquee__track">
+      <span>Star Health</span><span>HDFC ERGO</span><span>ICICI Lombard</span><span>Niva Bupa</span><span>Care Health</span><span>Bajaj Allianz</span><span>Tata AIG</span><span>Aditya Birla</span><span>CGHS</span><span>ECHS</span><span>Ayushman Bharat</span><span>New India Assurance</span>
+      <span aria-hidden="true">Star Health</span><span aria-hidden="true">HDFC ERGO</span><span aria-hidden="true">ICICI Lombard</span><span aria-hidden="true">Niva Bupa</span><span aria-hidden="true">Care Health</span><span aria-hidden="true">Bajaj Allianz</span><span aria-hidden="true">Tata AIG</span><span aria-hidden="true">Aditya Birla</span><span aria-hidden="true">CGHS</span><span aria-hidden="true">ECHS</span><span aria-hidden="true">Ayushman Bharat</span><span aria-hidden="true">New India Assurance</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BLOG ============ -->
+<section class="section blog" id="blog">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="kicker reveal">Health Library</span>
+        <h2 class="section-title reveal">Expert advice for <em>healthier living</em></h2>
+      </div>
+      <a href="#blog" class="link-arrow reveal">View all articles <svg class="ic"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="blog-grid">
+      <article class="post reveal">
+        <div class="post__img" style="--a:#E5484D;--b:#F59E0B"><svg class="ic"><use href="#i-heart-pulse"/></svg><span class="post__cat">Cardiology</span></div>
+        <div class="post__body"><small>Dr. Ananya Rao • 5 min read</small><h3>7 early warning signs of a heart attack you should never ignore</h3><a href="#blog" class="link-arrow">Read more <svg class="ic"><use href="#i-arrow"/></svg></a></div>
+      </article>
+      <article class="post reveal">
+        <div class="post__img" style="--a:#0A6DD8;--b:#14B8A6"><svg class="ic"><use href="#i-drop"/></svg><span class="post__cat">Diabetes</span></div>
+        <div class="post__body"><small>Dr. Vikram Mehta • 4 min read</small><h3>Managing blood sugar during festivals: a practical guide</h3><a href="#blog" class="link-arrow">Read more <svg class="ic"><use href="#i-arrow"/></svg></a></div>
+      </article>
+      <article class="post reveal">
+        <div class="post__img" style="--a:#8B5CF6;--b:#EC4899"><svg class="ic"><use href="#i-baby"/></svg><span class="post__cat">Mother &amp; Child</span></div>
+        <div class="post__body"><small>Dr. Priya Sharma • 6 min read</small><h3>Your trimester-by-trimester checklist for a healthy pregnancy</h3><a href="#blog" class="link-arrow">Read more <svg class="ic"><use href="#i-arrow"/></svg></a></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section faq" id="faq">
+  <div class="container faq__grid">
+    <div>
+      <span class="kicker reveal">FAQs</span>
+      <h2 class="section-title reveal">Questions? <em>We've got answers.</em></h2>
+      <p class="reveal">Can't find what you're looking for? Our patient helpdesk is available 24x7.</p>
+      <div class="faq__contact reveal">
+        <a href="tel:+919876543210" class="btn btn--primary"><svg class="ic"><use href="#i-phone"/></svg> Call Helpdesk</a>
+        <button class="btn btn--ghost" data-open-chat><svg class="ic"><use href="#i-chat"/></svg> Chat with us</button>
+      </div>
+    </div>
+    <div class="accordion" id="faqList">
+      <details class="acc reveal" open><summary>How do I book an appointment?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Use the online booking form on this page, call +91 98765 43210, WhatsApp us, or walk in to the OPD registration desk. Online bookings get a priority digital token.</p></details>
+      <details class="acc reveal"><summary>Do you accept health insurance / cashless treatment?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. We have tie-ups with 150+ insurers and TPAs including CGHS, ECHS and Ayushman Bharat. Our insurance desk helps with pre-authorisation, usually within 30 minutes.</p></details>
+      <details class="acc reveal"><summary>What are the visiting hours?<svg class="ic"><use href="#i-plus"/></svg></summary><p>General wards: 11 AM – 1 PM and 5 PM – 7 PM. ICU visits are limited to one attendant at 12 PM and 6 PM for infection control.</p></details>
+      <details class="acc reveal"><summary>How can I get my lab reports?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Reports are sent by SMS/WhatsApp and can be downloaded from the "Download Reports" option using your UHID and registered mobile number.</p></details>
+      <details class="acc reveal"><summary>Do you provide treatment for international patients?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes. Our International Patient Desk assists with medical visas, cost estimates, airport transfers, accommodation and interpreters in 12 languages.</p></details>
+      <details class="acc reveal"><summary>Is parking available?<svg class="ic"><use href="#i-plus"/></svg></summary><p>Yes, we have a multi-level parking for 800+ vehicles with free valet for senior citizens and differently-abled patients.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA BANNER ============ -->
+<section class="cta-banner">
+  <div class="container">
+    <div class="cta-banner__inner reveal">
+      <div>
+        <h2>Your health can't wait. Neither should you.</h2>
+        <p>Book a consultation today or call our 24x7 helpline — we're here for you, always.</p>
+      </div>
+      <div class="cta-banner__btns">
+        <a href="#appointment" class="btn btn--light btn--lg">Book Appointment</a>
+        <a href="tel:18001234567" class="btn btn--outline-light btn--lg"><svg class="ic"><use href="#i-phone"/></svg> 1800-123-4567</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="section contact" id="contact">
+  <div class="container contact__grid">
+    <div class="contact__info">
+      <span class="kicker reveal">Get in Touch</span>
+      <h2 class="section-title reveal">We're here to <em>help</em></h2>
+      <div class="contact__cards">
+        <div class="ccard reveal"><svg class="ic"><use href="#i-pin"/></svg><div><strong>Address</strong><p>Plot 21, Health City, NH-48,<br />Sector 44, Gurugram, Haryana 122003</p></div></div>
+        <div class="ccard reveal"><svg class="ic"><use href="#i-phone"/></svg><div><strong>Phone</strong><p><a href="tel:+919876543210">+91 98765 43210</a><br />Emergency: <a href="tel:18001234567">1800-123-4567</a></p></div></div>
+        <div class="ccard reveal"><svg class="ic"><use href="#i-mail"/></svg><div><strong>Email</strong><p><a href="mailto:care@carenovahospitals.com">care@carenovahospitals.com</a><br /><a href="mailto:intl@carenovahospitals.com">intl@carenovahospitals.com</a></p></div></div>
+        <div class="ccard reveal"><svg class="ic"><use href="#i-clock"/></svg><div><strong>Timings</strong><p>Emergency &amp; Pharmacy: 24x7<br />OPD: Mon–Sat, 8 AM – 8 PM</p></div></div>
+      </div>
+    </div>
+    <div class="contact__right">
+      <form class="contact-form reveal" id="contactForm" novalidate>
+        <h3>Send us a message</h3>
+        <div class="field-row">
+          <label class="field"><span>Name</span><input type="text" name="name" placeholder="Your name" required /></label>
+          <label class="field"><span>Phone</span><input type="tel" name="phone" placeholder="10-digit mobile" pattern="[6-9][0-9]{9}" maxlength="10" required /></label>
+        </div>
+        <label class="field"><span>Email</span><input type="email" name="email" placeholder="you@example.com" required /></label>
+        <label class="field"><span>Message</span><textarea name="message" rows="3" placeholder="How can we help?" required></textarea></label>
+        <button class="btn btn--primary btn--block" type="submit"><svg class="ic"><use href="#i-send"/></svg> Send Message</button>
+        <p class="form-msg" id="contactMsg" role="status"></p>
+      </form>
+      <div class="map reveal">
+        <iframe title="CareNova Hospitals location" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          src="https://maps.google.com/maps?q=Sector%2044%20Gurugram%20Haryana&t=&z=14&ie=UTF8&iwloc=&output=embed"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <a href="#home" class="logo logo--light">
+          <span class="logo__mark"><svg viewBox="0 0 40 40"><rect width="40" height="40" rx="12" fill="url(#lg2)"/><path d="M16 9h8v7h7v8h-7v7h-8v-7H9v-8h7z" fill="#fff"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#14B8A6"/><stop offset="1" stop-color="#0A6DD8"/></linearGradient></defs></svg></span>
+          <span class="logo__text">CareNova<small>Hospitals</small></span>
+        </a>
+        <p>Advanced care. Human touch. A NABH &amp; JCI accredited multi-speciality hospital committed to excellence since 1998.</p>
+        <form class="newsletter" id="newsletter">
+          <input type="email" placeholder="Get health tips in your inbox" aria-label="Email for newsletter" required />
+          <button class="btn btn--primary" type="submit" aria-label="Subscribe"><svg class="ic"><use href="#i-send"/></svg></button>
+        </form>
+        <div class="socials">
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M14 8h3V4h-3a4 4 0 0 0-4 4v2H8v4h2v8h4v-8h3l1-4h-4V8a0 0 0 0 1 0 0z" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M4 4h4.5l4 5.5L17 4h3l-6 7 7 9h-4.5l-4.4-5.8L7 20H4l6.6-7.6z" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24"><path d="M22 8.2a3 3 0 0 0-2.1-2.1C18 5.6 12 5.6 12 5.6s-6 0-7.9.5A3 3 0 0 0 2 8.2 31 31 0 0 0 1.6 12 31 31 0 0 0 2 15.8a3 3 0 0 0 2.1 2.1c1.9.5 7.9.5 7.9.5s6 0 7.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .4-3.8 31 31 0 0 0-.4-3.8zM10 15V9l5.2 3z" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4 9h4v12H4zM6 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 9h3.8v1.7c.6-1 1.9-2 3.9-2 4 0 4.3 2.6 4.3 6V21h-4v-5.5c0-1.4 0-3.1-1.9-3.1s-2.1 1.5-2.1 3V21h-4z" fill="currentColor"/></svg></a>
+        </div>
+      </div>
+      <div class="footer__col">
+        <h4>Quick Links</h4>
+        <a href="#about">About Us</a><a href="#doctors">Find a Doctor</a><a href="#appointment">Book Appointment</a><a href="#packages">Health Packages</a><a href="#blog">Health Library</a><a href="#contact">Careers</a>
+      </div>
+      <div class="footer__col">
+        <h4>Specialities</h4>
+        <a href="#departments">Cardiology</a><a href="#departments">Neurosciences</a><a href="#departments">Orthopaedics</a><a href="#departments">Oncology</a><a href="#departments">Mother &amp; Child</a><a href="#departments">Gastroenterology</a>
+      </div>
+      <div class="footer__col">
+        <h4>Patient Care</h4>
+        <a href="#teleconsult">Video Consultation</a><a href="#patients">Home Healthcare</a><a href="#patients">International Patients</a><a href="#patients">Insurance &amp; TPA</a><a href="#" data-open="reportsModal">Download Reports</a><a href="#faq">FAQs</a>
+      </div>
+      <div class="footer__col footer__emergency">
+        <h4>24x7 Emergency</h4>
+        <a href="tel:18001234567" class="footer__phone">1800-123-4567</a>
+        <p>Ambulance &amp; critical care available round the clock.</p>
+        <button class="btn btn--danger btn--block" data-open="sosModal"><svg class="ic"><use href="#i-ambulance"/></svg> Request Ambulance</button>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p>© <span id="year">2026</span> CareNova Hospitals Pvt. Ltd. All rights reserved.</p>
+      <div><a href="#">Privacy Policy</a><a href="#">Terms of Use</a><a href="#">Patient Rights</a><a href="#">Sitemap</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ FLOATING ACTIONS ============ -->
+<div class="fab-stack">
+  <a href="https://wa.me/919876543210?text=Hi%20CareNova%2C%20I%20need%20help%20with%20an%20appointment" target="_blank" rel="noopener" class="fab fab--wa" aria-label="Chat on WhatsApp"><svg class="ic"><use href="#i-wa"/></svg></a>
+  <button class="fab fab--chat" id="chatToggle" aria-label="Open virtual assistant" aria-expanded="false"><svg class="ic ic-open"><use href="#i-chat"/></svg><svg class="ic ic-close"><use href="#i-x"/></svg></button>
+</div>
+<button class="fab-sos" data-open="sosModal" aria-label="Emergency SOS"><span>SOS</span></button>
+<button class="to-top" id="toTop" aria-label="Back to top"><svg class="ic"><use href="#i-chev"/></svg></button>
+
+<!-- Chat widget -->
+<div class="chat" id="chat" role="dialog" aria-label="CareNova virtual assistant" aria-hidden="true">
+  <div class="chat__head">
+    <div class="avatar avatar--sm" style="--h:175">CN</div>
+    <div><strong>Nova – Virtual Assistant</strong><small><span class="pulse-dot pulse-dot--green"></span> Online • replies instantly</small></div>
+  </div>
+  <div class="chat__body" id="chatBody"></div>
+  <div class="chat__quick" id="chatQuick"></div>
+  <form class="chat__form" id="chatForm">
+    <input type="text" id="chatInput" placeholder="Type your question…" aria-label="Message" autocomplete="off" />
+    <button type="submit" aria-label="Send"><svg class="ic"><use href="#i-send"/></svg></button>
+  </form>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal" id="sosModal" aria-hidden="true" role="dialog" aria-labelledby="sosTitle">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__box modal__box--sos">
+    <button class="modal__close" data-close aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+    <div class="sos-ring"><svg class="ic"><use href="#i-ambulance"/></svg></div>
+    <h3 id="sosTitle">Emergency Assistance</h3>
+    <p>Our emergency team is available 24x7. For life-threatening situations call immediately.</p>
+    <a href="tel:18001234567" class="btn btn--danger btn--lg btn--block"><svg class="ic"><use href="#i-phone"/></svg> Call 1800-123-4567</a>
+    <a href="tel:108" class="btn btn--ghost btn--block">National Ambulance: 108</a>
+    <button class="btn btn--ghost btn--block" id="shareLoc"><svg class="ic"><use href="#i-pin"/></svg> Share my location with ER team</button>
+    <p class="form-msg" id="locMsg" role="status"></p>
+    <div class="sos-tips">
+      <strong>While you wait:</strong>
+      <ul><li>Keep the patient calm and still.</li><li>Do not give food or water if unconscious.</li><li>Keep ID, insurance card and medicine list ready.</li></ul>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="reportsModal" aria-hidden="true" role="dialog" aria-labelledby="repTitle">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__box">
+    <button class="modal__close" data-close aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+    <span class="modal__icon"><svg class="ic"><use href="#i-file"/></svg></span>
+    <h3 id="repTitle">Download Your Reports</h3>
+    <p>Enter your UHID (on your registration slip) and registered mobile number.</p>
+    <form id="reportForm" novalidate>
+      <label class="field"><span>UHID</span><input type="text" id="rUhid" placeholder="e.g. CNH123456" required /></label>
+      <label class="field"><span>Registered mobile</span><input type="tel" id="rPhone" placeholder="10-digit mobile" maxlength="10" required /></label>
+      <button class="btn btn--primary btn--block" type="submit">Send OTP</button>
+      <p class="form-msg" id="reportMsg" role="status"></p>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="successModal" aria-hidden="true" role="dialog" aria-labelledby="okTitle">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__box modal__box--success">
+    <button class="modal__close" data-close aria-label="Close"><svg class="ic"><use href="#i-x"/></svg></button>
+    <div class="success-check"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" fill="none"/><path fill="none" d="M15 27l7 7 15-15"/></svg></div>
+    <h3 id="okTitle">Appointment Confirmed!</h3>
+    <p>We've sent the details to your mobile number.</p>
+    <div class="ticket" id="ticket"></div>
+    <div class="modal__btns">
+      <button class="btn btn--ghost" id="addToCal"><svg class="ic"><use href="#i-calendar"/></svg> Add to Calendar</button>
+      <button class="btn btn--primary" data-close>Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
