@@ -61,6 +61,7 @@ function takenTopPaths() {
   }
   return set;
 }
+const hasRoute = (p) => ((C.app._router && C.app._router.stack) || []).some((l) => l.route && [].concat(l.route.path).includes(p) && l.route.methods.get);
 /** Fills empty slugs and keeps them unique per collection. Returns true when anything changed. */
 function ensureSlugs() {
   let changed = false;
@@ -124,7 +125,7 @@ function renderMarkdown(src) { return sanitizeHtml(md.parse(String(src || "")));
 function baseUrl(req) {
   const env = String(process.env.SITE_URL || "").trim().replace(/\/+$/, "");
   if (/^https?:\/\/[^\s/]+/i.test(env)) return env;
-  return `${req.protocol}://${req.get("host")}`;
+  return req ? `${req.protocol}://${req.get("host")}` : "";
 }
 
 /* =========================================================
@@ -141,14 +142,15 @@ function rewriteUrl(v) {
 /**
  * Renders a page in the site chrome.
  * opts: { title, description, path, image, type ("website"|"article"), jsonLd (object or array), body (HTML for <main>),
- *         active ("/doctors"…: highlights the menu link), status, noindex }
+ *         active ("/doctors"…: highlights the menu link), status, noindex, styles [], scripts [], bodyClass, mainClass }
+ * Also used by server/privacy.js (renderShell) for the legal and manage-booking pages, via ctx.renderInner.
  */
 function renderInner(req, opts) {
   const s = settings();
   const data = db();
   const $ = cheerio.load(C.renderPage(data));
   const base = baseUrl(req);
-  const url = base + (opts.path || req.path);
+  const url = base + (opts.path || (req ? req.path : "/"));
   const fullTitle = opts.title ? `${opts.title} · ${s.name}` : s.name;
 
   // head: title, description, canonical, share tags, structured data
@@ -174,13 +176,16 @@ function renderInner(req, opts) {
   $("head").append(head.filter(Boolean).join("\n"));
 
   // the new main content (settings replacements were applied to the rest of the page already)
-  $("main").first().attr("id", "main").attr("class", "pg").html(C.applyReplacements(opts.body || "", data.settings));
+  $("main").first().attr("id", "main").attr("class", ["pg", opts.mainClass].filter(Boolean).join(" ")).html(C.applyReplacements(opts.body || "", data.settings));
+  if (opts.bodyClass) $("body").addClass(opts.bodyClass);
+  for (const href of opts.styles || []) if (!$(`link[href="${href}"]`).length) $("head").append(`<link rel="stylesheet" href="${esc(href)}">`);
 
   // scripts: keep data.js (chat replies) and anything else global; swap the home-page-only ones for js/pages.js
   $('script[src="js/main.js"], script[src="js/plates.js"], script[src^="js/stage/"]').remove();
   $("#pkgModal").remove();   // the check-up request needs the home page's package list
   const dataJs = $('script[src="js/data.js"]');
   if (dataJs.length) dataJs.after('<script src="js/pages.js"></script>'); else $("body").append('<script src="js/pages.js"></script>');
+  for (const src of opts.scripts || []) $("body").append(`<script src="${esc(src)}" defer></script>`);
 
   // links: header, menu and footer anchors point to the home page sections (or the new directory pages);
   // relative asset paths become absolute so they work from /doctors/<slug>
@@ -634,6 +639,8 @@ function sitemap(req, res) {
   // other modules can add public paths: ctx.sitemapPaths = ["/privacy-policy", …] or a function returning them
   const extra = typeof C.sitemapPaths === "function" ? C.sitemapPaths() : C.sitemapPaths;
   for (const p of asArray(extra)) if (typeof p === "string" && p.startsWith("/")) urls.push({ loc: p, pr: "0.3" });
+  // legal pages (server/privacy.js); /manage-booking is noindex, so it stays out
+  for (const p of ["/privacy-policy", "/terms", "/patient-rights", "/data-request"]) if (hasRoute(p)) urls.push({ loc: p, pr: "0.3" });
   if (fileExists("credits.html")) urls.push({ loc: "/credits.html", pr: "0.2" });
   const seen = new Set();
   const xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];
@@ -724,6 +731,7 @@ function migrate() {
    ========================================================= */
 function register(ctx) {
   C = ctx;
+  ctx.renderInner = renderInner;   // the one inner-page shell, shared with server/privacy.js
   const { app, store } = ctx;
   migrate();
 

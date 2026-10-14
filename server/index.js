@@ -81,6 +81,8 @@ setInterval(() => { const now = Date.now(); for (const [k, v] of hits) if (!v.so
 const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, role: u.role, createdAt: u.createdAt, lastLogin: u.lastLogin });
 
 /* ---------- cleaning content items against the schema ---------- */
+// Markdown fields are sanitised when rendered (server/pages.js), so they are stored as typed
+const isMarkdown = (f) => f.markdown === true || /^Markdown/.test(f.help || "");
 function cleanItem(col, body, existing) {
   const def = COLLECTIONS[col];
   const out = { ...(existing || {}) };
@@ -92,7 +94,7 @@ function cleanItem(col, body, existing) {
       case "boolean": v = !!v; break;
       case "tags": case "list": v = (Array.isArray(v) ? v : String(v || "").split(f.type === "list" ? "\n" : ",")).map((x) => str(x, 300)).filter(Boolean); break;
       case "json": if (typeof v === "string") { try { v = v.trim() ? JSON.parse(v) : null; } catch { throw new Error(`${f.label} is not valid JSON.`); } } break;
-      case "textarea": v = str(v, 5000); break;
+      case "textarea": v = str(v, f.max || (isMarkdown(f) ? 40000 : 5000)); break;
       default: v = str(v, 1000);
     }
     if (f.required && (v === "" || v == null || (Array.isArray(v) && !v.length))) throw new Error(`${f.label} is required.`);
@@ -102,7 +104,7 @@ function cleanItem(col, body, existing) {
   if ("hidden" in body) out.hidden = !!body.hidden;
   if (out.hidden === undefined) out.hidden = false;
   // text shown with innerHTML on the site: keep plain text as is, clean anything that looks like markup
-  for (const f of def.fields) if ((f.type === "text" || f.type === "textarea") && typeof out[f.name] === "string" && out[f.name].includes("<")) out[f.name] = sanitizeInline(out[f.name]);
+  for (const f of def.fields) if ((f.type === "text" || f.type === "textarea") && !isMarkdown(f) && typeof out[f.name] === "string" && out[f.name].includes("<")) out[f.name] = sanitizeInline(out[f.name]);
   for (const f of def.fields) if (f.type === "image" && out[f.name] && !/^(\/uploads\/|assets\/|https?:\/\/)/.test(out[f.name])) throw new Error(`${f.label} must be an uploaded image or a web address.`);
   return out;
 }

@@ -342,7 +342,11 @@ function renderMarkdown(md) {
    Page shell: the home page's head, header and footer around new <main> content.
    Exported so other modules can reuse it.
    ========================================================= */
-function renderShell({ title, description, path: pagePath, main, styles = [], scripts = [], noindex = false, bodyClass = "" }) {
+function renderShell({ title, description, path: pagePath, main, styles = [], scripts = [], noindex = false, bodyClass = "", req = null }) {
+  // one shell for every inner page: server/pages.js (ctx.renderInner) when it is loaded, the fallback below otherwise
+  if (typeof C.renderInner === "function") {
+    return C.renderInner(req, { title, description, path: pagePath, body: main, noindex, bodyClass, mainClass: "inner-main", styles: ["css/privacy.css", ...styles], scripts });
+  }
   const db = C.db();
   const s = settings();
   const $ = cheerio.load(C.renderPage(db));
@@ -421,7 +425,7 @@ function dataRequestForm() {
   </form>`;
 }
 
-function legalPage(p) {
+function legalPage(p, req) {
   const s = settings();
   const body = renderMarkdown(s[p.key] || DEFAULT_SETTINGS[p.key] || "");
   const main = `<section class="section legal" aria-labelledby="pageTitle">
@@ -431,10 +435,10 @@ function legalPage(p) {
       ${asideHtml(p.path)}
     </div>
   </section>`;
-  return renderShell({ title: p.title, description: p.description, path: p.path, main, scripts: p.path === "/data-request" ? ["js/manage.js"] : [] });
+  return renderShell({ title: p.title, description: p.description, path: p.path, main, req, scripts: p.path === "/data-request" ? ["js/manage.js"] : [] });
 }
 
-function managePage() {
+function managePage(req) {
   const s = settings();
   const main = `<section class="section legal manage" aria-labelledby="pageTitle">
     <div class="wrap legal__grid">
@@ -458,7 +462,7 @@ function managePage() {
       ${asideHtml("/manage-booking")}
     </div>
   </section>`;
-  return renderShell({ title: "Manage booking", description: `Change or cancel your ${s.name} appointment online.`, path: "/manage-booking", main, scripts: ["js/manage.js"], noindex: true });
+  return renderShell({ title: "Manage booking", description: `Change or cancel your ${s.name} appointment online.`, path: "/manage-booking", main, req, scripts: ["js/manage.js"], noindex: true });
 }
 
 /* =========================================================
@@ -488,8 +492,8 @@ function register(ctx) {
   const html = (fn) => (req, res, next) => {
     try { res.type("html").setHeader("Cache-Control", "no-cache"); res.send(fn(req)); } catch (e) { next(e); }
   };
-  for (const p of LEGAL_PAGES) app.get(p.path, html(() => legalPage(p)));
-  app.get("/manage-booking", html(() => managePage()));
+  for (const p of LEGAL_PAGES) app.get(p.path, html((req) => legalPage(p, req)));
+  app.get("/manage-booking", html((req) => managePage(req)));
 
   /* ---------- public config for the forms ---------- */
   app.get("/api/privacy/config", (req, res) => {
