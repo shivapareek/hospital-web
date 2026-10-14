@@ -94,7 +94,20 @@
   }, { threshold: 0.6 });
   if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) $$(".counter").forEach((c) => counterObserver.observe(c));
 
-  /* ---------- Live status (demo feed) ---------- */
+  /* ---------- CMS connection (window.CMS is set when the site runs on the CMS server) ---------- */
+  const CMS = window.CMS || null;
+  async function cmsPost(kind, body) {
+    const r = await fetch(`${CMS.api}/submit/${kind}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify(body) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || "We couldn't send that. Please try again or call us.");
+    return data;
+  }
+  const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const closedDays = CMS ? (CMS.booking.closedDays || []).map((d) => DAY_NAMES.findIndex((n) => n.startsWith(String(d).trim().toLowerCase().slice(0, 3)))).filter((i) => i >= 0) : [0];
+  const isClosed = (d) => closedDays.includes(d.getDay());
+  const toMin = (t, fb) => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t || "").trim()); return m ? +m[1] * 60 + +m[2] : fb; };
+
+  /* ---------- Live status (demo feed, or the values set in the admin panel) ---------- */
   const live = { er: 8, beds: 42, icu: 7, token: 114 };
   let lastUpdate = Date.now();
   function setLive(sel, val) {
@@ -104,7 +117,18 @@
     el.classList.add("flash");
     setTimeout(() => el.classList.remove("flash"), 900);
   }
-  setInterval(() => {
+  function applyLive(L) {
+    if (!L) return;
+    setLive("#liveEr", String(L.erWait ?? 0).padStart(2, "0"));
+    setLive("#liveBeds", L.beds ?? "—");
+    setLive("#liveIcu", L.icu ?? "—");
+    setLive("#liveToken", L.token || "—");
+    lastUpdate = L.updatedAt ? Date.parse(L.updatedAt) || Date.now() : Date.now();
+  }
+  if (CMS && CMS.live.mode === "manual") {
+    applyLive(CMS.live);
+    setInterval(() => fetch(`${CMS.api}/live`).then((r) => r.json()).then((L) => { if (L.mode === "manual") applyLive(L); }).catch(() => {}), 30000);
+  } else setInterval(() => {
     live.er = Math.max(4, Math.min(16, live.er + rand(-2, 2)));
     live.beds = Math.max(30, Math.min(58, live.beds + rand(-2, 2)));
     live.icu = Math.max(3, Math.min(11, live.icu + rand(-1, 1)));
@@ -117,7 +141,7 @@
   }, 7000);
   setInterval(() => {
     const s = Math.round((Date.now() - lastUpdate) / 1000);
-    $("#liveUpdated").textContent = s < 3 ? "just now" : s + " s ago";
+    $("#liveUpdated").textContent = s < 3 ? "just now" : s < 120 ? s + " s ago" : s < 7200 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago";
   }, 1000);
 
   /* ---------- Hero search with suggestions ---------- */
@@ -370,10 +394,10 @@
   const dates = Array.from({ length: 14 }, (_, i) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i); return d; });
   function renderDates() {
     $("#dateStrip").innerHTML = dates.map((d, i) => {
-      const closed = d.getDay() === 0;
+      const closed = isClosed(d);
       const label = i === 0 ? "Today" : DAY[d.getDay()];
       const active = booking.date && dateKey(booking.date) === dateKey(d);
-      return `<button type="button" class="date${active ? " is-active" : ""}" data-i="${i}" aria-pressed="${active ? "true" : "false"}" ${closed ? "disabled title=\"OPD is closed on Sundays\"" : ""}><small>${label}</small><b>${d.getDate()}</b><small>${MON[d.getMonth()]}</small></button>`;
+      return `<button type="button" class="date${active ? " is-active" : ""}" data-i="${i}" aria-pressed="${active ? "true" : "false"}" ${closed ? "disabled title=\"OPD is closed on this day\"" : ""}><small>${label}</small><b>${d.getDate()}</b><small>${MON[d.getMonth()]}</small></button>`;
     }).join("");
   }
   $("#dateStrip").addEventListener("click", (e) => {
@@ -381,11 +405,23 @@
     if (!b || b.disabled) return;
     booking.date = dates[+b.dataset.i];
     booking.slot = null;
-    renderDates(); renderSlots(); updateTicket();
+    renderDates(); renderSlots(); updateTicket(); loadTaken();
     // the strip was re-rendered: put focus back on the tile that was picked
     $(`#dateStrip .date[data-i="${b.dataset.i}"]`)?.focus({ preventScroll: true });
   });
 
+  const slotCache = {};
+  const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  /** Fetches booked slots for the chosen doctor/date, then re-renders (CMS only). */
+  function loadTaken() {
+    if (!CMS || !booking.date || !bDoctor.value) return;
+    const key = bDoctor.value + "|" + isoDate(booking.date);
+    fetch(`${CMS.api}/slots?doctor=${encodeURIComponent(bDoctor.value)}&date=${isoDate(booking.date)}`).then((r) => r.json()).then((d) => {
+      slotCache[key] = d.taken || [];
+      if (booking.slot && slotCache[key].includes(booking.slot)) booking.slot = null;
+      if (booking.date && key === bDoctor.value + "|" + isoDate(booking.date)) { renderSlots(); updateTicket(); }
+    }).catch(() => {});
+  }
   function hash(str) { let h = 0; for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0; return Math.abs(h); }
   function renderSlots() {
     const wrap = $("#slots");
@@ -393,13 +429,18 @@
     const now = new Date();
     const isToday = dateKey(booking.date) === dateKey(now);
     const seed = hash((bDoctor.value || "x") + dateKey(booking.date));
+    const cfg = CMS ? CMS.booking : null;
+    const first = cfg ? toMin(cfg.slotStart, 540) : 540, last = cfg ? toMin(cfg.slotEnd, 1170) : 1170;
+    const step = cfg ? Math.max(5, cfg.slotMinutes || 30) : 30;
+    const brA = cfg ? toMin(cfg.breakStart, -1) : 780, brB = cfg ? toMin(cfg.breakEnd, -1) : 840;
+    const takenSet = CMS ? (slotCache[(bDoctor.value || "") + "|" + isoDate(booking.date)] || []) : null;
     let i = 0;
-    for (let m = 9 * 60; m <= 19 * 60 + 30; m += 30) {
-      if (m >= 13 * 60 && m < 14 * 60) continue;
+    for (let m = first; m <= last; m += step) {
+      if (brA >= 0 && m >= brA && m < brB) continue;
       const h = Math.floor(m / 60), mm = m % 60;
       const label = `${String(((h + 11) % 12) + 1).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
       const past = isToday && m <= now.getHours() * 60 + now.getMinutes() + 30;
-      const taken = ((seed >> (i % 28)) & 1) === 1 && i % 3 !== 0;
+      const taken = takenSet ? takenSet.includes(label) : ((seed >> (i % 28)) & 1) === 1 && i % 3 !== 0;
       const g = h < 12 ? "Morning" : h < 16 ? "Afternoon" : "Evening";
       groups[g].push(`<button type="button" class="slot${booking.slot === label ? " is-active" : ""}" data-slot="${label}" aria-pressed="${booking.slot === label ? "true" : "false"}" ${past || taken ? "disabled" : ""}>${label}</button>`);
       i++;
@@ -431,8 +472,8 @@
     });
     bError.textContent = "";
     if (n === 2) {
-      if (!booking.date) booking.date = dates.find((d) => d.getDay() !== 0);
-      renderDates(); renderSlots(); updateTicket();
+      if (!booking.date) booking.date = dates.find((d) => !isClosed(d));
+      renderDates(); renderSlots(); updateTicket(); loadTaken();
     }
     // the old step's fieldset is now hidden, so focus would fall to <body>
     if (focus) stepFocus()?.focus({ preventScroll: true });
@@ -470,8 +511,24 @@
     if (!validate(3)) { $(".bstep.is-active .invalid", form)?.focus(); return; }
     bError.textContent = "";   // a fix after a failed submit must not leave the old error under the confirmation
     const d = currentDoctor();
-    const token = d.dept.slice(0, 2).toUpperCase() + "-" + rand(100, 999);
     const phone = $("#bPhone").value.trim();
+    if (CMS) {
+      const submitBtn = $('button[type="submit"]', form);
+      submitBtn.disabled = true;
+      cmsPost("appointment", {
+        doctor: d.name, date: isoDate(booking.date), slot: booking.slot, type: consultType(),
+        patient: { name: $("#bName").value.trim(), phone, age: $("#bAge").value, gender: $("#bGender").value },
+        reason: ($("#bNote") || {}).value || ""
+      }).then((r) => confirmBooking(d, r.token, phone)).catch((err) => {
+        bError.textContent = err.message;
+        if (/just booked/.test(err.message)) { delete slotCache[d.name + "|" + isoDate(booking.date)]; booking.slot = null; goStep(2); loadTaken(); }
+      }).finally(() => { submitBtn.disabled = false; });
+      return;
+    }
+    confirmBooking(d, d.dept.slice(0, 2).toUpperCase() + "-" + rand(100, 999), phone);
+  });
+
+  function confirmBooking(d, token, phone) {
     lastBooking = { doctor: d, date: booking.date, slot: booking.slot, token };
     try {
       const all = JSON.parse(storage.get("cn-appointments") || "[]");
@@ -486,7 +543,7 @@
     ticket.classList.add("is-confirmed");
     // the confirmation replaces the form: take focus there, so it is announced and Tab continues from it
     $("#doneTitle").focus({ preventScroll: true });
-  });
+  }
 
   $("#bookAgain").addEventListener("click", () => {
     form.reset();
@@ -729,8 +786,36 @@
     if (uhid.value.trim().length < 5 || !/^[6-9]\d{9}$/.test(ph.value.trim())) {
       msg.className = "form-msg err"; msg.textContent = "Enter your UHID and a 10-digit mobile number."; return;
     }
+    if (CMS) {
+      msg.className = "form-msg"; msg.textContent = "Sending…";
+      cmsPost("report", { uhid: uhid.value.trim(), phone: ph.value.trim() })
+        .then(() => { msg.className = "form-msg ok"; msg.textContent = `Request received. We'll send your reports to ******${ph.value.trim().slice(-4)}.`; })
+        .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
+      return;
+    }
     msg.className = "form-msg ok";
     msg.textContent = `OTP sent to ******${ph.value.trim().slice(-4)}.`;
+  });
+
+  /* ---------- Health check-up request (CMS) ---------- */
+  let pkgChosen = "";
+  function openPkgRequest(pkg) {
+    pkgChosen = pkg;
+    const nameEl = $("#pkgName"); if (nameEl) nameEl.textContent = pkg;
+    $("#pkgMsg").textContent = "";
+    openModal("pkgModal");
+  }
+  $("#pkgForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const msg = $("#pkgMsg"), nm = $("#pkName"), ph = $("#pkPhone");
+    let ok = true;
+    if (nm.value.trim().length < 2) { markInvalid(nm); ok = false; }
+    if (!/^[6-9]\d{9}$/.test(ph.value.trim())) { markInvalid(ph); ok = false; }
+    if (!ok) { msg.className = "form-msg err"; msg.textContent = "Enter your name and a 10-digit mobile number."; return; }
+    msg.className = "form-msg"; msg.textContent = "Sending…";
+    cmsPost("package", { package: pkgChosen, name: nm.value.trim(), phone: ph.value.trim() })
+      .then(() => { msg.className = "form-msg ok"; msg.textContent = "Request received. We'll call you to schedule it."; e.target.reset(); })
+      .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
   });
 
   /* ---------- Contact & newsletter ---------- */
@@ -743,6 +828,14 @@
       if (!valid) { markInvalid(el); ok = false; }
     });
     if (!ok) { msg.className = "form-msg err"; msg.textContent = "Fill in the highlighted fields."; return; }
+    if (CMS) {
+      const fd = Object.fromEntries(new FormData(f).entries());
+      msg.className = "form-msg"; msg.textContent = "Sending…";
+      cmsPost("message", { name: fd.name, phone: fd.phone, email: fd.email, message: fd.message })
+        .then(() => { msg.className = "form-msg ok"; msg.textContent = "Message sent. We'll reply within 2 hours."; f.reset(); })
+        .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
+      return;
+    }
     msg.className = "form-msg ok";
     msg.textContent = "Message sent. We'll reply within 2 hours.";
     f.reset();
@@ -751,6 +844,10 @@
     e.preventDefault();
     const inp = $("input", e.target);
     if (!inp.checkValidity()) { toast("Enter a valid email address."); return; }
+    if (CMS) {
+      cmsPost("subscribe", { email: inp.value.trim() }).then(() => { inp.value = ""; toast("Subscribed. The next issue arrives on the 1st."); }).catch((err) => toast(err.message));
+      return;
+    }
     inp.value = "";
     toast("Subscribed. The next issue arrives on the 1st.");
   });
@@ -834,7 +931,10 @@
     if (t.dataset.bookDoc) { e.preventDefault(); startBooking({ doctor: t.dataset.bookDoc }); return; }
     if (t.dataset.bookDept) { e.preventDefault(); startBooking({ dept: t.dataset.bookDept }); return; }
     if (t.dataset.findDept) { e.preventDefault(); showDoctors({ dept: t.dataset.findDept }); return; }
-    if (t.dataset.pkg) { toast(`Request received for ${t.dataset.pkg}. We'll call you to schedule it.`); return; }
+    if (t.dataset.pkg) {
+      if (CMS) { const pkg = t.dataset.pkg; openPkgRequest(pkg); return; }
+      toast(`Request received for ${t.dataset.pkg}. We'll call you to schedule it.`); return;
+    }
     if (t.hasAttribute("data-video-book")) { e.preventDefault(); startBooking({ video: true }); if (window.innerWidth <= 600) toggleChat(false); }
   });
 

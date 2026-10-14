@@ -821,6 +821,24 @@
   </div>
 </div>
 
+<div class="modal" id="pkgModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="pkgTitle">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__box">
+    <button class="modal__close icon-btn" data-close aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <div class="modal__inner">
+      <p class="modal__label">Health check-up</p>
+      <h3 id="pkgTitle">Book <span id="pkgName">this check-up</span></h3>
+      <p>Leave your number and our team will call you to fix a date and time.</p>
+      <form id="pkgForm" novalidate>
+        <label class="field"><span>Your name</span><input type="text" id="pkName" autocomplete="name" required /></label>
+        <label class="field"><span>Mobile number</span><input type="tel" id="pkPhone" maxlength="10" inputmode="numeric" autocomplete="tel-national" required /></label>
+        <button class="btn btn--accent btn--block" type="submit">Request a call back</button>
+        <p class="form-msg" id="pkgMsg" role="status"></p>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="reportsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="repTitle">
   <div class="modal__backdrop" data-close></div>
   <div class="modal__box modal__box--banner">

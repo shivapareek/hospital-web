@@ -38,3 +38,29 @@ Deploy the folder as-is to any static host (GitHub Pages, Netlify, Vercel). Enab
 - **Photographs to replace**: the patient care photo (a doctor with a tablet), the operating theatre and the two scanner photos are illustrative stock from other facilities. Swap in CareNova's own photographs when they exist.
 
 > Forms, live status, OTP and booking are front-end demos. Connect them to your backend or CRM before going live.
+
+## CMS and admin panel
+
+The site now runs on a small Node.js server that stores everything in a database file and gives the hospital an admin panel.
+
+```bash
+npm install
+npm start            # http://localhost:3000  (admin: http://localhost:3000/admin/)
+```
+
+First sign-in: **admin@carenova.local / ChangeMe@123** (or set `ADMIN_PASSWORD` before the first start). You are asked to change it.
+
+What the admin panel controls
+- **Appointments** booked on the website (real tokens, double-booking blocked), status, notes, manual bookings, CSV export
+- **Enquiries**: contact messages, report requests, health check-up call-back requests; **newsletter subscribers**
+- **Content**: doctors (with photos), specialities, health check-ups, patient stories, FAQs, symptom finder, chat replies, health library
+- **Page text and images**: every heading, paragraph, button label and content image on the home page (about 330 fields), each with "reset to default"
+- **Sections**: show or hide any section of the page
+- **Settings**: hospital name, phone numbers, WhatsApp, email, map, SEO title/description/share image, brand colour, logo, announcement bar, booking hours/closed days/slot length, social links
+- **Live status**: the "Emergency wait right now" panel (manual values or demo mode)
+- **Media library**, **users with roles** (admin, editor, reception), **activity log**
+
+Environment variables: `PORT` (3000), `DATA_DIR` (./data), `UPLOAD_DIR` (./uploads), `ADMIN_PASSWORD` (first run only), `COOKIE_SECURE=1` (behind HTTPS), `TRUST_PROXY=1` (behind Nginx/Render/Railway).
+Data lives in `data/cms.json` with daily backups in `data/backups/`. Keep `data/` and `uploads/` on persistent storage and out of git.
+
+Hosting: any Node 18+ host (a VPS with PM2 + Nginx, Render, Railway, Hostinger VPS, DigitalOcean). Static hosting (Netlify/GitHub Pages) still works for the public site alone, but then the admin panel and form saving are not available.
