@@ -163,9 +163,12 @@
   /* ---------- Specialities ---------- */
   $("#specList").innerHTML = DEPARTMENTS.map((d) => {
     const n = DOCTORS.filter((x) => x.dept === d.name).length;
+    const thumb = d.still
+      ? `<img class="spec__still" src="${d.still}-128.webp" width="64" height="64" alt="" loading="lazy" decoding="async">`
+      : `<span class="spec__still spec__still--type" aria-hidden="true">${d.stillText || ""}</span>`;
     return `<li><button type="button" class="spec" data-find-dept="${d.name}">
-      <span class="spec__icon">${icon(d.icon)}</span>
-      <span><span class="spec__name">${d.name}</span><span class="spec__desc">${d.desc}</span></span>
+      ${thumb}
+      <span class="spec__text"><span class="spec__name">${d.name}</span><span class="spec__desc">${d.desc}</span></span>
       <span class="spec__count">${n} ${n === 1 ? "doctor" : "doctors"}</span>
       <span class="spec__go">${icon("i-arrow")}</span>
     </button></li>`;
@@ -190,19 +193,21 @@
 
   function docCard(d) {
     return `<article class="doc">
-      <div class="doc__top">
-        <span class="avatar" data-tone="${tone(d.name)}">${initials(d.name)}</span>
-        <span class="doc__avail${d.today ? " is-today" : ""}">${d.today ? "Available today" : "Next: tomorrow"}</span>
+      <p class="doc__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? "In today" : "Next: tomorrow"}${d.room ? `<span class="doc__room">Room ${esc(d.room)}</span>` : ""}</p>
+      ${d.photo ? `<img class="doc__photo" src="${esc(d.photo)}" alt="${esc(d.photoAlt || d.name)}" width="800" height="1000" loading="lazy" decoding="async">` : ""}
+      <div class="doc__id">
+        ${d.photo ? "" : `<span class="avatar avatar--lg" aria-hidden="true">${initials(d.name)}</span>`}
+        <div><h3>${d.name}</h3><p class="doc__role">${d.role} · ${d.dept}</p></div>
       </div>
-      <div>
-        <h3>${d.name}</h3>
-        <p class="doc__role">${d.role} · ${d.dept}</p>
-        <p class="doc__deg">${d.deg}</p>
-      </div>
-      <div class="doc__meta mono"><span><b>${d.exp}</b> yrs</span><span>★ <b>${d.rating}</b> (${d.reviews.toLocaleString("en-IN")})</span></div>
+      <p class="doc__deg">${d.deg}</p>
+      <dl class="doc__facts">
+        <div><dt>Speaks</dt><dd>${d.lang}</dd></div>
+        ${d.opd ? `<div><dt>OPD</dt><dd class="mono">${esc(d.opd)}</dd></div>` : ""}
+      </dl>
+      <p class="doc__meta num"><span><b>${d.exp}</b> yrs</span> · <span>★ <b>${d.rating}</b> (${d.reviews.toLocaleString("en-IN")})</span></p>
       <div class="doc__foot">
-        <span><span class="doc__fee mono">${inr(d.fee)}</span> ${d.video ? `<span class="doc__video">${icon("i-video")} Video</span>` : ""}</span>
-        <button class="link-btn" data-book-doc="${esc(d.name)}">Book ${icon("i-arrow")}</button>
+        <span><span class="doc__fee num">${inr(d.fee)}</span>${d.video ? ` <span class="doc__video">${icon("i-video")} Video</span>` : ""}</span>
+        <button class="link-btn" data-book-doc="${esc(d.name)}">Book ${icon("i-arrow")}<span class="sr-only"> ${d.name}</span></button>
       </div>
     </article>`;
   }
@@ -262,10 +267,12 @@
     const top = ranked[0][0];
     const also = ranked.slice(1, 3).map((r) => r[0]);
     const docs = DOCTORS.filter((d) => d.dept === top).sort((a, b) => b.today - a.today).slice(0, 2);
+    const dep = DEPARTMENTS.find((x) => x.name === top);
     out.innerHTML = `
       ${urgent ? `<p class="fr-urgent">${icon("i-sos")}<span>One or more of these can be urgent. If it's sudden or severe, call <b class="mono">1800-123-4567</b> now.</span></p>` : ""}
       <div class="fr-head">
         <div><small>Suggested speciality</small><h3>${top}</h3>${also.length ? `<small>Also consider ${also.join(", ")}</small>` : ""}</div>
+        ${dep && dep.still ? `<img class="fr-still" src="${dep.still}-320.webp" width="120" height="120" alt="" loading="lazy" decoding="async">` : ""}
         <button class="btn btn--accent btn--sm" data-book-dept="${top}">Book ${top}</button>
       </div>
       <div class="fr-docs">${docs.map((d) => `
@@ -495,10 +502,12 @@
   updateTicket();
 
   /* ---------- Packages ---------- */
+  const ORGAN = { heart: "Heart", lungs: "Lungs", liver: "Liver", kidney: "Kidneys", brain: "Brain", eye: "Eyes", spine: "Bones", uterus: "Uterus" };
   function renderPackages(filter = "all") {
     $("#pkgGrid").innerHTML = PACKAGES.filter((p) => p.tag.includes(filter)).map((p) => `
       <article class="pkg${p.popular ? " pkg--featured" : ""}">
         <div class="pkg__head"><div><h3>${p.name}</h3><small>${p.tests} tests</small></div>${p.popular ? `<span class="pkg__flag">Most chosen</span>` : ""}</div>
+        ${p.covers ? `<ul class="pkg__covers" aria-label="Looks at">${p.covers.map((o) => `<li><img src="assets/img/specimens/${o}-128.webp" width="32" height="32" alt="" loading="lazy" decoding="async"><span>${ORGAN[o]}</span></li>`).join("")}</ul>` : ""}
         <div class="pkg__price"><b>${inr(p.price)}</b><s>${inr(p.mrp)}</s><span>save ${Math.round((1 - p.price / p.mrp) * 100)}%</span></div>
         <ul>${p.items.map((it) => `<li>${icon("i-check")}${it}</li>`).join("")}</ul>
         <button class="btn btn--line btn--block" data-pkg="${esc(p.name)}">Book this check-up</button>
@@ -560,15 +569,33 @@
   let qIdx = 0;
   let qTimer;
   storyList.innerHTML = TESTIMONIALS.map((t, i) => `<li><button type="button" data-i="${i}"><span><strong>${t.name}</strong><small>${t.meta}</small></span>${icon("i-arrow")}</button></li>`).join("");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pauseBtn = $("#quotePause");
+  const storiesEl = $("#stories");
+  let qPaused = reduceMotion, qHold = false;
+  pauseBtn.textContent = qPaused ? "Play stories" : "Pause stories";
+  function schedule() {
+    clearTimeout(qTimer);
+    bar.classList.remove("run");
+    if (qPaused || qHold) return;
+    const words = TESTIMONIALS[qIdx].text.split(/\s+/).length;
+    const ms = Math.max(9000, Math.round((words / 3.3) * 1000));
+    bar.style.setProperty("--dur", ms + "ms");
+    void bar.offsetWidth; bar.classList.add("run");
+    qTimer = setTimeout(() => showQuote(qIdx + 1), ms);
+  }
   function showQuote(i) {
     qIdx = (i + TESTIMONIALS.length) % TESTIMONIALS.length;
     const t = TESTIMONIALS[qIdx];
-    quote.innerHTML = `<p>“${t.text}”</p><footer><span class="avatar" data-tone="${tone(t.name)}">${initials(t.name)}</span><span>${t.name}<small>${t.meta}</small></span></footer>`;
+    quote.innerHTML = `<p>“${t.text}”</p><footer><span>${t.name}<small>${t.meta}</small></span></footer>`;
     $$("button", storyList).forEach((b) => b.setAttribute("aria-current", String(+b.dataset.i === qIdx)));
-    bar.classList.remove("run"); void bar.offsetWidth; bar.classList.add("run");
-    clearTimeout(qTimer);
-    qTimer = setTimeout(() => showQuote(qIdx + 1), 7000);
+    schedule();
   }
+  pauseBtn.addEventListener("click", () => { qPaused = !qPaused; pauseBtn.textContent = qPaused ? "Play stories" : "Pause stories"; schedule(); });
+  storiesEl.addEventListener("mouseenter", () => { qHold = true; schedule(); });
+  storiesEl.addEventListener("mouseleave", () => { qHold = false; schedule(); });
+  storiesEl.addEventListener("focusin", () => { qHold = true; schedule(); });
+  storiesEl.addEventListener("focusout", (e) => { if (!storiesEl.contains(e.relatedTarget)) { qHold = false; schedule(); } });
   storyList.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) showQuote(+b.dataset.i); });
   showQuote(0);
 
