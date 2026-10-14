@@ -243,7 +243,7 @@ app.post("/api/admin/password", requireAuth("account"), (req, res) => {
 });
 
 /* ---------- dashboard ---------- */
-app.get("/api/admin/stats", requireAuth("dashboard"), (req, res) => {
+app.get("/api/admin/stats", requireAuth("submissions"), (req, res) => {
   const S = db().submissions;
   const today = new Date().toISOString().slice(0, 10);
   const appts = S.appointments;

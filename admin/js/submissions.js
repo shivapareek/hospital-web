@@ -3,7 +3,7 @@ import {
   esc, el, get, post, patch, del, state, toast, toastError, pill, statusLabel, fmtDate, fmtDateTime, fmtRel,
   loadingHTML, emptyHTML, errorHTML, openLayer, confirmIn, confirmModal, busy, debounce, icon, todayISO, uid,
 } from './core.js';
-import { loadCollection, renderField } from './forms.js';
+import { loadCollection } from './forms.js';
 
 const DEFAULT_STATUSES = {
   appointments: ['new', 'confirmed', 'completed', 'cancelled', 'no-show'],
@@ -110,7 +110,7 @@ function submissionList(root, type, { allowNew = false, onChanged } = {}) {
         ${statusesFor(type).map((s) => `<option value="${esc(s)}">${esc(statusLabel(s))}</option>`).join('')}</select></div>
       <div class="field"><label for="${ids.fr}">From</label><input id="${ids.fr}" name="from" type="date"></div>
       <div class="field"><label for="${ids.to}">To</label><input id="${ids.to}" name="to" type="date"></div>
-      <div class="field grow"><label for="${ids.q}">Search</label><input id="${ids.q}" name="q" type="search" placeholder="Name, phone, token…"></div>
+      <div class="field grow"><label for="${ids.q}">Search</label><input id="${ids.q}" name="q" type="search" placeholder="${type === 'appointments' ? 'Name, phone, token…' : 'Name, phone, email…'}"></div>
       <div class="btn-row">
         <button type="button" class="btn" data-clear>Clear</button>
         <a class="btn" data-export href="#">${icon('download')} Export CSV</a>
@@ -387,4 +387,3 @@ export function openBooking(onDone) {
   L.foot.querySelector('[data-save]').addEventListener('click', (e) => submit(e.currentTarget));
   form.addEventListener('submit', (e) => { e.preventDefault(); submit(L.foot.querySelector('[data-save]')); });
 }
-export { renderField };

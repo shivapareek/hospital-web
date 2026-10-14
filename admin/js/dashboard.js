@@ -49,7 +49,8 @@ export async function renderDashboard(root, ctx) {
         <section class="card" aria-labelledby="re-h"><div class="card-head"><h2 id="re-h">Recent enquiries</h2><a href="#/enquiries" class="small">View all</a></div><div data-re></div></section>
       </div>
     </div>`;
-  statsEl.querySelector('[data-chart]').innerHTML = barChart(fillDays(s.byDay || [], 14));
+  const days = fillDays(s.byDay || [], 14);
+  statsEl.querySelector('[data-chart]').innerHTML = barChart(days) + (days.some((d) => d.count) ? '' : '<p class="small muted" style="margin:8px 0 0">No appointments were booked in the last 14 days.</p>');
 
   const recentA = s.recentAppointments || [];
   const raEl = statsEl.querySelector('[data-ra]');
@@ -187,9 +188,8 @@ export function liveEditor(box, live) {
     };
     for (const k of ['erWait', 'beds', 'icu']) if (body[k] === null) delete body[k];
     busy(form.querySelector('button[type="submit"]'), async () => {
-      try { const r = await put('/api/admin/live', body); fill(r && r.mode ? r : { ...body, updatedAt: new Date().toISOString() }); toast('Live status saved.'); }
+      try { const r = await put("/api/admin/live", body); const saved = r && (r.live || (r.mode ? r : null)); fill(saved || { ...body, updatedAt: new Date().toISOString() }); toast('Live status saved.'); }
       catch (err) { toastError(err); }
     });
   });
 }
-export { TYPES };
