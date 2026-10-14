@@ -1,4 +1,5 @@
 /* Field schemas: drive the admin forms and server-side cleaning. */
+const { LEGAL_DEFAULTS, NOTIFY_DEFAULTS } = require("./legal-defaults");
 
 const ICONS = ["i-heart-pulse", "i-brain", "i-bone", "i-ribbon", "i-baby", "i-users", "i-pill", "i-drop", "i-lungs", "i-eye", "i-tooth", "i-steth", "i-flask", "i-home", "i-plane", "i-file", "i-video"]
   .map((v) => ({ value: v, label: v.replace("i-", "").replace("-", " ") }));
@@ -23,7 +24,14 @@ const COLLECTIONS = {
       { name: "opd", label: "OPD days and hours", type: "text", group: "Availability", help: "Format: Mon–Sat · 10 AM – 2 PM" },
       { name: "room", label: "Room number", type: "text", group: "Availability" },
       { name: "today", label: "Available today", type: "boolean", group: "Availability" },
-      { name: "video", label: "Offers video consultation", type: "boolean", group: "Availability" }
+      { name: "video", label: "Offers video consultation", type: "boolean", group: "Availability" },
+      // profile page (/doctors/<slug>); serverOnly fields are left out of js/data.js
+      { name: "slug", label: "Web address", type: "text", group: "Profile page", help: "The page is /doctors/<this>. Leave empty to make one from the name." },
+      { name: "bio", label: "About", type: "textarea", rows: 8, group: "Profile page", serverOnly: true, help: "Markdown: blank line between paragraphs, **bold**, - lists, [links](/doctors)." },
+      { name: "education", label: "Education and training", type: "list", group: "Profile page", serverOnly: true },
+      { name: "awards", label: "Awards and memberships", type: "list", group: "Profile page", serverOnly: true },
+      { name: "conditions", label: "Conditions treated", type: "tags", group: "Profile page", serverOnly: true },
+      { name: "patientReviews", label: "Patient reviews", type: "json", group: "Profile page", serverOnly: true, help: "[{\"name\":\"Rakesh G.\",\"rating\":5,\"date\":\"2026-08\",\"text\":\"…\"}]. Publish real, consented reviews only." }
     ]
   },
   departments: {
@@ -40,7 +48,14 @@ const COLLECTIONS = {
       { name: "view", label: "View type", type: "text", advanced: true },
       { name: "stillText", label: "Typographic tile text", type: "text", advanced: true },
       { name: "image", label: "Photo instead of model", type: "image", advanced: true },
-      { name: "inset", label: "Inset scan", type: "json", advanced: true }
+      { name: "inset", label: "Inset scan", type: "json", advanced: true },
+      // speciality page (/specialities/<slug>)
+      { name: "slug", label: "Web address", type: "text", group: "Speciality page", help: "The page is /specialities/<this>. Leave empty to make one from the name." },
+      { name: "overview", label: "Overview", type: "textarea", rows: 8, group: "Speciality page", serverOnly: true, help: "Markdown: blank line between paragraphs, **bold**, - lists, [links](/doctors)." },
+      { name: "conditions", label: "Conditions treated", type: "list", group: "Speciality page", serverOnly: true },
+      { name: "treatments", label: "Treatments and procedures", type: "list", group: "Speciality page", serverOnly: true },
+      { name: "costs", label: "Indicative costs (₹)", type: "json", group: "Speciality page", serverOnly: true, help: "[{\"item\":\"Angioplasty\",\"from\":180000,\"to\":320000}]. Shown as indicative ranges." },
+      { name: "faqs", label: "Questions and answers", type: "json", group: "Speciality page", serverOnly: true, help: "[{\"q\":\"Question?\",\"a\":\"Answer.\"}]" }
     ]
   },
   packages: {
@@ -95,7 +110,25 @@ const COLLECTIONS = {
       { name: "readTime", label: "Reading time", type: "text", help: "e.g. 5 min" },
       { name: "image", label: "Thumbnail", type: "image" },
       { name: "round", label: "Round thumbnail", type: "boolean" },
-      { name: "url", label: "Link", type: "text", help: "Full article URL, or leave empty" }
+      { name: "url", label: "External link", type: "text", help: "Only for articles hosted elsewhere. Leave empty to use the article page on this site." },
+      { name: "slug", label: "Web address", type: "text", group: "Article page", help: "The page is /library/<this>. Leave empty to make one from the title." },
+      { name: "date", label: "Published on", type: "text", group: "Article page", help: "YYYY-MM-DD" },
+      { name: "authorDoctor", label: "Author's profile", type: "select", optionsFrom: "doctors", group: "Article page", help: "Links the byline to the doctor's page" },
+      { name: "summary", label: "Summary", type: "textarea", rows: 3, group: "Article page", help: "One or two sentences. Used for search engines and link previews." },
+      { name: "body", label: "Article", type: "textarea", rows: 18, group: "Article page", help: "Markdown: ## headings, blank line between paragraphs, **bold**, - lists, | tables |, > quotes." }
+    ]
+  },
+  pages: {
+    label: "Pages", titleField: "title", subtitleField: "slug", imageField: "image",
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true },
+      { name: "slug", label: "Web address", type: "text", help: "The page is /<this>, e.g. careers. Leave empty to make one from the title." },
+      { name: "summary", label: "Summary and search description", type: "textarea", rows: 3, help: "Shown under the title, in search results and in link previews." },
+      { name: "image", label: "Top image", type: "image", help: "Optional. A wide photo, at least 1600 px across." },
+      { name: "imageAlt", label: "Top image description (alt text)", type: "text" },
+      { name: "body", label: "Page text", type: "textarea", rows: 20, help: "Markdown: ## headings, blank line between paragraphs, **bold**, - lists, | tables |, [links](/doctors). HTML is not allowed." },
+      { name: "showInNav", label: "Show in the top menu", type: "boolean", group: "Where it appears" },
+      { name: "showInFooter", label: "Show in the footer", type: "boolean", group: "Where it appears" }
     ]
   }
 };
@@ -126,6 +159,10 @@ const SUBMISSIONS = {
   subscribers: {
     label: "Subscribers", statuses: ["new", "in-progress", "done", "spam"],
     columns: [{ name: "email", label: "Email", type: "text" }, { name: "createdAt", label: "Subscribed", type: "datetime" }]
+  },
+  dataRequests: {
+    label: "Data requests", statuses: ["new", "verifying", "completed", "rejected"],
+    columns: [{ name: "name", label: "Name", type: "text" }, { name: "phone", label: "Mobile", type: "text" }, { name: "email", label: "Email", type: "text" }, { name: "requestType", label: "Request", type: "text" }, { name: "status", label: "Status", type: "status" }, { name: "createdAt", label: "Received", type: "datetime" }]
   }
 };
 
@@ -168,6 +205,30 @@ const SETTINGS = [
   { group: "Social links", fields: [
     { name: "facebook", label: "Facebook", type: "text" }, { name: "instagram", label: "Instagram", type: "text" },
     { name: "youtube", label: "YouTube", type: "text" }, { name: "linkedin", label: "LinkedIn", type: "text" }, { name: "x", label: "X (Twitter)", type: "text" }
+  ] },
+  { group: "Privacy and legal", fields: [
+    { name: "dpoName", label: "Grievance officer / data protection officer", type: "text", help: "Name and title, shown on the legal pages" },
+    { name: "dpoEmail", label: "Grievance officer email", type: "text" },
+    { name: "dpoPhone", label: "Grievance officer phone", type: "text" },
+    { name: "retentionAppointments", label: "Keep appointment requests for (days)", type: "number", help: "Older website appointments are anonymised by a daily job. 0 = keep" },
+    { name: "retentionEnquiries", label: "Keep messages, report and check-up requests for (days)", type: "number", help: "0 = keep" },
+    { name: "retentionSubscribers", label: "Keep newsletter subscribers for (days)", type: "number", help: "0 = until they unsubscribe or ask to be removed" },
+    { name: "consentText", label: "Consent text on forms", type: "textarea", rows: 3, max: 600, help: "Shown next to the tick box on every form. A link to the privacy policy is added after it. Changing it starts a new consent version." },
+    { name: "legalUpdated", label: "Legal pages last updated", type: "text", help: "e.g. 14 October 2026" },
+    { name: "legalPrivacy", label: "Privacy policy (Markdown)", type: "textarea", rows: 16, max: 40000, help: "Markdown: ## heading, **bold**, - list, [link](/page), | tables |. Placeholders: {hospital} {dpoName} {dpoEmail} {dpoPhone} {helpdesk} {email} {retentionAppointments} {retentionEnquiries} {retentionSubscribers}" },
+    { name: "legalTerms", label: "Terms of use (Markdown)", type: "textarea", rows: 12, max: 40000 },
+    { name: "legalPatientRights", label: "Patient rights (Markdown)", type: "textarea", rows: 12, max: 40000 },
+    { name: "legalDataRequest", label: "Data request page intro (Markdown)", type: "textarea", rows: 6, max: 10000 }
+  ] },
+  { group: "Patient messages (SMS / WhatsApp)", fields: [
+    { name: "notifyOn", label: "Send booking messages and reminders", type: "boolean", help: "Demo: messages go to the outbox (Admin → Notifications). Set SMS_WEBHOOK_URL on the server to deliver them." },
+    { name: "notifyChannel", label: "Channel", type: "select", options: [{ value: "sms", label: "SMS" }, { value: "whatsapp", label: "WhatsApp" }] },
+    { name: "reminderHours", label: "Send the reminder this many hours before the visit", type: "number" },
+    { name: "siteUrl", label: "Public website address", type: "text", help: "Used for the manage-booking link, e.g. https://www.carenovahospitals.com. Empty = the address the site was opened at." },
+    { name: "tplConfirm", label: "Booking confirmed", type: "textarea", rows: 3, max: 600, help: "Placeholders: {name} {token} {doctor} {date} {time} {link}" },
+    { name: "tplReminder", label: "Reminder", type: "textarea", rows: 3, max: 600 },
+    { name: "tplCancel", label: "Cancelled", type: "textarea", rows: 3, max: 600 },
+    { name: "tplReschedule", label: "Rescheduled", type: "textarea", rows: 3, max: 600 }
   ] }
 ];
 
@@ -179,7 +240,8 @@ const DEFAULT_SETTINGS = {
   accent: "#0F5C4D",
   announcementOn: false, announcementText: "", announcementLink: "",
   bookingOn: true, closedDays: ["Sunday"], slotStart: "09:00", slotEnd: "19:30", slotMinutes: 30, breakStart: "13:00", breakEnd: "14:00", perSlot: 1,
-  facebook: "", instagram: "", youtube: "", linkedin: "", x: ""
+  facebook: "", instagram: "", youtube: "", linkedin: "", x: "",
+  ...LEGAL_DEFAULTS, ...NOTIFY_DEFAULTS
 };
 
 module.exports = { COLLECTIONS, SUBMISSIONS, SETTINGS, DEFAULT_SETTINGS };

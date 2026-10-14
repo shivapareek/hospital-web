@@ -102,6 +102,24 @@
     if (!r.ok) throw new Error(data.error || "We couldn't send that. Please try again or call us.");
     return data;
   }
+
+  /* ---------- Consent (privacy): every form that collects personal data needs the tick box ---------- */
+  const CONSENT_TEXT = "I agree that CareNova Hospitals may use these details to handle this request, as set out in the privacy policy.";
+  const CONSENT_MSG = "Tick the box to agree to the privacy policy.";
+  let privacyCfg = window.CMS_PRIVACY || null;   // set by the server: consent version, notification settings
+  // the server fills the consent labels; the static site (or an older server) gets the default text here
+  $$("[data-consent]").forEach((el) => { if (!el.textContent.trim()) el.innerHTML = `${esc(CONSENT_TEXT)} <a href="privacy-policy" target="_blank" rel="noopener">Read the privacy policy</a>.`; });
+  $$("[data-consent-note]").forEach((el) => { if (!el.textContent.trim()) el.innerHTML = 'By subscribing you agree to receive a monthly email and to our <a href="privacy-policy">privacy policy</a>. Unsubscribe any time.'; });
+  if (CMS && !privacyCfg) fetch(`${CMS.api}/privacy/config`).then((r) => r.json()).then((c) => { privacyCfg = c; }).catch(() => {});
+  /** True when the form's consent box is ticked; otherwise marks it and returns false. */
+  function consentOk(form) {
+    const box = $("input[name=consent]", form);
+    if (!box || box.checked) return true;
+    const lab = box.closest(".consent");
+    lab.classList.add("invalid");
+    box.addEventListener("change", () => lab.classList.remove("invalid"), { once: true });
+    return false;
+  }
   const DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
   const closedDays = CMS ? (CMS.booking.closedDays || []).map((d) => DAY_NAMES.findIndex((n) => n.startsWith(String(d).trim().toLowerCase().slice(0, 3)))).filter((i) => i >= 0) : [0];
   const isClosed = (d) => closedDays.includes(d.getDay());
@@ -204,7 +222,7 @@
       <span class="spec__text"><span class="spec__name">${d.name}</span><span class="spec__desc">${d.desc}</span></span>
       <span class="spec__count">${n} ${n === 1 ? "doctor" : "doctors"}</span>
       <span class="spec__go">${icon("i-arrow")}</span>
-    </button></li>`;
+    </button>${d.slug ? `<a class="spec__page" href="specialities/${d.slug}">Overview<span class="sr-only"> of ${d.name}</span></a>` : ""}</li>`;
   }).join("");
 
   /* ---------- Doctors ---------- */
@@ -237,7 +255,7 @@
       ${d.photo ? `<img class="doc__photo" src="${esc(d.photo)}" alt="${esc(d.photoAlt || d.name)}" width="800" height="1000" loading="lazy" decoding="async">` : ""}
       <div class="doc__id">
         ${d.photo ? "" : `<span class="avatar avatar--lg" aria-hidden="true">${initials(d.name)}</span>`}
-        <div><h3>${d.name}</h3><p class="doc__role">${d.role}</p>${d.role.toLowerCase().includes(d.dept.toLowerCase()) ? "" : `<p class="doc__dept">${d.dept}</p>`}</div>
+        <div><h3>${d.slug ? `<a class="doc__link" href="doctors/${d.slug}">${d.name}</a>` : d.name}</h3><p class="doc__role">${d.role}</p>${d.role.toLowerCase().includes(d.dept.toLowerCase()) ? "" : `<p class="doc__dept">${d.dept}</p>`}</div>
       </div>
       <p class="doc__deg">${d.deg}</p>
       <dl class="doc__facts">
@@ -493,8 +511,9 @@
       if (!/^[6-9]\d{9}$/.test(phone.value.trim())) { markInvalid(phone); ok = false; }
       if (age.value === "" || +age.value < 0 || +age.value > 120) { markInvalid(age); ok = false; }
       if (!gender.value) { markInvalid(gender); ok = false; }
-      if (!ok) bError.textContent = "Check the highlighted fields. Mobile numbers have 10 digits and start with 6–9.";
-      return ok;
+      if (!ok) { bError.textContent = "Check the highlighted fields. Mobile numbers have 10 digits and start with 6–9."; return false; }
+      if (!consentOk(form)) { bError.textContent = CONSENT_MSG; $("#bConsent").focus(); return false; }
+      return true;
     }
     return true;
   }
@@ -518,8 +537,8 @@
       cmsPost("appointment", {
         doctor: d.name, date: isoDate(booking.date), slot: booking.slot, type: consultType(),
         patient: { name: $("#bName").value.trim(), phone, age: $("#bAge").value, gender: $("#bGender").value },
-        reason: ($("#bNote") || {}).value || ""
-      }).then((r) => confirmBooking(d, r.token, phone)).catch((err) => {
+        reason: ($("#bNote") || {}).value || "", consent: true
+      }).then((r) => confirmBooking(d, r.token, phone, r)).catch((err) => {
         bError.textContent = err.message;
         if (/just booked/.test(err.message)) { delete slotCache[d.name + "|" + isoDate(booking.date)]; booking.slot = null; goStep(2); loadTaken(); }
       }).finally(() => { submitBtn.disabled = false; });
@@ -528,7 +547,7 @@
     confirmBooking(d, d.dept.slice(0, 2).toUpperCase() + "-" + rand(100, 999), phone);
   });
 
-  function confirmBooking(d, token, phone) {
+  function confirmBooking(d, token, phone, server) {
     lastBooking = { doctor: d, date: booking.date, slot: booking.slot, token };
     try {
       const all = JSON.parse(storage.get("cn-appointments") || "[]");
@@ -537,7 +556,17 @@
     } catch { /* ignore */ }
     $$(".bstep", form).forEach((f) => f.classList.remove("is-active"));
     $$(".steps__item", form).forEach((s) => { s.classList.remove("is-active"); s.classList.add("is-done"); });
-    $("#doneMobile").textContent = "******" + phone.slice(-4);
+    // only promise messages the hospital will actually send (notifications on, on the CMS server)
+    const notify = $("#doneNotify"), manage = $("#doneManage");
+    const n = (server && server.notify !== undefined) ? { on: server.notify, channel: server.channel, reminderHours: server.reminderHours } : privacyCfg && privacyCfg.notify;
+    if (notify) {
+      notify.hidden = !(server && n && n.on);
+      if (!notify.hidden) notify.textContent = `We'll send the details${n.channel === "whatsapp" ? " on WhatsApp" : " by SMS"} to ******${phone.slice(-4)}, and a reminder about ${n.reminderHours || 24} hours before your visit.`;
+    }
+    if (manage) {
+      manage.hidden = !(server && server.manage);
+      if (!manage.hidden) manage.innerHTML = `Need to change it? <a href="${esc(server.manage.replace(/^\//, ""))}">Manage this booking</a> with your token and mobile number.`;
+    }
     $("#bookingDone").hidden = false;
     $("#tToken").textContent = token;
     ticket.classList.add("is-confirmed");
@@ -607,6 +636,21 @@
     (bDoctor.value ? bDoctor : bDept).focus({ preventScroll: true });
   }
   updateTicket();
+
+  /* "Book appointment" on a doctor or speciality page links to /#book?doctor=<name> (or ?dept=, ?video=1) */
+  function bookFromHash() {
+    const m = /^#book\?(.+)$/.exec(location.hash);
+    if (!m) return;
+    const p = new URLSearchParams(m[1]);
+    const doctor = p.get("doctor"), dept = p.get("dept");
+    startBooking({
+      doctor: doctor && DOCTORS.some((d) => d.name === doctor) ? doctor : undefined,
+      dept: dept && DEPARTMENTS.some((d) => d.name === dept) ? dept : undefined,
+      video: p.get("video") === "1"
+    });
+  }
+  window.addEventListener("hashchange", bookFromHash);
+  bookFromHash();
 
   /* ---------- Packages ---------- */
   const ORGAN = { heart: "Heart", lungs: "Lungs", liver: "Liver", kidney: "Kidneys", brain: "Brain", eye: "Eyes", spine: "Bones", uterus: "Uterus" };
@@ -786,9 +830,10 @@
     if (uhid.value.trim().length < 5 || !/^[6-9]\d{9}$/.test(ph.value.trim())) {
       msg.className = "form-msg err"; msg.textContent = "Enter your UHID and a 10-digit mobile number."; return;
     }
+    if (!consentOk(e.target)) { msg.className = "form-msg err"; msg.textContent = CONSENT_MSG; return; }
     if (CMS) {
       msg.className = "form-msg"; msg.textContent = "Sending…";
-      cmsPost("report", { uhid: uhid.value.trim(), phone: ph.value.trim() })
+      cmsPost("report", { uhid: uhid.value.trim(), phone: ph.value.trim(), consent: true })
         .then(() => { msg.className = "form-msg ok"; msg.textContent = `Request received. We'll send your reports to ******${ph.value.trim().slice(-4)}.`; })
         .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
       return;
@@ -812,8 +857,9 @@
     if (nm.value.trim().length < 2) { markInvalid(nm); ok = false; }
     if (!/^[6-9]\d{9}$/.test(ph.value.trim())) { markInvalid(ph); ok = false; }
     if (!ok) { msg.className = "form-msg err"; msg.textContent = "Enter your name and a 10-digit mobile number."; return; }
+    if (!consentOk(e.target)) { msg.className = "form-msg err"; msg.textContent = CONSENT_MSG; return; }
     msg.className = "form-msg"; msg.textContent = "Sending…";
-    cmsPost("package", { package: pkgChosen, name: nm.value.trim(), phone: ph.value.trim() })
+    cmsPost("package", { package: pkgChosen, name: nm.value.trim(), phone: ph.value.trim(), consent: true })
       .then(() => { msg.className = "form-msg ok"; msg.textContent = "Request received. We'll call you to schedule it."; e.target.reset(); })
       .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
   });
@@ -823,15 +869,16 @@
     e.preventDefault();
     const f = e.target, msg = $("#contactMsg");
     let ok = true;
-    $$("input, textarea", f).forEach((el) => {
+    $$("input:not([type=checkbox]), textarea", f).forEach((el) => {
       const valid = el.name === "phone" ? /^[6-9]\d{9}$/.test(el.value.trim()) : el.checkValidity() && el.value.trim() !== "";
       if (!valid) { markInvalid(el); ok = false; }
     });
     if (!ok) { msg.className = "form-msg err"; msg.textContent = "Fill in the highlighted fields."; return; }
+    if (!consentOk(f)) { msg.className = "form-msg err"; msg.textContent = CONSENT_MSG; return; }
     if (CMS) {
       const fd = Object.fromEntries(new FormData(f).entries());
       msg.className = "form-msg"; msg.textContent = "Sending…";
-      cmsPost("message", { name: fd.name, phone: fd.phone, email: fd.email, message: fd.message })
+      cmsPost("message", { name: fd.name, phone: fd.phone, email: fd.email, message: fd.message, consent: true })
         .then(() => { msg.className = "form-msg ok"; msg.textContent = "Message sent. We'll reply within 2 hours."; f.reset(); })
         .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
       return;
@@ -845,7 +892,7 @@
     const inp = $("input", e.target);
     if (!inp.checkValidity()) { toast("Enter a valid email address."); return; }
     if (CMS) {
-      cmsPost("subscribe", { email: inp.value.trim() }).then(() => { inp.value = ""; toast("Subscribed. The next issue arrives on the 1st."); }).catch((err) => toast(err.message));
+      cmsPost("subscribe", { email: inp.value.trim(), consent: true }).then(() => { inp.value = ""; toast("Subscribed. The next issue arrives on the 1st."); }).catch((err) => toast(err.message));
       return;
     }
     inp.value = "";

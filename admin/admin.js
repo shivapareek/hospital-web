@@ -7,6 +7,7 @@ import { renderAppointments, renderEnquiries, renderSubscribers } from './js/sub
 import { renderContent, renderTexts, renderSections, renderSettings, loadSchema } from './js/content.js';
 import { renderMedia } from './js/media.js';
 import { renderUsers, renderAccount, renderAudit } from './js/people.js';
+import { renderDataRequests, renderNotifications } from './js/privacy.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +17,8 @@ const NAV = [
   ['appointments', 'Appointments', 'calendar', 'submissions', 'Inbox'],
   ['enquiries', 'Enquiries', 'inbox', 'submissions'],
   ['subscribers', 'Subscribers', 'mail', 'submissions'],
+  ['data-requests', 'Data requests', 'shield', 'submissions'],
+  ['notifications', 'Notifications', 'bell', 'submissions'],
   ['content', 'Content', 'list', 'content', 'Website'],
   ['texts', 'Page text', 'text', 'texts'],
   ['sections', 'Sections', 'layers', 'sections'],
@@ -27,6 +30,7 @@ const NAV = [
 ];
 const ROUTES = {
   dashboard: renderDashboard, appointments: renderAppointments, enquiries: renderEnquiries, subscribers: renderSubscribers,
+  'data-requests': renderDataRequests, notifications: renderNotifications,
   content: renderContent, texts: renderTexts, sections: renderSections, media: renderMedia, settings: renderSettings,
   users: renderUsers, audit: renderAudit, account: renderAccount,
 };

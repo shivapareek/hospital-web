@@ -9,6 +9,7 @@ const { seed } = require("./seed");
 const { COLLECTIONS, SUBMISSIONS, SETTINGS, DEFAULT_SETTINGS } = require("./schema");
 const { renderPage, renderDataJs, textGroups, sectionList, applyReplacements, loadTemplate, sanitizeInline } = require("./render");
 const auth = require("./auth");
+const privacy = require("./privacy");
 
 const ROOT = path.join(__dirname, "..");
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
@@ -143,7 +144,10 @@ app.post("/api/submit/:kind", (req, res) => {
   if (limited("submit:" + ip, 20, 10 * 60e3)) return bad(res, 429, "Too many requests. Please call us instead.");
   const b = req.body || {};
   if (b.website) return res.json({ ok: true }); // honeypot
-  const base = { id: newId(), createdAt: nowIso(), status: "new", note: "" };
+  // consent (privacy.js): every form that collects personal data must carry consent:true
+  const consentError = privacy.consentError(req.params.kind, b);
+  if (consentError) return bad(res, 400, consentError);
+  const base = { id: newId(), createdAt: nowIso(), status: "new", note: "", consent: privacy.consentRecord() };
   const S = db().submissions;
   switch (req.params.kind) {
     case "appointment": {
@@ -167,8 +171,9 @@ app.post("/api/submit/:kind", (req, res) => {
         type: b.type === "Video" ? "Video" : "In-clinic", fee: doctor.fee
       };
       S.appointments.unshift(item);
+      const extra = privacy.onBooked(item, req);   // queues the confirmation message, returns {manage, notify}
       store.save();
-      return res.json({ ok: true, token });
+      return res.json({ ok: true, token, ...extra });
     }
     case "message": {
       if (str(b.name).length < 2 || !PHONE.test(str(b.phone)) || !EMAIL.test(str(b.email)) || str(b.message).length < 2) return bad(res, 400, "Fill in your name, mobile, email and message.");
@@ -189,6 +194,12 @@ app.post("/api/submit/:kind", (req, res) => {
     case "subscribe": {
       if (!EMAIL.test(str(b.email))) return bad(res, 400, "Enter a valid email address.");
       if (!S.subscribers.some((s) => s.email.toLowerCase() === str(b.email).toLowerCase())) S.subscribers.unshift({ ...base, email: str(b.email, 200) });
+      break;
+    }
+    case "datarequest": {
+      const r = privacy.dataRequest(b, base);
+      if (r.error) return bad(res, 400, r.error);
+      S.dataRequests.unshift(r.item);
       break;
     }
     default: return bad(res, 404, "Unknown form.");
@@ -379,7 +390,7 @@ app.put("/api/admin/settings", requireAuth("settings"), (req, res) => {
     else if (f.type === "number") x = Number(x) || 0;
     else if (f.type === "tags") x = (Array.isArray(x) ? x : String(x || "").split(",")).map((t) => str(t, 40)).filter(Boolean);
     else if (f.type === "color") { x = str(x, 7); if (x && !/^#[0-9a-f]{6}$/i.test(x)) return bad(res, 400, "Colour must look like #0F5C4D."); }
-    else x = str(x, f.type === "textarea" ? 1000 : 300);
+    else x = str(x, f.max || (f.type === "textarea" ? 1000 : 300));
     s[f.name] = x;
   }
   for (const k of ["name", "shortName", "helpdesk", "emergency", "email"]) if (!s[k]) s[k] = DEFAULT_SETTINGS[k];
@@ -429,6 +440,7 @@ app.post("/api/admin/submissions/appointments", requireAuth("submissions"), (req
     reason: str(b.reason, 1000), doctor: doctor.name, dept: doctor.dept, date: b.date, slot: str(b.slot, 20), type: b.type === "Video" ? "Video" : "In-clinic", fee: doctor.fee
   };
   db().submissions.appointments.unshift(item);
+  privacy.onBooked(item, req);
   audit(req.user, "Added appointment", `${token} · ${item.patient.name}`);
   store.save();
   res.json({ item });
@@ -440,6 +452,7 @@ app.patch("/api/admin/submissions/:type/:id", requireAuth("submissions"), subGua
   const b = req.body || {};
   if ("status" in b) {
     if (!SUBMISSIONS[req.params.type].statuses.includes(b.status)) return bad(res, 400, "Unknown status.");
+    if (req.params.type === "appointments" && item.status !== b.status) (item.history = item.history || []).push({ at: nowIso(), action: "status", from: item.status, to: b.status, by: req.user.email });
     item.status = b.status;
   }
   if ("note" in b) item.note = str(b.note, 2000);
@@ -574,7 +587,7 @@ app.get("/api/admin/audit", requireAuth("users"), (req, res) => res.json({ items
 
 /* ---------- feature modules (each owns its routes) ---------- */
 const ctx = { app, store, db, ROOT, UPLOAD_DIR, requireAuth, audit, bad, str, nowIso, newId, limited, renderPage, applyReplacements };
-require("./privacy").register(ctx);   // legal pages, consent, data requests, manage booking, reminders
+privacy.register(ctx);   // legal pages, consent, data requests, manage booking, reminders
 require("./pages").register(ctx);     // doctor / speciality / article / custom pages, sitemap
 
 app.use("/api", (req, res) => bad(res, 404, "Not found."));

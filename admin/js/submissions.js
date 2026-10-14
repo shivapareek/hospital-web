@@ -80,6 +80,23 @@ export const TYPES = {
   },
 };
 
+/* Consent record and change history (privacy features) shown under the details. */
+function consentHTML(item) {
+  const c = item.consent;
+  if (item.anonymisedAt) return `<p class="help">Personal details were removed on ${esc(fmtDateTime(item.anonymisedAt))}.</p>`;
+  if (!c) return item.source === 'admin' ? '' : '<p class="help">No consent record (received before consent was required).</p>';
+  return `<dl class="details"><dt>Consent</dt><dd>Given ${esc(fmtDateTime(c.at))} <span class="mono sub">${esc(c.textVersion || '')}</span></dd></dl>`;
+}
+const HISTORY_LABEL = { rescheduled: 'Rescheduled', cancelled: 'Cancelled', status: 'Status changed' };
+export function historyHTML(item) {
+  const h = Array.isArray(item.history) ? item.history : [];
+  if (!h.length) return '';
+  return `<div class="history"><h3>History</h3><ol class="history-list">${h.slice().reverse().map((x) => `<li>
+      <span class="history-when">${esc(fmtDateTime(x.at))}</span>
+      <span><strong>${esc(HISTORY_LABEL[x.action] || x.action)}</strong>${x.from || x.to ? ` · ${esc(x.from || '')} → ${esc(x.to || '')}` : ''}${x.tokenTo ? ` · new token ${esc(x.tokenTo)}` : ''}${x.reason ? ` · “${esc(x.reason)}”` : ''}</span>
+      <span class="sub">by ${esc(x.by === 'patient' ? 'the patient (website)' : x.by || 'staff')}</span></li>`).join('')}</ol></div>`;
+}
+
 function detailsHTML(rows) {
   return `<dl class="details">${rows.filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v, kind]) => {
     let val = esc(v);
@@ -100,7 +117,7 @@ const qs = (f) => {
 /**
  * Render a submissions list for `type` into `root`. `opts.head` adds a page heading.
  */
-function submissionList(root, type, { allowNew = false, onChanged } = {}) {
+export function submissionList(root, type, { allowNew = false, onChanged } = {}) {
   const cfg = TYPES[type];
   const f = filters[type] || (filters[type] = { status: '', q: '', from: '', to: '' });
   const ids = { st: uid('st'), q: uid('q'), fr: uid('fr'), to: uid('to') };
@@ -176,12 +193,13 @@ export function openSubmission(type, item, { onSaved, onDeleted } = {}) {
   const cfg = TYPES[type];
   const sid = uid('s'); const nid = uid('n');
   const L = openLayer({ title: cfg.title(item), isDirty: () => dirty() });
-  L.body.innerHTML = `${detailsHTML(cfg.details(item))}
+  L.body.innerHTML = `${detailsHTML(cfg.details(item))}${consentHTML(item)}${historyHTML(item)}<div data-extra></div>
     <div class="field"><label for="${sid}">Status</label><select id="${sid}">
       ${statusesFor(type).map((s) => `<option value="${esc(s)}">${esc(statusLabel(s))}</option>`).join('')}</select></div>
     <div class="field"><label for="${nid}">Internal note</label><textarea id="${nid}" rows="4" aria-describedby="${nid}-h"></textarea>
       <div class="help" id="${nid}-h">Only staff can see this note.</div></div>`;
-  const sel = L.body.querySelector('select'); const note = L.body.querySelector('textarea');
+  if (cfg.extra) cfg.extra(item, L.body.querySelector('[data-extra]'), L);
+  const sel = L.body.querySelector(`#${sid}`); const note = L.body.querySelector(`#${nid}`);
   if (!statusesFor(type).includes(item.status) && item.status) sel.insertAdjacentHTML('beforeend', `<option value="${esc(item.status)}">${esc(statusLabel(item.status))}</option>`);
   sel.value = item.status || 'new'; note.value = item.note || '';
   const dirty = () => sel.value !== (item.status || 'new') || note.value !== (item.note || '');
