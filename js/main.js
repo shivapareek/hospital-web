@@ -18,6 +18,13 @@
   const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
   const deptIcon = (d) => (DEPARTMENTS.find((x) => x.name === d) || {}).icon || "i-steth";
 
+  /* ---------- Language: window.I18N (set by the server on Hindi pages) maps English text to the page language ---------- */
+  const I18N = window.I18N || {};
+  const LANG = (window.CMS && window.CMS.lang) || "en";
+  const tr = (s, v) => { let r = Object.prototype.hasOwnProperty.call(I18N, s) ? I18N[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
+  /** A speciality's display name: `label` in the Hindi data, the English name otherwise. Doctors and symptoms store the English name. */
+  const deptName = (name) => (DEPARTMENTS.find((x) => x.name === name) || {}).label || name;
+
   /* ---------- Toast ---------- */
   let toastTimer;
   function toast(msg) {
@@ -45,7 +52,7 @@
     fs = (fs + 1) % sizes.length;
     storage.set("cn-fs", String(sizes[fs]));
     applyFs();
-    toast(`Text size ${Math.round(sizes[fs] * 100)}%`);
+    toast(tr("Text size {n}%", { n: Math.round(sizes[fs] * 100) }));
   });
   applyFs();
 
@@ -97,20 +104,21 @@
   /* ---------- CMS connection (window.CMS is set when the site runs on the CMS server) ---------- */
   const CMS = window.CMS || null;
   async function cmsPost(kind, body) {
-    const r = await fetch(`${CMS.api}/submit/${kind}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify(body) });
+    // lang: the server answers with messages in the page language
+    const r = await fetch(`${CMS.api}/submit/${kind}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify(LANG === "en" ? body : { ...body, lang: LANG }) });
     const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data.error || "We couldn't send that. Please try again or call us.");
+    if (!r.ok) { const e = new Error(data.error || tr("We couldn't send that. Please try again or call us.")); e.status = r.status; throw e; }
     return data;
   }
 
   /* ---------- Consent (privacy): every form that collects personal data needs the tick box ---------- */
   const CONSENT_TEXT = "I agree that CareNova Hospitals may use these details to handle this request, as set out in the privacy policy.";
-  const CONSENT_MSG = "Tick the box to agree to the privacy policy.";
+  const CONSENT_MSG = tr("Tick the box to agree to the privacy policy.");
   let privacyCfg = window.CMS_PRIVACY || null;   // set by the server: consent version, notification settings
   // the server fills the consent labels; the static site (or an older server) gets the default text here
-  $$("[data-consent]").forEach((el) => { if (!el.textContent.trim()) el.innerHTML = `${esc(CONSENT_TEXT)} <a href="privacy-policy" target="_blank" rel="noopener">Read the privacy policy</a>.`; });
+  $$("[data-consent]").forEach((el) => { if (!el.textContent.trim()) el.innerHTML = `${esc(CONSENT_TEXT)} <a href="privacy-policy" target="_blank" rel="noopener">${tr("Read the privacy policy")}</a>.`; });
   $$("[data-consent-note]").forEach((el) => { if (!el.textContent.trim()) el.innerHTML = 'By subscribing you agree to receive a monthly email and to our <a href="privacy-policy">privacy policy</a>. Unsubscribe any time.'; });
-  if (CMS && !privacyCfg) fetch(`${CMS.api}/privacy/config`).then((r) => r.json()).then((c) => { privacyCfg = c; }).catch(() => {});
+  if (CMS && !privacyCfg) fetch(`${CMS.api}/privacy/config${LANG === "en" ? "" : "?lang=" + LANG}`).then((r) => r.json()).then((c) => { privacyCfg = c; }).catch(() => {});
   /** True when the form's consent box is ticked; otherwise marks it and returns false. */
   function consentOk(form) {
     const box = $("input[name=consent]", form);
@@ -159,7 +167,7 @@
   }, 7000);
   setInterval(() => {
     const s = Math.round((Date.now() - lastUpdate) / 1000);
-    $("#liveUpdated").textContent = s < 3 ? "just now" : s < 120 ? s + " s ago" : s < 7200 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago";
+    $("#liveUpdated").textContent = s < 3 ? tr("just now") : s < 120 ? tr("{n} s ago", { n: s }) : s < 7200 ? tr("{n} min ago", { n: Math.round(s / 60) }) : tr("{n} h ago", { n: Math.round(s / 3600) });
   }, 1000);
 
   /* ---------- Hero search with suggestions ---------- */
@@ -171,9 +179,10 @@
     q = q.trim().toLowerCase();
     if (!q) return [];
     const out = [];
-    DEPARTMENTS.forEach((d) => { if (d.name.toLowerCase().includes(q)) out.push({ label: d.name, kind: "Speciality", run: () => showDoctors({ dept: d.name }) }); });
-    DOCTORS.forEach((d) => { if (d.name.toLowerCase().includes(q)) out.push({ label: d.name, kind: d.dept, run: () => startBooking({ doctor: d.name }) }); });
-    SYMPTOMS.forEach((s) => { if (s.label.toLowerCase().includes(q)) out.push({ label: s.label, kind: "→ " + s.dept, run: () => showDoctors({ dept: s.dept }) }); });
+    // on Hindi pages both the Hindi label and the English name match
+    DEPARTMENTS.forEach((d) => { if (d.name.toLowerCase().includes(q) || (d.label && d.label.toLowerCase().includes(q))) out.push({ label: d.label || d.name, kind: tr("Speciality"), run: () => showDoctors({ dept: d.name }) }); });
+    DOCTORS.forEach((d) => { if (d.name.toLowerCase().includes(q)) out.push({ label: d.name, kind: deptName(d.dept), run: () => startBooking({ doctor: d.name }) }); });
+    SYMPTOMS.forEach((s) => { if (s.label.toLowerCase().includes(q)) out.push({ label: s.label, kind: "→ " + deptName(s.dept), run: () => showDoctors({ dept: s.dept }) }); });
     return out.slice(0, 7);
   }
   function setDrop(open) {
@@ -219,10 +228,10 @@
       : `<span class="spec__still spec__still--type${(d.stillText || "").length > 4 ? " is-long" : ""}" aria-hidden="true">${d.stillText || ""}</span>`;
     return `<li><button type="button" class="spec" data-find-dept="${d.name}">
       ${thumb}
-      <span class="spec__text"><span class="spec__name">${d.name}</span><span class="spec__desc">${d.desc}</span></span>
-      <span class="spec__count">${n} ${n === 1 ? "doctor" : "doctors"}</span>
+      <span class="spec__text"><span class="spec__name">${d.label || d.name}</span><span class="spec__desc">${d.desc}</span></span>
+      <span class="spec__count">${tr(n === 1 ? "{n} doctor" : "{n} doctors", { n })}</span>
       <span class="spec__go">${icon("i-arrow")}</span>
-    </button>${d.slug ? `<a class="spec__page" href="specialities/${d.slug}">Overview<span class="sr-only"> of ${d.name}</span></a>` : ""}</li>`;
+    </button>${d.slug ? `<a class="spec__page" href="specialities/${d.slug}">${tr("Overview")}<span class="sr-only">${tr(" of {name}", { name: d.label || d.name })}</span></a>` : ""}</li>`;
   }).join("");
 
   /* ---------- Doctors ---------- */
@@ -234,7 +243,7 @@
   let docDept = "";
   let showAll = false;
   const tabDepts = ["", ...DEPARTMENTS.map((d) => d.name)];
-  $("#docTabs").innerHTML = tabDepts.map((d) => `<button role="tab" data-dept="${d}" aria-selected="${d === "" ? "true" : "false"}">${d || "All"}</button>`).join("");
+  $("#docTabs").innerHTML = tabDepts.map((d) => `<button role="tab" data-dept="${d}" aria-selected="${d === "" ? "true" : "false"}">${d ? deptName(d) : tr("All")}</button>`).join("");
   $("#docTabs").addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -251,21 +260,21 @@
 
   function docCard(d) {
     return `<article class="doc">
-      <p class="doc__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? "In today" : "Next: tomorrow"}${d.room ? `<span class="doc__room">Room ${esc(d.room)}</span>` : ""}</p>
+      <p class="doc__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? tr("In today") : tr("Next: tomorrow")}${d.room ? `<span class="doc__room">${tr("Room {room}", { room: esc(d.room) })}</span>` : ""}</p>
       ${d.photo ? `<img class="doc__photo" src="${esc(d.photo)}" alt="${esc(d.photoAlt || d.name)}" width="800" height="1000" loading="lazy" decoding="async">` : ""}
       <div class="doc__id">
         ${d.photo ? "" : `<span class="avatar avatar--lg" aria-hidden="true">${initials(d.name)}</span>`}
-        <div><h3>${d.slug ? `<a class="doc__link" href="doctors/${d.slug}">${d.name}</a>` : d.name}</h3><p class="doc__role">${d.role}</p>${d.role.toLowerCase().includes(d.dept.toLowerCase()) ? "" : `<p class="doc__dept">${d.dept}</p>`}</div>
+        <div><h3>${d.slug ? `<a class="doc__link" href="doctors/${d.slug}">${d.name}</a>` : d.name}</h3><p class="doc__role">${d.role}</p>${d.role.toLowerCase().includes(deptName(d.dept).toLowerCase()) ? "" : `<p class="doc__dept">${deptName(d.dept)}</p>`}</div>
       </div>
       <p class="doc__deg">${d.deg}</p>
       <dl class="doc__facts">
-        <div><dt>Speaks</dt><dd>${d.lang}</dd></div>
+        <div><dt>${tr("Speaks")}</dt><dd>${d.lang}</dd></div>
         ${d.opd ? `<div><dt>OPD</dt><dd class="num">${opdHtml(d.opd)}</dd></div>` : ""}
       </dl>
-      <p class="doc__meta num"><span><b>${d.exp}</b> yrs</span> · <span>★ <b>${d.rating}</b> (${d.reviews.toLocaleString("en-IN")})</span></p>
+      <p class="doc__meta num"><span>${tr("<b>{n}</b> yrs", { n: d.exp })}</span> · <span>★ <b>${d.rating}</b> (${d.reviews.toLocaleString("en-IN")})</span></p>
       <div class="doc__foot">
-        <span><span class="doc__fee num">${inr(d.fee)}</span>${d.video ? ` <span class="doc__video">${icon("i-video")} Video</span>` : ""}</span>
-        <button class="link-btn" data-book-doc="${esc(d.name)}">Book ${icon("i-arrow")}<span class="sr-only"> ${d.name}</span></button>
+        <span><span class="doc__fee num">${inr(d.fee)}</span>${d.video ? ` <span class="doc__video">${icon("i-video")} ${tr("Video")}</span>` : ""}</span>
+        <button class="link-btn" data-book-doc="${esc(d.name)}">${tr("Book")} ${icon("i-arrow")}<span class="sr-only"> ${d.name}</span></button>
       </div>
     </article>`;
   }
@@ -274,7 +283,7 @@
     $$("#docTabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.dept === docDept)));
     const q = docSearch.value.trim().toLowerCase();
     const list = DOCTORS.filter((d) =>
-      (!q || (d.name + " " + d.dept + " " + d.role).toLowerCase().includes(q)) &&
+      (!q || (d.name + " " + d.dept + " " + deptName(d.dept) + " " + d.role).toLowerCase().includes(q)) &&
       (!docDept || d.dept === docDept) &&
       (!docToday.checked || d.today) &&
       (!docVideo.checked || d.video));
@@ -282,7 +291,7 @@
     docGrid.innerHTML = list.slice(0, limit).map(docCard).join("");
     $("#docEmpty").hidden = list.length > 0;
     docMore.hidden = list.length <= limit;
-    docMore.textContent = `Show all ${list.length} doctors`;
+    docMore.textContent = tr("Show all {n} doctors", { n: list.length });
   }
   [docSearch, docToday, docVideo].forEach((el) => el.addEventListener("input", renderDoctors));
   docMore.addEventListener("click", () => { showAll = true; renderDoctors(); });
@@ -315,7 +324,7 @@
   function renderFinder() {
     const out = $("#symptomResult");
     if (!picked.size) {
-      out.innerHTML = `<div class="fr-empty"><strong>Your suggestion appears here.</strong><span>For example, "Knee or joint pain" points you to Orthopedics and its consultants.</span></div>`;
+      out.innerHTML = `<div class="fr-empty"><strong>${tr("Your suggestion appears here.")}</strong><span>${tr("For example, \"Knee or joint pain\" points you to Orthopedics and its consultants.")}</span></div>`;
       return;
     }
     const tally = {};
@@ -327,16 +336,16 @@
     const docs = DOCTORS.filter((d) => d.dept === top).sort((a, b) => b.today - a.today).slice(0, 2);
     const dep = DEPARTMENTS.find((x) => x.name === top);
     out.innerHTML = `
-      ${urgent ? `<p class="fr-urgent">${icon("i-sos")}<span>One or more of these can be urgent. If it's sudden or severe, call <b class="mono">1800-123-4567</b> now.</span></p>` : ""}
+      ${urgent ? `<p class="fr-urgent">${icon("i-sos")}<span>${tr("One or more of these can be urgent. If it's sudden or severe, call <b class=\"mono\">1800-123-4567</b> now.")}</span></p>` : ""}
       <div class="fr-head">
-        <div><small>Suggested speciality</small><h3>${top}</h3>${also.length ? `<small>Also consider ${also.join(", ")}</small>` : ""}</div>
+        <div><small>${tr("Suggested speciality")}</small><h3>${deptName(top)}</h3>${also.length ? `<small>${tr("Also consider {list}", { list: also.map(deptName).join(", ") })}</small>` : ""}</div>
         ${dep && dep.still ? `<img class="fr-still" src="${dep.still}-320.webp" width="120" height="120" alt="" loading="lazy" decoding="async">` : ""}
-        <button class="btn btn--accent btn--sm" data-book-dept="${top}">Book ${top}</button>
+        <button class="btn btn--accent btn--sm" data-book-dept="${top}">${tr("Book {dept}", { dept: deptName(top) })}</button>
       </div>
       <div class="fr-docs">${docs.map((d) => `
         <div class="fr-doc"><span class="avatar" data-tone="${tone(d.name)}">${initials(d.name)}</span>
-          <div><strong>${d.name}</strong><small>${d.today ? "Available today" : "Next: tomorrow"} · ★ ${d.rating}</small></div>
-          <button class="link-btn" data-book-doc="${esc(d.name)}">Book ${icon("i-arrow")}</button></div>`).join("")}
+          <div><strong>${d.name}</strong><small>${d.today ? tr("Available today") : tr("Next: tomorrow")} · ★ ${d.rating}</small></div>
+          <button class="link-btn" data-book-doc="${esc(d.name)}">${tr("Book")} ${icon("i-arrow")}</button></div>`).join("")}
       </div>`;
   }
   renderFinder();
@@ -347,25 +356,26 @@
   const bDoctor = $("#bDoctor");
   const bError = $("#bError");
   const ticket = $("#ticket");
-  const DAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  // short day and month names in the page language (Hindi: the hi-IN forms, e.g. मंगल, अक्टू॰)
+  const DAY = I18N["@days"] || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const MON = I18N["@months"] || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const booking = { date: null, slot: null };
   let step = 1;
   let lastBooking = null;
 
-  bDept.insertAdjacentHTML("beforeend", DEPARTMENTS.map((d) => `<option value="${d.name}">${d.name}</option>`).join(""));
+  bDept.insertAdjacentHTML("beforeend", DEPARTMENTS.map((d) => `<option value="${d.name}">${d.label || d.name}</option>`).join(""));
 
   const currentDoctor = () => DOCTORS.find((d) => d.name === bDoctor.value);
   const consultType = () => $("input[name=bType]:checked", form).value;
-  const fmtDate = (d) => `${DAY[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`;
+  const fmtDate = (d) => (LANG === "hi" ? `${DAY[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}` : `${DAY[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]}`);
   const dateKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 
   function fillDoctors(dept, selectName) {
     const list = DOCTORS.filter((d) => d.dept === dept);
     bDoctor.disabled = !dept;
     bDoctor.innerHTML = dept
-      ? `<option value="">Select doctor</option>` + list.map((d) => `<option value="${esc(d.name)}">${d.name}${d.today ? " · today" : ""}</option>`).join("")
-      : `<option value="">Select a speciality first</option>`;
+      ? `<option value="">${tr("Select doctor")}</option>` + list.map((d) => `<option value="${esc(d.name)}">${d.name}${d.today ? tr(" · today") : ""}</option>`).join("")
+      : `<option value="">${tr("Select a speciality first")}</option>`;
     if (selectName) bDoctor.value = selectName;
   }
 
@@ -376,11 +386,11 @@
   }
   function updateTicket() {
     const d = currentDoctor();
-    setRow("#tDoc", d ? d.name : "Not chosen yet", d);
-    setRow("#tDept", d ? d.dept : bDept.value || "—", d || bDept.value);
+    setRow("#tDoc", d ? d.name : tr("Not chosen yet"), d);
+    setRow("#tDept", d ? deptName(d.dept) : bDept.value ? deptName(bDept.value) : "—", d || bDept.value);
     setRow("#tDate", booking.date ? fmtDate(booking.date) : "—", booking.date);
     setRow("#tTime", booking.slot || "—", booking.slot);
-    setRow("#tType", consultType() === "Video" ? "Video call" : "At the hospital", true);
+    setRow("#tType", consultType() === "Video" ? tr("Video call") : tr("At the hospital"), true);
     setRow("#tFee", d ? inr(d.fee) : "—", d);
   }
 
@@ -390,7 +400,7 @@
     const d = currentDoctor();
     if (d && !d.video && consultType() === "Video") {
       $("input[name=bType][value='In-clinic']", form).checked = true;
-      toast(`${d.name} sees patients at the hospital only.`);
+      toast(tr("{name} sees patients at the hospital only.", { name: d.name }));
       updateTicket();
       return true;
     }
@@ -413,9 +423,9 @@
   function renderDates() {
     $("#dateStrip").innerHTML = dates.map((d, i) => {
       const closed = isClosed(d);
-      const label = i === 0 ? "Today" : DAY[d.getDay()];
+      const label = i === 0 ? tr("Today") : DAY[d.getDay()];
       const active = booking.date && dateKey(booking.date) === dateKey(d);
-      return `<button type="button" class="date${active ? " is-active" : ""}" data-i="${i}" aria-pressed="${active ? "true" : "false"}" ${closed ? "disabled title=\"OPD is closed on this day\"" : ""}><small>${label}</small><b>${d.getDate()}</b><small>${MON[d.getMonth()]}</small></button>`;
+      return `<button type="button" class="date${active ? " is-active" : ""}" data-i="${i}" aria-pressed="${active ? "true" : "false"}" ${closed ? `disabled title="${esc(tr("OPD is closed on this day"))}"` : ""}><small>${label}</small><b>${d.getDate()}</b><small>${MON[d.getMonth()]}</small></button>`;
     }).join("");
   }
   $("#dateStrip").addEventListener("click", (e) => {
@@ -463,7 +473,7 @@
       groups[g].push(`<button type="button" class="slot${booking.slot === label ? " is-active" : ""}" data-slot="${label}" aria-pressed="${booking.slot === label ? "true" : "false"}" ${past || taken ? "disabled" : ""}>${label}</button>`);
       i++;
     }
-    wrap.innerHTML = Object.entries(groups).map(([g, s]) => `<div class="slot-group"><small>${g}</small><div>${s.join("")}</div></div>`).join("");
+    wrap.innerHTML = Object.entries(groups).map(([g, s]) => `<div class="slot-group"><small>${tr(g)}</small><div>${s.join("")}</div></div>`).join("");
   }
   $("#slots").addEventListener("click", (e) => {
     const b = e.target.closest(".slot");
@@ -500,10 +510,10 @@
   function validate(n) {
     if (n === 1) {
       enforceVideo();   // safety net: never carry Video forward with a doctor who has no video
-      if (!bDept.value) { markInvalid(bDept); bError.textContent = "Choose a speciality to continue."; return false; }
-      if (!bDoctor.value) { markInvalid(bDoctor); bError.textContent = "Choose a doctor to continue."; return false; }
+      if (!bDept.value) { markInvalid(bDept); bError.textContent = tr("Choose a speciality to continue."); return false; }
+      if (!bDoctor.value) { markInvalid(bDoctor); bError.textContent = tr("Choose a doctor to continue."); return false; }
     }
-    if (n === 2 && (!booking.date || !booking.slot)) { bError.textContent = "Pick a date and one of the open time slots."; return false; }
+    if (n === 2 && (!booking.date || !booking.slot)) { bError.textContent = tr("Pick a date and one of the open time slots."); return false; }
     if (n === 3) {
       let ok = true;
       const name = $("#bName"), phone = $("#bPhone"), age = $("#bAge"), gender = $("#bGender");
@@ -511,7 +521,7 @@
       if (!/^[6-9]\d{9}$/.test(phone.value.trim())) { markInvalid(phone); ok = false; }
       if (age.value === "" || +age.value < 0 || +age.value > 120) { markInvalid(age); ok = false; }
       if (!gender.value) { markInvalid(gender); ok = false; }
-      if (!ok) { bError.textContent = "Check the highlighted fields. Mobile numbers have 10 digits and start with 6–9."; return false; }
+      if (!ok) { bError.textContent = tr("Check the highlighted fields. Mobile numbers have 10 digits and start with 6–9."); return false; }
       if (!consentOk(form)) { bError.textContent = CONSENT_MSG; $("#bConsent").focus(); return false; }
       return true;
     }
@@ -540,7 +550,7 @@
         reason: ($("#bNote") || {}).value || "", consent: true
       }).then((r) => confirmBooking(d, r.token, phone, r)).catch((err) => {
         bError.textContent = err.message;
-        if (/just booked/.test(err.message)) { delete slotCache[d.name + "|" + isoDate(booking.date)]; booking.slot = null; goStep(2); loadTaken(); }
+        if (err.status === 409 || /just booked/.test(err.message)) { delete slotCache[d.name + "|" + isoDate(booking.date)]; booking.slot = null; goStep(2); loadTaken(); }
       }).finally(() => { submitBtn.disabled = false; });
       return;
     }
@@ -561,11 +571,12 @@
     const n = (server && server.notify !== undefined) ? { on: server.notify, channel: server.channel, reminderHours: server.reminderHours } : privacyCfg && privacyCfg.notify;
     if (notify) {
       notify.hidden = !(server && n && n.on);
-      if (!notify.hidden) notify.textContent = `We'll send the details${n.channel === "whatsapp" ? " on WhatsApp" : " by SMS"} to ******${phone.slice(-4)}, and a reminder about ${n.reminderHours || 24} hours before your visit.`;
+      if (!notify.hidden) notify.textContent = tr(n.channel === "whatsapp" ? "We'll send the details on WhatsApp to {phone}, and a reminder about {hours} hours before your visit." : "We'll send the details by SMS to {phone}, and a reminder about {hours} hours before your visit.", { phone: "******" + phone.slice(-4), hours: n.reminderHours || 24 });
     }
     if (manage) {
       manage.hidden = !(server && server.manage);
-      if (!manage.hidden) manage.innerHTML = `Need to change it? <a href="${esc(server.manage.replace(/^\//, ""))}">Manage this booking</a> with your token and mobile number.`;
+      // relative link: from /hi/ it opens the Hindi manage page
+      if (!manage.hidden) manage.innerHTML = tr('Need to change it? <a href="{href}">Manage this booking</a> with your token and mobile number.', { href: esc(server.manage.replace(/^\//, "")) });
     }
     $("#bookingDone").hidden = false;
     $("#tToken").textContent = token;
@@ -596,8 +607,8 @@
     const f = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CareNova Hospitals//EN", "BEGIN:VEVENT",
       `UID:${lastBooking.token}@carenovahospitals.com`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(start)}`, `DTEND:${f(end)}`,
-      `SUMMARY:${lastBooking.doctor.name} (token ${lastBooking.token})`, "LOCATION:CareNova Hospitals\\, Sector 44\\, Gurugram",
-      "DESCRIPTION:Arrive 15 minutes early with a photo ID and previous reports.", "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+      `SUMMARY:${tr("{doctor} (token {token})", { doctor: lastBooking.doctor.name, token: lastBooking.token })}`, "LOCATION:CareNova Hospitals\\, Sector 44\\, Gurugram",
+      `DESCRIPTION:${tr("Arrive 15 minutes early with a photo ID and previous reports.")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
     a.download = `CareNova-${lastBooking.token}.ics`;
@@ -623,7 +634,7 @@
       const d = currentDoctor();
       if (d && !d.video && !doctor) {
         bDoctor.value = "";
-        toast(`${d.name} sees patients at the hospital only. Choose a doctor who offers video.`);
+        toast(tr("{name} sees patients at the hospital only. Choose a doctor who offers video.", { name: d.name }));
       }
     }
     enforceVideo();   // a doctor without video (from a Book button or the search) turns Video back to At the hospital
@@ -657,11 +668,11 @@
   function renderPackages(filter = "all") {
     $("#pkgGrid").innerHTML = PACKAGES.filter((p) => p.tag.includes(filter)).map((p) => `
       <article class="pkg${p.popular ? " pkg--featured" : ""}">
-        <div class="pkg__head"><div><h3>${p.name}</h3><small>${p.tests} tests</small></div>${p.popular ? `<span class="pkg__flag">Most chosen</span>` : ""}</div>
-        ${p.covers ? `<ul class="pkg__covers" aria-label="Looks at">${p.covers.map((o) => `<li><img src="assets/img/specimens/${o}-64.webp" width="36" height="36" alt="" loading="lazy" decoding="async"><span>${ORGAN[o]}</span></li>`).join("")}</ul>` : ""}
-        <div class="pkg__price"><b>${inr(p.price)}</b><s>${inr(p.mrp)}</s><span>save ${Math.round((1 - p.price / p.mrp) * 100)}%</span></div>
+        <div class="pkg__head"><div><h3>${p.label || p.name}</h3><small>${tr("{n} tests", { n: p.tests })}</small></div>${p.popular ? `<span class="pkg__flag">${tr("Most chosen")}</span>` : ""}</div>
+        ${p.covers ? `<ul class="pkg__covers" aria-label="${esc(tr("Looks at"))}">${p.covers.map((o) => `<li><img src="assets/img/specimens/${o}-64.webp" width="36" height="36" alt="" loading="lazy" decoding="async"><span>${tr(ORGAN[o])}</span></li>`).join("")}</ul>` : ""}
+        <div class="pkg__price"><b>${inr(p.price)}</b><s>${inr(p.mrp)}</s><span>${tr("save {n}%", { n: Math.round((1 - p.price / p.mrp) * 100) })}</span></div>
         <ul>${p.items.map((it) => `<li>${icon("i-check")}${it}</li>`).join("")}</ul>
-        <button class="btn btn--line btn--block" data-pkg="${esc(p.name)}">Book this check-up</button>
+        <button class="btn btn--line btn--block" data-pkg="${esc(p.name)}" data-pkg-label="${esc(p.label || p.name)}">${tr("Book this check-up")}</button>
       </article>`).join("");
   }
   $("#pkgTabs").addEventListener("click", (e) => {
@@ -676,11 +687,11 @@
   function bmi() {
     const h = parseFloat($("#bmiH").value), w = parseFloat($("#bmiW").value);
     const out = $("#bmiOut"), pin = $("#bmiPin");
-    if (!(h > 50 && w > 10)) { out.textContent = "Enter your height and weight."; return; }
+    if (!(h > 50 && w > 10)) { out.textContent = tr("Enter your height and weight."); return; }
     const v = w / Math.pow(h / 100, 2);
     const [cat, tip] = v < 18.5 ? ["in the underweight range", "A nutrition consult can help."] : v < 25 ? ["in the healthy range", "Keep it up."] : v < 30 ? ["in the overweight range", "Small daily changes add up."] : ["in the obese range", "We'd suggest a doctor's review."];
     pin.style.left = Math.max(2, Math.min(98, ((v - 12) / (40 - 12)) * 100)) + "%";
-    out.innerHTML = `<b>${v.toFixed(1)}</b>Your BMI is ${cat}. ${tip}`;
+    out.innerHTML = `<b>${v.toFixed(1)}</b>${tr("Your BMI is {range}.", { range: tr(cat) })} ${tr(tip)}`;
   }
   ["#bmiH", "#bmiW"].forEach((s) => $(s).addEventListener("input", bmi));
   bmi();
@@ -688,11 +699,11 @@
   function water() {
     const w = parseFloat($("#waterW").value), a = parseFloat($("#waterA").value);
     const out = $("#waterOut"), g = $("#waterGlasses");
-    if (!(w > 10)) { out.textContent = "Enter your weight."; g.innerHTML = ""; return; }
+    if (!(w > 10)) { out.textContent = tr("Enter your weight."); g.innerHTML = ""; return; }
     const litres = w * 0.033 + a;
     const glasses = Math.round((litres * 1000) / 250);
     g.innerHTML = Array.from({ length: Math.min(glasses, 20) }, () => `<span class="glass"></span>`).join("");
-    out.innerHTML = `<b>${litres.toFixed(1)} L</b>About ${glasses} glasses of water a day.`;
+    out.innerHTML = `<b>${tr("{n} L", { n: litres.toFixed(1) })}</b>${tr("About {n} glasses of water a day.", { n: glasses })}`;
   }
   ["#waterW", "#waterA"].forEach((s) => $(s).addEventListener("input", water));
   water();
@@ -703,12 +714,12 @@
   lmp.value = sample.toISOString().split("T")[0];
   function due() {
     const out = $("#dueOut");
-    if (!lmp.value) { out.textContent = "Pick a date to estimate your due date."; return; }
+    if (!lmp.value) { out.textContent = tr("Pick a date to estimate your due date."); return; }
     const start = new Date(lmp.value + "T00:00:00");
     const d = new Date(start); d.setDate(d.getDate() + 280);
     const weeks = Math.floor((Date.now() - start) / (7 * 864e5));
-    if (weeks < 0 || weeks > 42) { out.textContent = "Choose a date within the last 42 weeks."; return; }
-    out.innerHTML = `<b>${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}</b>Your estimated due date. You're about ${weeks} weeks along, in trimester ${weeks < 13 ? 1 : weeks < 27 ? 2 : 3}.`;
+    if (weeks < 0 || weeks > 42) { out.textContent = tr("Choose a date within the last 42 weeks."); return; }
+    out.innerHTML = `<b>${d.getDate()} ${(I18N["@monthsLong"] || MON)[d.getMonth()]} ${d.getFullYear()}</b>${tr("Your estimated due date. You're about {weeks} weeks along, in trimester {n}.", { weeks, n: weeks < 13 ? 1 : weeks < 27 ? 2 : 3 })}`;
   }
   lmp.addEventListener("input", due);
   due();
@@ -724,7 +735,7 @@
   const pauseBtn = $("#quotePause");
   const storiesEl = $("#stories");
   let qPaused = reduceMotion, qHold = false;
-  pauseBtn.textContent = qPaused ? "Play stories" : "Pause stories";
+  pauseBtn.textContent = qPaused ? tr("Play stories") : tr("Pause stories");
   function schedule() {
     clearTimeout(qTimer);
     bar.classList.remove("run");
@@ -742,7 +753,7 @@
     $$("button", storyList).forEach((b) => b.setAttribute("aria-current", String(+b.dataset.i === qIdx)));
     schedule();
   }
-  pauseBtn.addEventListener("click", () => { qPaused = !qPaused; pauseBtn.textContent = qPaused ? "Play stories" : "Pause stories"; schedule(); });
+  pauseBtn.addEventListener("click", () => { qPaused = !qPaused; pauseBtn.textContent = qPaused ? tr("Play stories") : tr("Pause stories"); schedule(); });
   storiesEl.addEventListener("mouseenter", () => { qHold = true; schedule(); });
   storiesEl.addEventListener("mouseleave", () => { qHold = false; schedule(); });
   storiesEl.addEventListener("focusin", () => { qHold = true; schedule(); });
@@ -759,7 +770,7 @@
   function showFaq(i) {
     $$(".faq__q", faqWrap).forEach((b) => b.setAttribute("aria-selected", String(+b.dataset.i === i)));
     $$(".faq__item", faqWrap).forEach((it, k) => { it.classList.toggle("is-open", k === i); $(".faq__inline", it).hidden = k !== i; });
-    $("#faqAnswer").innerHTML = `<h3>${FAQS[i].q}</h3><p>${FAQS[i].a}</p><button class="link-btn" data-open-chat>Ask something else ${icon("i-arrow")}</button>`;
+    $("#faqAnswer").innerHTML = `<h3>${FAQS[i].q}</h3><p>${FAQS[i].a}</p><button class="link-btn" data-open-chat>${tr("Ask something else")} ${icon("i-arrow")}</button>`;
   }
   faqWrap.addEventListener("click", (e) => { const b = e.target.closest(".faq__q"); if (b) showFaq(+b.dataset.i); });
   showFaq(0);
@@ -816,11 +827,11 @@
 
   $("#shareLoc").addEventListener("click", () => {
     const msg = $("#locMsg");
-    if (!navigator.geolocation) { msg.className = "form-msg err"; msg.textContent = "This device can't share location. Please call us."; return; }
-    msg.className = "form-msg"; msg.textContent = "Finding your location…";
+    if (!navigator.geolocation) { msg.className = "form-msg err"; msg.textContent = tr("This device can't share location. Please call us."); return; }
+    msg.className = "form-msg"; msg.textContent = tr("Finding your location…");
     navigator.geolocation.getCurrentPosition(
-      (p) => { msg.className = "form-msg ok"; msg.textContent = `Location shared (${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}). Our ER team will call you back.`; },
-      () => { msg.className = "form-msg err"; msg.textContent = "We couldn't get your location. Please call 1800-123-4567."; },
+      (p) => { msg.className = "form-msg ok"; msg.textContent = tr("Location shared ({lat}, {lng}). Our ER team will call you back.", { lat: p.coords.latitude.toFixed(4), lng: p.coords.longitude.toFixed(4) }); },
+      () => { msg.className = "form-msg err"; msg.textContent = tr("We couldn't get your location. Please call 1800-123-4567."); },
       { timeout: 8000 });
   });
 
@@ -828,25 +839,25 @@
     e.preventDefault();
     const msg = $("#reportMsg"), uhid = $("#rUhid"), ph = $("#rPhone");
     if (uhid.value.trim().length < 5 || !/^[6-9]\d{9}$/.test(ph.value.trim())) {
-      msg.className = "form-msg err"; msg.textContent = "Enter your UHID and a 10-digit mobile number."; return;
+      msg.className = "form-msg err"; msg.textContent = tr("Enter your UHID and a 10-digit mobile number."); return;
     }
     if (!consentOk(e.target)) { msg.className = "form-msg err"; msg.textContent = CONSENT_MSG; return; }
     if (CMS) {
-      msg.className = "form-msg"; msg.textContent = "Sending…";
+      msg.className = "form-msg"; msg.textContent = tr("Sending…");
       cmsPost("report", { uhid: uhid.value.trim(), phone: ph.value.trim(), consent: true })
-        .then(() => { msg.className = "form-msg ok"; msg.textContent = `Request received. We'll send your reports to ******${ph.value.trim().slice(-4)}.`; })
+        .then(() => { msg.className = "form-msg ok"; msg.textContent = tr("Request received. We'll send your reports to {phone}.", { phone: "******" + ph.value.trim().slice(-4) }); })
         .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
       return;
     }
     msg.className = "form-msg ok";
-    msg.textContent = `OTP sent to ******${ph.value.trim().slice(-4)}.`;
+    msg.textContent = tr("OTP sent to {phone}.", { phone: "******" + ph.value.trim().slice(-4) });
   });
 
   /* ---------- Health check-up request (CMS) ---------- */
   let pkgChosen = "";
-  function openPkgRequest(pkg) {
-    pkgChosen = pkg;
-    const nameEl = $("#pkgName"); if (nameEl) nameEl.textContent = pkg;
+  function openPkgRequest(pkg, label) {
+    pkgChosen = pkg;   // the request carries the English name; the dialog shows the page-language label
+    const nameEl = $("#pkgName"); if (nameEl) nameEl.textContent = label || pkg;
     $("#pkgMsg").textContent = "";
     openModal("pkgModal");
   }
@@ -856,11 +867,11 @@
     let ok = true;
     if (nm.value.trim().length < 2) { markInvalid(nm); ok = false; }
     if (!/^[6-9]\d{9}$/.test(ph.value.trim())) { markInvalid(ph); ok = false; }
-    if (!ok) { msg.className = "form-msg err"; msg.textContent = "Enter your name and a 10-digit mobile number."; return; }
+    if (!ok) { msg.className = "form-msg err"; msg.textContent = tr("Enter your name and a 10-digit mobile number."); return; }
     if (!consentOk(e.target)) { msg.className = "form-msg err"; msg.textContent = CONSENT_MSG; return; }
-    msg.className = "form-msg"; msg.textContent = "Sending…";
+    msg.className = "form-msg"; msg.textContent = tr("Sending…");
     cmsPost("package", { package: pkgChosen, name: nm.value.trim(), phone: ph.value.trim(), consent: true })
-      .then(() => { msg.className = "form-msg ok"; msg.textContent = "Request received. We'll call you to schedule it."; e.target.reset(); })
+      .then(() => { msg.className = "form-msg ok"; msg.textContent = tr("Request received. We'll call you to schedule it."); e.target.reset(); })
       .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
   });
 
@@ -873,30 +884,30 @@
       const valid = el.name === "phone" ? /^[6-9]\d{9}$/.test(el.value.trim()) : el.checkValidity() && el.value.trim() !== "";
       if (!valid) { markInvalid(el); ok = false; }
     });
-    if (!ok) { msg.className = "form-msg err"; msg.textContent = "Fill in the highlighted fields."; return; }
+    if (!ok) { msg.className = "form-msg err"; msg.textContent = tr("Fill in the highlighted fields."); return; }
     if (!consentOk(f)) { msg.className = "form-msg err"; msg.textContent = CONSENT_MSG; return; }
     if (CMS) {
       const fd = Object.fromEntries(new FormData(f).entries());
-      msg.className = "form-msg"; msg.textContent = "Sending…";
+      msg.className = "form-msg"; msg.textContent = tr("Sending…");
       cmsPost("message", { name: fd.name, phone: fd.phone, email: fd.email, message: fd.message, consent: true })
-        .then(() => { msg.className = "form-msg ok"; msg.textContent = "Message sent. We'll reply within 2 hours."; f.reset(); })
+        .then(() => { msg.className = "form-msg ok"; msg.textContent = tr("Message sent. We'll reply within 2 hours."); f.reset(); })
         .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
       return;
     }
     msg.className = "form-msg ok";
-    msg.textContent = "Message sent. We'll reply within 2 hours.";
+    msg.textContent = tr("Message sent. We'll reply within 2 hours.");
     f.reset();
   });
   $("#newsletter").addEventListener("submit", (e) => {
     e.preventDefault();
     const inp = $("input", e.target);
-    if (!inp.checkValidity()) { toast("Enter a valid email address."); return; }
+    if (!inp.checkValidity()) { toast(tr("Enter a valid email address.")); return; }
     if (CMS) {
-      cmsPost("subscribe", { email: inp.value.trim(), consent: true }).then(() => { inp.value = ""; toast("Subscribed. The next issue arrives on the 1st."); }).catch((err) => toast(err.message));
+      cmsPost("subscribe", { email: inp.value.trim(), consent: true }).then(() => { inp.value = ""; toast(tr("Subscribed. The next issue arrives on the 1st.")); }).catch((err) => toast(err.message));
       return;
     }
     inp.value = "";
-    toast("Subscribed. The next issue arrives on the 1st.");
+    toast(tr("Subscribed. The next issue arrives on the 1st."));
   });
 
   /* ---------- Assistant ---------- */
@@ -919,7 +930,7 @@
     const rule = CHAT_RULES.find((r) => r.k.some((k) => q.includes(k)));
     setTimeout(() => {
       t.classList.remove("msg--typing");
-      t.innerHTML = rule ? rule.a : "I don't have an answer for that yet. Call our helpdesk on <b>+91 98765 43210</b>, or tap one of the options below.";
+      t.innerHTML = rule ? rule.a : tr("I don't have an answer for that yet. Call our helpdesk on <b>+91 98765 43210</b>, or tap one of the options below.");
       chatBody.scrollTop = chatBody.scrollHeight;
     }, 600 + Math.random() * 400);
   }
@@ -928,7 +939,7 @@
     chat.classList.toggle("open", open);
     chat.setAttribute("aria-hidden", String(!open));
     chatBtn.setAttribute("aria-expanded", String(open));
-    if (open && !chatStarted) { chatStarted = true; addMsg("Namaste. I'm Nova, CareNova's assistant. What can I help you with?"); }
+    if (open && !chatStarted) { chatStarted = true; addMsg(tr("Namaste. I'm Nova, CareNova's assistant. What can I help you with?")); }
     if (open) {
       // .chat.open is visible at once (CSS); retry shortly if the first focus() did not take,
       // but never pull focus out of a modal opened in the meantime
@@ -946,7 +957,7 @@
     if (had) chatBtn.focus();   // closing with focus inside: back to the chat button, not <body>
   }
   chatBtn.addEventListener("click", () => toggleChat(!chat.classList.contains("open")));
-  $("#chatQuick").innerHTML = ["Book appointment", "Emergency", "Health packages", "Insurance", "OPD timings", "WhatsApp"].map((q) => `<button type="button">${q}</button>`).join("");
+  $("#chatQuick").innerHTML = ["Book appointment", "Emergency", "Health packages", "Insurance", "OPD timings", "WhatsApp"].map((q) => `<button type="button">${tr(q)}</button>`).join("");
   $("#chatQuick").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; addMsg(esc(b.textContent), "user"); botReply(b.textContent); });
   $("#chatForm").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -979,8 +990,8 @@
     if (t.dataset.bookDept) { e.preventDefault(); startBooking({ dept: t.dataset.bookDept }); return; }
     if (t.dataset.findDept) { e.preventDefault(); showDoctors({ dept: t.dataset.findDept }); return; }
     if (t.dataset.pkg) {
-      if (CMS) { const pkg = t.dataset.pkg; openPkgRequest(pkg); return; }
-      toast(`Request received for ${t.dataset.pkg}. We'll call you to schedule it.`); return;
+      if (CMS) { const pkg = t.dataset.pkg; openPkgRequest(pkg, t.dataset.pkgLabel); return; }
+      toast(tr("Request received for {pkg}. We'll call you to schedule it.", { pkg: t.dataset.pkgLabel || t.dataset.pkg })); return;
     }
     if (t.hasAttribute("data-video-book")) { e.preventDefault(); startBooking({ video: true }); if (window.innerWidth <= 600) toggleChat(false); }
   });

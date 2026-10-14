@@ -1,5 +1,6 @@
 /* Field schemas: drive the admin forms and server-side cleaning. */
 const { LEGAL_DEFAULTS, NOTIFY_DEFAULTS } = require("./legal-defaults");
+const { LEGAL_DEFAULTS_HI } = require("./i18n/hi-legal");
 
 const ICONS = ["i-heart-pulse", "i-brain", "i-bone", "i-ribbon", "i-baby", "i-users", "i-pill", "i-drop", "i-lungs", "i-eye", "i-tooth", "i-steth", "i-flask", "i-home", "i-plane", "i-file", "i-video"]
   .map((v) => ({ value: v, label: v.replace("i-", "").replace("-", " ") }));
@@ -133,6 +134,42 @@ const COLLECTIONS = {
   }
 };
 
+/* ---------- Hindi (हिन्दी) versions of the user-facing text fields ----------
+   Each becomes "<field>_hi" in a collapsed "हिन्दी (Hindi)" block of the admin form (lang:"hi").
+   Empty means "show the English on Hindi pages". Names, slugs, numbers, photos and degrees are shared. */
+const HI_GROUP = "हिन्दी (Hindi)";
+const HI_FIELDS = {
+  doctors: [["role", "Role"], ["photoAlt", "Photo description (alt text)"], ["lang", "Languages", { help: "e.g. अंग्रेज़ी, हिन्दी, तेलुगु" }],
+    ["opd", "OPD days and hours", { help: "Keep the format: सोम–शनि · 10 AM – 2 PM" }],
+    ["bio", "About", { type: "textarea", rows: 8, serverOnly: true, markdown: true, help: "Markdown, like the English." }],
+    ["education", "Education and training", { type: "list", serverOnly: true, help: "Degrees and institutions can stay in English." }],
+    ["awards", "Awards and memberships", { type: "list", serverOnly: true }],
+    ["conditions", "Conditions treated", { type: "tags", serverOnly: true }],
+    ["patientReviews", "Patient reviews", { type: "json", serverOnly: true, help: "Same shape as the English list: [{\"name\":\"Rakesh G.\",\"rating\":5,\"date\":\"2026-08\",\"text\":\"…\"}]. Translations of real, consented reviews only." }]],
+  departments: [["name", "Name", { help: "Shown on Hindi pages. Doctors and symptoms still refer to the English name." }], ["desc", "Short description", { type: "textarea" }],
+    ["caption", "Cabinet caption", { type: "textarea" }], ["captionAlt", "Second model caption (e.g. Spine)", { type: "textarea" }],
+    ["insetLabel", "Inset scan label"],
+    ["overview", "Overview", { type: "textarea", rows: 8, serverOnly: true, markdown: true, help: "Markdown, like the English." }],
+    ["conditions", "Conditions treated", { type: "list", serverOnly: true }], ["treatments", "Treatments and procedures", { type: "list", serverOnly: true }],
+    ["costs", "Indicative costs: item names", { type: "list", serverOnly: true, help: "One per line, in the same order as the English costs. Amounts come from the English list." }],
+    ["faqs", "Questions and answers", { type: "json", serverOnly: true, help: "[{\"q\":\"सवाल?\",\"a\":\"जवाब।\"}]" }]],
+  packages: [["name", "Name", { help: "Shown on Hindi pages; requests still use the English name." }], ["items", "What's included", { type: "list" }]],
+  testimonials: [["meta", "Treatment · City"], ["text", "Story", { type: "textarea" }]],
+  faqs: [["q", "Question"], ["a", "Answer", { type: "textarea" }]],
+  symptoms: [["label", "Symptom"]],
+  chatRules: [["k", "Keywords", { type: "tags", help: "Hindi and Hinglish words, e.g. अपॉइंटमेंट, doctor se milna, बीमा. On Hindi pages these and the English keywords both work." }],
+    ["a", "Reply", { type: "textarea", help: "Plain text; <b> and <a href=\"#section\"> links are allowed" }]],
+  articles: [["title", "Title"], ["category", "Category"], ["readTime", "Reading time", { help: "e.g. 5 मिनट" }],
+    ["summary", "Summary", { type: "textarea", rows: 3 }], ["body", "Article", { type: "textarea", rows: 18, markdown: true, help: "Markdown, like the English." }]],
+  pages: [["title", "Title"], ["summary", "Summary and search description", { type: "textarea", rows: 3 }], ["imageAlt", "Top image description (alt text)"],
+    ["body", "Page text", { type: "textarea", rows: 20, markdown: true, help: "Markdown, like the English." }]]
+};
+for (const [col, list] of Object.entries(HI_FIELDS)) {
+  for (const [name, label, extra = {}] of list) {
+    COLLECTIONS[col].fields.push({ name: name + "_hi", label: `${label} (हिन्दी)`, type: "text", group: HI_GROUP, lang: "hi", hiOf: name, ...extra });
+  }
+}
+
 const SUBMISSIONS = {
   appointments: {
     label: "Appointments", statuses: ["new", "confirmed", "completed", "cancelled", "no-show"],
@@ -182,6 +219,8 @@ const SETTINGS = [
   { group: "Search engines and sharing", fields: [
     { name: "seoTitle", label: "Page title", type: "text" },
     { name: "seoDescription", label: "Description", type: "textarea" },
+    { name: "seoTitleHi", label: "Page title (हिन्दी)", type: "text", help: "Home page at /hi/. Empty = the built-in Hindi title." },
+    { name: "seoDescriptionHi", label: "Description (हिन्दी)", type: "textarea" },
     { name: "ogImage", label: "Share image", type: "image" }
   ] },
   { group: "Brand", fields: [
@@ -190,6 +229,7 @@ const SETTINGS = [
   { group: "Announcement bar", fields: [
     { name: "announcementOn", label: "Show announcement", type: "boolean" },
     { name: "announcementText", label: "Text", type: "text" },
+    { name: "announcementTextHi", label: "Text (हिन्दी)", type: "text", help: "Shown on Hindi pages. Empty = the English text." },
     { name: "announcementLink", label: "Link (optional)", type: "text" }
   ] },
   { group: "Online booking", fields: [
@@ -220,8 +260,17 @@ const SETTINGS = [
     { name: "legalPatientRights", label: "Patient rights (Markdown)", type: "textarea", rows: 12, max: 40000 },
     { name: "legalDataRequest", label: "Data request page intro (Markdown)", type: "textarea", rows: 6, max: 10000 }
   ] },
+  { group: "Privacy and legal: हिन्दी (Hindi)", fields: [
+    { name: "consentTextHi", label: "Consent text on forms (हिन्दी)", type: "textarea", rows: 3, max: 600, help: "Shown on Hindi pages. Changing it starts a new consent version, like the English." },
+    { name: "dpoNameHi", label: "Grievance officer (हिन्दी)", type: "text", help: "Empty = the English name and title." },
+    { name: "legalUpdatedHi", label: "Legal pages last updated (हिन्दी)", type: "text", help: "e.g. 14 अक्टूबर 2026" },
+    { name: "legalPrivacyHi", label: "Privacy policy (हिन्दी, Markdown)", type: "textarea", rows: 16, max: 40000, help: "Same placeholders as the English. Empty = the English policy is shown on the Hindi page." },
+    { name: "legalTermsHi", label: "Terms of use (हिन्दी, Markdown)", type: "textarea", rows: 12, max: 40000 },
+    { name: "legalPatientRightsHi", label: "Patient rights (हिन्दी, Markdown)", type: "textarea", rows: 12, max: 40000 },
+    { name: "legalDataRequestHi", label: "Data request page intro (हिन्दी, Markdown)", type: "textarea", rows: 6, max: 10000 }
+  ] },
   { group: "Patient messages (SMS / WhatsApp)", fields: [
-    { name: "notifyOn", label: "Send booking messages and reminders", type: "boolean", help: "Demo: messages go to the outbox (Admin → Notifications). Set SMS_WEBHOOK_URL on the server to deliver them." },
+    { name: "notifyOn", label: "Send booking messages and reminders", type: "boolean", help: "Demo: messages go to the outbox (Admin → Notifications). Set SMS_WEBHOOK_URL on the server to deliver them. The templates are sent in English, also for bookings made on the Hindi site." },
     { name: "notifyChannel", label: "Channel", type: "select", options: [{ value: "sms", label: "SMS" }, { value: "whatsapp", label: "WhatsApp" }] },
     { name: "reminderHours", label: "Send the reminder this many hours before the visit", type: "number" },
     { name: "siteUrl", label: "Public website address", type: "text", help: "Used for the manage-booking link, e.g. https://www.carenovahospitals.com. Empty = the address the site was opened at." },
@@ -241,7 +290,8 @@ const DEFAULT_SETTINGS = {
   announcementOn: false, announcementText: "", announcementLink: "",
   bookingOn: true, closedDays: ["Sunday"], slotStart: "09:00", slotEnd: "19:30", slotMinutes: 30, breakStart: "13:00", breakEnd: "14:00", perSlot: 1,
   facebook: "", instagram: "", youtube: "", linkedin: "", x: "",
-  ...LEGAL_DEFAULTS, ...NOTIFY_DEFAULTS
+  seoTitleHi: "", seoDescriptionHi: "", announcementTextHi: "",
+  ...LEGAL_DEFAULTS, ...NOTIFY_DEFAULTS, ...LEGAL_DEFAULTS_HI
 };
 
 module.exports = { COLLECTIONS, SUBMISSIONS, SETTINGS, DEFAULT_SETTINGS };

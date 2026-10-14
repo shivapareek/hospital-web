@@ -49,6 +49,7 @@ function seed() {
     settings: { ...DEFAULT_SETTINGS },
     content,
     texts: {},
+    textsHi: {},
     hiddenSections: [],
     live: { mode: "demo", erWait: 8, beds: 42, icu: 7, token: "A-114", updatedAt: now },
     submissions: { appointments: [], messages: [], reports: [], packages: [], subscribers: [] },

@@ -9,6 +9,8 @@ const crypto = require("crypto");
 const cheerio = require("cheerio");
 const { marked } = require("marked");
 const { DEFAULT_SETTINGS } = require("./schema");
+const i18n = require("./i18n");
+const { tr } = i18n;
 
 let C = null; // ctx from index.js
 const settings = () => ({ ...DEFAULT_SETTINGS, ...((C && C.db().settings) || {}) });
@@ -30,17 +32,20 @@ const last10 = (p) => String(p || "").replace(/\D/g, "").slice(-10);
    Consent
    ========================================================= */
 const CONSENT_KINDS = new Set(["appointment", "message", "report", "package", "subscribe", "datarequest"]);
-function consentVersion() { return "c-" + sha(settings().consentText).slice(0, 10); }
+/** The consent text shown in a language (Hindi: settings.consentTextHi, English when empty). */
+function consentText(lang, s = settings()) { return i18n.norm(lang) === "hi" && String(s.consentTextHi || "").trim() ? s.consentTextHi : s.consentText; }
+function consentVersion(lang) { return "c-" + sha(consentText(lang)).slice(0, 10); }
 function consentError(kind, b) {
   if (!CONSENT_KINDS.has(kind)) return null;
   return b && b.consent === true ? null : "Please tick the box to agree to the privacy policy before sending.";
 }
-function consentRecord() {
-  const v = consentVersion();
+/** {given, at, textVersion}; the version is the hash of the text the person saw (Hindi pages: the Hindi text). */
+function consentRecord(lang) {
+  const v = consentVersion(lang);
   if (C) {
     const db = C.db();
     db.consentVersions = db.consentVersions || {};
-    if (!db.consentVersions[v]) db.consentVersions[v] = { text: settings().consentText, firstUsed: nowIso() };
+    if (!db.consentVersions[v]) db.consentVersions[v] = { text: consentText(lang), firstUsed: nowIso(), ...(i18n.norm(lang) === "hi" ? { lang: "hi" } : {}) };
   }
   return { given: true, at: nowIso(), textVersion: v };
 }
@@ -82,10 +87,10 @@ function slotLabels(s = settings()) {
   }
   return out;
 }
-function fmtDate(date) {
+function fmtDate(date, lang = "en") {
   const d = new Date(`${date}T12:00:00${IST}`);
   if (isNaN(d)) return date;
-  return d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
+  return d.toLocaleDateString(i18n.LOCALE[i18n.norm(lang)], { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
 }
 
 /* =========================================================
@@ -98,7 +103,8 @@ function siteBase(req) {
   if (req) lastOrigin = `${req.protocol}://${req.get("host")}`;
   return lastOrigin || `http://localhost:${process.env.PORT || 3000}`;
 }
-const manageLink = (a, req) => `${siteBase(req)}/manage-booking?token=${encodeURIComponent(a.token)}`;
+// bookings made on the Hindi site link to the Hindi manage page (the message itself uses the English templates)
+const manageLink = (a, req) => `${siteBase(req)}${a.lang === "hi" ? "/hi" : ""}/manage-booking?token=${encodeURIComponent(a.token)}`;
 function fill(tpl, vars) { return String(tpl || "").replace(/\{(\w+)\}/g, (m, k) => (Object.prototype.hasOwnProperty.call(vars, k) ? String(vars[k]) : m)); }
 function apptVars(a, req, link) {
   const p = a.patient || {};
@@ -244,7 +250,8 @@ function findPersonal(phone, email) {
    Data requests (public form → submissions.dataRequests)
    ========================================================= */
 const REQUEST_TYPES = { access: "Access my data", correction: "Correct my data", deletion: "Delete my data", "withdraw-consent": "Withdraw consent" };
-function dataRequest(b, base) {
+/** Validates a public data request. Errors are English; index.js translates them for Hindi pages. */
+function dataRequest(b, base, lang) {
   const str = C.str;
   if (str(b.name).length < 2) return { error: "Enter your name." };
   if (!PHONE.test(str(b.phone))) return { error: "Enter the 10-digit mobile number you used with us." };
@@ -272,6 +279,11 @@ function noteFailure(ip) { const arr = failures.get(ip) || []; arr.push(Date.now
 setInterval(() => { const now = Date.now(); for (const [k, v] of failures) if (!v.some((t) => now - t < 15 * 60e3)) failures.delete(k); }, 600e3).unref();
 
 const NOT_FOUND = "We couldn't find a booking with that token and mobile number. Check both and try again, or call the helpdesk.";
+const LOCKED = {
+  cancelled: "This appointment is cancelled and can't be changed online.",
+  completed: "This appointment is completed and can't be changed online.",
+  "no-show": "This appointment is marked as missed and can't be changed online."
+};
 function findBooking(token, phone) {
   const t = String(token || "").trim().toUpperCase().replace(/\s+/g, "");
   const p = last10(phone);
@@ -283,19 +295,20 @@ function findBooking(token, phone) {
   const upcoming = list.filter((a) => apptTime(a) > now).sort((a, b) => apptTime(a) - apptTime(b));
   return upcoming[0] || list.sort((a, b) => apptTime(b) - apptTime(a))[0];
 }
-function lockReason(a) {
+function lockReason(a, lang = "en") {
   const s = settings();
-  if (["cancelled", "completed", "no-show"].includes(a.status)) return `This appointment is ${a.status === "no-show" ? "marked as missed" : a.status} and can't be changed online.`;
+  if (LOCKED[a.status]) return tr(lang, LOCKED[a.status]);
   const t = apptTime(a);
-  if (!Number.isFinite(t) || t - Date.now() < CHANGE_CUTOFF_MS) return `Online changes close 2 hours before the appointment. Please call ${s.helpdesk}.`;
+  if (!Number.isFinite(t) || t - Date.now() < CHANGE_CUTOFF_MS) return tr(lang, "Online changes close 2 hours before the appointment. Please call {helpdesk}.", { helpdesk: s.helpdesk });
   return "";
 }
-function publicView(a) {
+function publicView(a, lang = "en") {
   const s = settings();
-  const lock = lockReason(a);
+  const lock = lockReason(a, lang);
+  const dep = i18n.norm(lang) === "hi" ? (C.db().content.departments || []).find((d) => d.name === a.dept) : null;
   return {
-    token: a.token, patient: String((a.patient || {}).name || "").split(/\s+/)[0], doctor: a.doctor, dept: a.dept,
-    date: a.date, dateLabel: fmtDate(a.date), slot: a.slot, type: a.type, status: a.status, fee: a.fee,
+    token: a.token, patient: String((a.patient || {}).name || "").split(/\s+/)[0], doctor: a.doctor, dept: (dep && dep.name_hi) || a.dept,
+    date: a.date, dateLabel: fmtDate(a.date, lang), slot: a.slot, type: a.type, status: a.status, fee: a.fee,
     canChange: !lock, lockReason: lock,
     history: (a.history || []).filter((h) => h.by === "patient" || ["cancelled", "rescheduled"].includes(h.action)).map((h) => ({ at: h.at, action: h.action, from: h.from, to: h.to })),
     rules: { closedDays: s.closedDays || [], slots: slotLabels(s), today: todayIst(), nowMinutes: nowIstMinutes(), days: BOOKING_DAYS, leadMinutes: 30 },
@@ -326,30 +339,39 @@ function sanitizeHtml(html) {
   $("#md table").each((_, t) => { $(t).wrap('<div class="legal__table" tabindex="0" role="region" aria-label="Table"></div>'); });
   return $("#md").html();
 }
-function legalVars(s = settings()) {
-  const days = (n, none) => (Number(n) > 0 ? `${Number(n)} days` : none);
+/** Grievance officer's name and title in a language: the Hindi one unless the English was changed and the Hindi was not. */
+function dpoName(lang, s = settings()) {
+  if (i18n.norm(lang) !== "hi") return s.dpoName;
+  const raw = (C && C.db().settings) || {};
+  const englishChanged = raw.dpoName && raw.dpoName !== DEFAULT_SETTINGS.dpoName;
+  const hindiSet = raw.dpoNameHi !== undefined && raw.dpoNameHi !== DEFAULT_SETTINGS.dpoNameHi;
+  if (!String(s.dpoNameHi || "").trim() || (englishChanged && !hindiSet)) return s.dpoName;
+  return s.dpoNameHi;
+}
+function legalVars(s = settings(), lang = "en") {
+  const days = (n, none) => (Number(n) > 0 ? tr(lang, "{n} days", { n: Number(n) }) : tr(lang, none));
   return {
-    hospital: s.name, helpdesk: s.helpdesk, email: s.email, dpoName: s.dpoName, dpoEmail: s.dpoEmail, dpoPhone: s.dpoPhone,
+    hospital: s.name, helpdesk: s.helpdesk, email: s.email, dpoName: dpoName(lang, s), dpoEmail: s.dpoEmail, dpoPhone: s.dpoPhone,
     retentionAppointments: days(s.retentionAppointments, "as long as needed"), retentionEnquiries: days(s.retentionEnquiries, "as long as needed"),
     retentionSubscribers: days(s.retentionSubscribers, "until you unsubscribe or ask us to remove you")
   };
 }
-function renderMarkdown(md) {
-  return sanitizeHtml(marked.parse(fill(md, legalVars()), { gfm: true, breaks: true }));
+function renderMarkdown(md, lang = "en") {
+  return sanitizeHtml(marked.parse(fill(md, legalVars(settings(), lang)), { gfm: true, breaks: true }));
 }
 
 /* =========================================================
    Page shell: the home page's head, header and footer around new <main> content.
    Exported so other modules can reuse it.
    ========================================================= */
-function renderShell({ title, description, path: pagePath, main, styles = [], scripts = [], noindex = false, bodyClass = "", req = null }) {
+function renderShell({ title, description, path: pagePath, main, styles = [], scripts = [], noindex = false, bodyClass = "", req = null, lang = "en" }) {
   // one shell for every inner page: server/pages.js (ctx.renderInner) when it is loaded, the fallback below otherwise
   if (typeof C.renderInner === "function") {
-    return C.renderInner(req, { title, description, path: pagePath, body: main, noindex, bodyClass, mainClass: "inner-main", styles: ["css/privacy.css", ...styles], scripts });
+    return C.renderInner(req, { title, description, path: pagePath, body: main, noindex, bodyClass, mainClass: "inner-main", styles: ["css/privacy.css", ...styles], scripts, lang });
   }
   const db = C.db();
   const s = settings();
-  const $ = cheerio.load(C.renderPage(db));
+  const $ = cheerio.load(C.renderPage(db, { lang, path: pagePath, base: i18n.baseUrl(req) }));
   $("meta[charset]").first().after('<base href="/">');
   const fullTitle = `${title} · ${s.name}`;
   $("title").text(fullTitle);
@@ -371,98 +393,107 @@ function renderShell({ title, description, path: pagePath, main, styles = [], sc
   return $.html();
 }
 
-const LEGAL_PAGES = [
+const LEGAL_PAGES = [   // titles and descriptions are translated with tr() (server/i18n/hi-strings.json)
   { path: "/privacy-policy", key: "legalPrivacy", title: "Privacy policy", nav: "Privacy policy", description: "How CareNova Hospitals collects, uses, keeps and protects your personal data, and your rights under India's DPDP Act 2023." },
   { path: "/terms", key: "legalTerms", title: "Terms of use", nav: "Terms of use", description: "The terms that apply when you use the CareNova Hospitals website and book appointments online." },
   { path: "/patient-rights", key: "legalPatientRights", title: "Patient rights and responsibilities", nav: "Patient rights", description: "The rights every patient has at CareNova Hospitals, your responsibilities, and how to raise a complaint." },
   { path: "/data-request", key: "legalDataRequest", title: "Request your data", nav: "Data request", description: "Ask CareNova Hospitals to show, correct or delete your personal data, or withdraw your consent." }
 ];
-const consentLabel = (text) => `${esc(text)} <a href="privacy-policy" target="_blank" rel="noopener">Read the privacy policy</a>.`;
-const NEWSLETTER_NOTE = 'By subscribing you agree to receive a monthly email and to our <a href="privacy-policy">privacy policy</a>. Unsubscribe any time.';
-const DEMO_NOTE = '<p class="legal__demo" role="note"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><span><strong>Demo website.</strong> Sample text for a demo website. Have a lawyer review before real use.</span></p>';
+const consentLabel = (text, lang = "en") => `${esc(text)} <a href="privacy-policy" target="_blank" rel="noopener">${esc(tr(lang, "Read the privacy policy"))}</a>.`;
+const newsletterNote = (lang = "en") => tr(lang, 'By subscribing you agree to receive a monthly email and to our <a href="privacy-policy">privacy policy</a>. Unsubscribe any time.');
+const demoNote = (lang = "en") => `<p class="legal__demo" role="note"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><span><strong>${esc(tr(lang, "Demo website."))}</strong> ${esc(tr(lang, "Sample text for a demo website. Have a lawyer review before real use."))}</span></p>`;
+/** Markdown for a legal page: the Hindi setting on Hindi pages (English when it is empty). */
+function legalSource(p, lang, s = settings()) {
+  if (i18n.norm(lang) === "hi" && String(s[p.key + "Hi"] || "").trim()) return s[p.key + "Hi"];
+  return s[p.key] || DEFAULT_SETTINGS[p.key] || "";
+}
 
-function asideHtml(current) {
+function asideHtml(current, lang = "en") {
   const s = settings();
-  return `<aside class="legal__aside" aria-label="More about privacy">
-    <nav class="legal__nav" aria-label="Legal pages"><p class="legal__aside-title">Privacy and legal</p><ul>
-      ${LEGAL_PAGES.map((p) => `<li><a href="${p.path}"${p.path === current ? ' aria-current="page"' : ""}>${esc(p.nav)}</a></li>`).join("")}
-      <li><a href="/manage-booking"${current === "/manage-booking" ? ' aria-current="page"' : ""}>Manage a booking</a></li>
+  const L = (h) => i18n.localizeHref(h, lang);
+  return `<aside class="legal__aside" aria-label="${esc(tr(lang, "More about privacy"))}">
+    <nav class="legal__nav" aria-label="${esc(tr(lang, "Legal pages"))}"><p class="legal__aside-title">${esc(tr(lang, "Privacy and legal"))}</p><ul>
+      ${LEGAL_PAGES.map((p) => `<li><a href="${L(p.path)}"${p.path === current ? ' aria-current="page"' : ""}>${esc(tr(lang, p.nav))}</a></li>`).join("")}
+      <li><a href="${L("/manage-booking")}"${current === "/manage-booking" ? ' aria-current="page"' : ""}>${esc(tr(lang, "Manage a booking"))}</a></li>
     </ul></nav>
     <div class="legal__card">
-      <p class="legal__aside-title">Grievance officer</p>
-      <p class="legal__officer">${esc(s.dpoName)}</p>
+      <p class="legal__aside-title">${esc(tr(lang, "Grievance officer"))}</p>
+      <p class="legal__officer">${esc(dpoName(lang, s))}</p>
       <p><a href="mailto:${esc(s.dpoEmail)}">${esc(s.dpoEmail)}</a><br><a class="mono" href="tel:${esc(String(s.dpoPhone).replace(/[^\d+]/g, ""))}">${esc(s.dpoPhone)}</a></p>
-      ${current === "/data-request" ? "" : '<a class="btn btn--line btn--sm btn--block" href="/data-request">Make a data request</a>'}
+      ${current === "/data-request" ? "" : `<a class="btn btn--line btn--sm btn--block" href="${L("/data-request")}">${esc(tr(lang, "Make a data request"))}</a>`}
     </div>
   </aside>`;
 }
 
-function legalHead(p, s) {
+function legalHead(p, s, lang = "en") {
+  const updated = i18n.norm(lang) === "hi" && String(s.legalUpdatedHi || "").trim() ? s.legalUpdatedHi : s.legalUpdated;
   return `<header class="legal__head">
-      <nav class="legal__crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">${esc(p.nav)}</span></nav>
-      <p class="kicker">Privacy and legal</p>
-      <h1 class="legal__title" id="pageTitle">${esc(p.title)}</h1>
-      ${s.legalUpdated ? `<p class="legal__meta">Last updated <time>${esc(s.legalUpdated)}</time></p>` : ""}
-      ${DEMO_NOTE}
+      <nav class="legal__crumbs" aria-label="${esc(tr(lang, "Breadcrumb"))}"><a href="${i18n.localizeHref("/", lang)}">${esc(tr(lang, "Home"))}</a><span aria-hidden="true">/</span><span aria-current="page">${esc(tr(lang, p.nav))}</span></nav>
+      <p class="kicker">${esc(tr(lang, "Privacy and legal"))}</p>
+      <h1 class="legal__title" id="pageTitle">${esc(tr(lang, p.title))}</h1>
+      ${updated ? `<p class="legal__meta">${esc(tr(lang, "Last updated"))} <time>${esc(updated)}</time></p>` : ""}
+      ${demoNote(lang)}
     </header>`;
 }
 
-function dataRequestForm() {
-  const opts = Object.entries(REQUEST_TYPES).map(([v, l], i) => `<label><input type="radio" name="requestType" value="${v}"${i === 0 ? " checked" : ""} /><span>${esc(l)}</span></label>`).join("");
+function dataRequestForm(lang = "en") {
+  const T = (x) => esc(tr(lang, x));
+  const opts = Object.entries(REQUEST_TYPES).map(([v, l], i) => `<label><input type="radio" name="requestType" value="${v}"${i === 0 ? " checked" : ""} /><span>${T(l)}</span></label>`).join("");
   return `<form class="legal__form" id="dataRequestForm" novalidate>
-    <h2>Your request</h2>
+    <h2>${T("Your request")}</h2>
     <div class="grid-2">
-      <label class="field"><span>Full name</span><input type="text" name="name" autocomplete="name" required /></label>
-      <label class="field"><span>Mobile number</span><input type="tel" name="phone" maxlength="10" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit mobile" required /></label>
+      <label class="field"><span>${T("Full name")}</span><input type="text" name="name" autocomplete="name" required /></label>
+      <label class="field"><span>${T("Mobile number")}</span><input type="tel" name="phone" maxlength="10" inputmode="numeric" autocomplete="tel-national" placeholder="${T("10-digit mobile")}" required /></label>
     </div>
-    <label class="field"><span>Email <em>(optional)</em></span><input type="email" name="email" autocomplete="email" /></label>
-    <fieldset class="field dr-types"><legend>What would you like us to do?</legend><div class="toggle-group toggle-group--4">${opts}</div></fieldset>
-    <label class="field"><span>Details <em>(optional)</em></span><textarea name="details" rows="4" placeholder="For example: which details are wrong, or which visit this is about"></textarea></label>
+    <label class="field"><span>${T("Email")} <em>${T("(optional)")}</em></span><input type="email" name="email" autocomplete="email" /></label>
+    <fieldset class="field dr-types"><legend>${T("What would you like us to do?")}</legend><div class="toggle-group toggle-group--4">${opts}</div></fieldset>
+    <label class="field"><span>${T("Details")} <em>${T("(optional)")}</em></span><textarea name="details" rows="4" placeholder="${T("For example: which details are wrong, or which visit this is about")}"></textarea></label>
     <label class="hp" aria-hidden="true">Leave empty<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
-    <label class="consent"><input type="checkbox" name="consent" required /><span data-consent>${consentLabel(settings().consentText)}</span></label>
-    <button class="btn btn--accent" type="submit">Send request</button>
+    <label class="consent"><input type="checkbox" name="consent" required /><span data-consent>${consentLabel(consentText(lang), lang)}</span></label>
+    <button class="btn btn--accent" type="submit">${T("Send request")}</button>
     <p class="form-msg" id="drMsg" role="status"></p>
   </form>`;
 }
 
-function legalPage(p, req) {
+function legalPage(p, req, lang = "en") {
   const s = settings();
-  const body = renderMarkdown(s[p.key] || DEFAULT_SETTINGS[p.key] || "");
+  const body = renderMarkdown(legalSource(p, lang, s), lang);
   const main = `<section class="section legal" aria-labelledby="pageTitle">
     <div class="wrap legal__grid">
-      ${legalHead(p, s)}
-      <div class="legal__content"><article class="legal__body prose">${body}</article>${p.path === "/data-request" ? dataRequestForm() : ""}</div>
-      ${asideHtml(p.path)}
+      ${legalHead(p, s, lang)}
+      <div class="legal__content"><article class="legal__body prose">${body}</article>${p.path === "/data-request" ? dataRequestForm(lang) : ""}</div>
+      ${asideHtml(p.path, lang)}
     </div>
   </section>`;
-  return renderShell({ title: p.title, description: p.description, path: p.path, main, req, scripts: p.path === "/data-request" ? ["js/manage.js"] : [] });
+  return renderShell({ title: tr(lang, p.title), description: tr(lang, p.description), path: p.path, main, req, lang, scripts: p.path === "/data-request" ? ["js/manage.js"] : [] });
 }
 
-function managePage(req) {
+function managePage(req, lang = "en") {
   const s = settings();
+  const T = (x, v) => esc(tr(lang, x, v));
   const main = `<section class="section legal manage" aria-labelledby="pageTitle">
     <div class="wrap legal__grid">
       <header class="legal__head">
-        <nav class="legal__crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span aria-current="page">Manage booking</span></nav>
-        <p class="kicker">Appointments</p>
-        <h1 class="legal__title" id="pageTitle">Manage your booking</h1>
-        <p class="legal__lead">Enter the token from your booking and the mobile number you booked with. You can change or cancel up to 2 hours before your time.</p>
+        <nav class="legal__crumbs" aria-label="${T("Breadcrumb")}"><a href="${i18n.localizeHref("/", lang)}">${T("Home")}</a><span aria-hidden="true">/</span><span aria-current="page">${T("Manage booking")}</span></nav>
+        <p class="kicker">${T("Appointments")}</p>
+        <h1 class="legal__title" id="pageTitle">${T("Manage your booking")}</h1>
+        <p class="legal__lead">${T("Enter the token from your booking and the mobile number you booked with. You can change or cancel up to 2 hours before your time.")}</p>
       </header>
       <div class="legal__content">
         <form class="legal__form" id="lookupForm" novalidate>
           <div class="grid-2">
-            <label class="field"><span>Token</span><input type="text" name="token" id="mToken" placeholder="e.g. CA-123" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" required /></label>
-            <label class="field"><span>Registered mobile</span><input type="tel" name="phone" id="mPhone" maxlength="10" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit mobile" required /></label>
+            <label class="field"><span>${T("Token")}</span><input type="text" name="token" id="mToken" placeholder="${T("e.g. CA-123")}" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="8" required /></label>
+            <label class="field"><span>${T("Registered mobile")}</span><input type="tel" name="phone" id="mPhone" maxlength="10" inputmode="numeric" autocomplete="tel-national" placeholder="${T("10-digit mobile")}" required /></label>
           </div>
-          <button class="btn btn--accent" type="submit">Find my booking</button>
+          <button class="btn btn--accent" type="submit">${T("Find my booking")}</button>
           <p class="form-msg" id="lookupMsg" role="status"></p>
         </form>
         <div id="manageResult" class="manage__result" hidden tabindex="-1"></div>
       </div>
-      ${asideHtml("/manage-booking")}
+      ${asideHtml("/manage-booking", lang)}
     </div>
   </section>`;
-  return renderShell({ title: "Manage booking", description: `Change or cancel your ${s.name} appointment online.`, path: "/manage-booking", main, req, scripts: ["js/manage.js"], noindex: true });
+  return renderShell({ title: tr(lang, "Manage booking"), description: tr(lang, "Change or cancel your {hospital} appointment online.", { hospital: s.name }), path: "/manage-booking", main, req, lang, scripts: ["js/manage.js"], noindex: true });
 }
 
 /* =========================================================
@@ -478,12 +509,13 @@ function register(ctx) {
   // consent text on the home page forms, filled in on the server (js/main.js has a fallback for the static site)
   const render = require("./render");
   if (typeof render.addRenderHook === "function") {
-    render.addRenderHook(($) => {
+    render.addRenderHook(($, _db, _s, opts = {}) => {
       const s = settings();
-      $("[data-consent]").html(consentLabel(s.consentText));
-      $("[data-consent-note]").html(NEWSLETTER_NOTE);
+      const lang = opts.lang || "en";
+      $("[data-consent]").html(consentLabel(consentText(lang), lang));
+      $("[data-consent-note]").html(newsletterNote(lang));
       if (!$('link[href="css/privacy.css"]').length) $("head").append('<link rel="stylesheet" href="css/privacy.css">');
-      const cfg = { consentVersion: consentVersion(), notify: { on: s.notifyOn !== false, channel: s.notifyChannel, reminderHours: Number(s.reminderHours) || 24 } };
+      const cfg = { consentVersion: consentVersion(lang), notify: { on: s.notifyOn !== false, channel: s.notifyChannel, reminderHours: Number(s.reminderHours) || 24 } };
       const anchor = $('script[src="js/data.js"]');
       if (anchor.length) anchor.before(`<script>window.CMS_PRIVACY=${JSON.stringify(cfg).replace(/</g, "\\u003c")};</script>`);
     });
@@ -492,60 +524,69 @@ function register(ctx) {
   const html = (fn) => (req, res, next) => {
     try { res.type("html").setHeader("Cache-Control", "no-cache"); res.send(fn(req)); } catch (e) { next(e); }
   };
-  for (const p of LEGAL_PAGES) app.get(p.path, html((req) => legalPage(p, req)));
-  app.get("/manage-booking", html((req) => managePage(req)));
+  for (const p of LEGAL_PAGES) {
+    app.get(p.path, html((req) => legalPage(p, req, "en")));
+    app.get("/hi" + p.path, html((req) => legalPage(p, req, "hi")));
+  }
+  app.get("/manage-booking", html((req) => managePage(req, "en")));
+  app.get("/hi/manage-booking", html((req) => managePage(req, "hi")));
 
   /* ---------- public config for the forms ---------- */
   app.get("/api/privacy/config", (req, res) => {
     const s = settings();
+    const lang = req.query.lang === "hi" ? "hi" : "en";
     res.setHeader("Cache-Control", "no-cache");
     res.json({
-      consentText: ctx.applyReplacements(s.consentText, db().settings), consentVersion: consentVersion(), privacyUrl: "/privacy-policy",
+      consentText: ctx.applyReplacements(consentText(lang), db().settings), consentVersion: consentVersion(lang), privacyUrl: i18n.localizeHref("/privacy-policy", lang),
       notify: { on: s.notifyOn !== false, channel: s.notifyChannel, reminderHours: Number(s.reminderHours) || 24 }
     });
   });
 
   /* ---------- manage booking ---------- */
+  // messages in the language of the page (body.lang / X-Lang); the booking view gets Hindi dates and labels too
+  const T = (req, msg, vars) => tr(i18n.reqLang(req), msg, vars);
   const guard = (req, res) => {
     const ip = req.ip || req.socket.remoteAddress;
-    if (limited("booking:" + ip, 30, 15 * 60e3) || tooManyFailures(ip)) { bad(res, 429, "Too many tries. Please wait 15 minutes or call the helpdesk."); return null; }
+    if (limited("booking:" + ip, 30, 15 * 60e3) || tooManyFailures(ip)) { bad(res, 429, T(req, "Too many tries. Please wait 15 minutes or call the helpdesk.")); return null; }
     const b = req.body || {};
     const a = findBooking(b.token, b.phone);
-    if (!a) { noteFailure(ip); bad(res, 404, NOT_FOUND); return null; }
+    if (!a) { noteFailure(ip); bad(res, 404, T(req, NOT_FOUND)); return null; }
     return a;
   };
   app.post("/api/booking/lookup", (req, res) => {
     const a = guard(req, res); if (!a) return;
-    res.json({ booking: publicView(a) });
+    res.json({ booking: publicView(a, i18n.reqLang(req)) });
   });
   app.post("/api/booking/cancel", (req, res) => {
     const a = guard(req, res); if (!a) return;
-    const lock = lockReason(a);
+    const lang = i18n.reqLang(req);
+    const lock = lockReason(a, lang);
     if (lock) return bad(res, 400, lock);
     const reason = str(req.body.reason, 300);
-    if (reason.length < 2) return bad(res, 400, "Tell us why you are cancelling.");
+    if (reason.length < 2) return bad(res, 400, T(req, "Tell us why you are cancelling."));
     (a.history = a.history || []).push({ at: nowIso(), action: "cancelled", from: a.status, to: "cancelled", by: "patient", reason });
     a.status = "cancelled"; a.cancelReason = reason; a.updatedAt = nowIso();
     audit(PATIENT, "Patient cancelled appointment", `${a.token} · ${a.date} ${a.slot}`);
-    notifyAppointment(a, "cancel", req, `${siteBase(req)}/#book`);
+    notifyAppointment(a, "cancel", req, `${siteBase(req)}${a.lang === "hi" ? "/hi/" : "/"}#book`);
     store.save();
-    res.json({ booking: publicView(a) });
+    res.json({ booking: publicView(a, lang) });
   });
   app.post("/api/booking/reschedule", (req, res) => {
     const a = guard(req, res); if (!a) return;
     const s = settings();
-    const lock = lockReason(a);
+    const lang = i18n.reqLang(req);
+    const lock = lockReason(a, lang);
     if (lock) return bad(res, 400, lock);
-    if (s.bookingOn === false) return bad(res, 400, `Online changes are paused. Please call ${s.helpdesk}.`);
+    if (s.bookingOn === false) return bad(res, 400, T(req, "Online changes are paused. Please call {helpdesk}.", { helpdesk: s.helpdesk }));
     const date = str(req.body.date, 10), slot = str(req.body.slot, 20);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < todayIst() || date > todayIst(BOOKING_DAYS - 1)) return bad(res, 400, `Choose a date in the next ${BOOKING_DAYS} days.`);
-    if (isClosed(date, s)) return bad(res, 400, "The OPD is closed on that day. Choose another date.");
-    if (!slotLabels(s).includes(slot)) return bad(res, 400, "Choose one of the listed times.");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < todayIst() || date > todayIst(BOOKING_DAYS - 1)) return bad(res, 400, T(req, "Choose a date in the next {n} days.", { n: BOOKING_DAYS }));
+    if (isClosed(date, s)) return bad(res, 400, T(req, "The OPD is closed on that day. Choose another date."));
+    if (!slotLabels(s).includes(slot)) return bad(res, 400, T(req, "Choose one of the listed times."));
     const when = apptTime({ date, slot });
-    if (!(when > Date.now() + 30 * 60e3)) return bad(res, 400, "That time has passed. Choose a later time.");
-    if (date === a.date && slot === a.slot) return bad(res, 400, "That is your current time. Choose a different one.");
+    if (!(when > Date.now() + 30 * 60e3)) return bad(res, 400, T(req, "That time has passed. Choose a later time."));
+    if (date === a.date && slot === a.slot) return bad(res, 400, T(req, "That is your current time. Choose a different one."));
     const perSlot = Math.max(1, Number(s.perSlot) || 1);
-    if (takenCount(a.doctor, date, slot, a.id) >= perSlot) return bad(res, 409, "That time was just booked. Please pick another slot.");
+    if (takenCount(a.doctor, date, slot, a.id) >= perSlot) return bad(res, 409, T(req, "That time was just booked. Please pick another slot."));
     const from = `${a.date} ${a.slot}`;
     const entry = { at: nowIso(), action: "rescheduled", from, to: `${date} ${slot}`, by: "patient" };
     // tokens are unique per day: give a new one if the new day already uses it
@@ -558,7 +599,7 @@ function register(ctx) {
     audit(PATIENT, "Patient rescheduled appointment", `${a.token} · ${from} → ${date} ${slot}`);
     notifyAppointment(a, "reschedule", req);
     store.save();
-    res.json({ booking: publicView(a) });
+    res.json({ booking: publicView(a, lang) });
   });
 
   /* ---------- admin: notifications ---------- */
@@ -630,7 +671,7 @@ function register(ctx) {
       retentionLastRun: db().retentionLastRun || null,
       retention: { appointments: s.retentionAppointments, enquiries: s.retentionEnquiries, subscribers: s.retentionSubscribers },
       openRequests: S.dataRequests.filter((r) => ["new", "verifying"].includes(r.status)).length,
-      consentVersion: consentVersion(), consentVersions: db().consentVersions || {}
+      consentVersion: consentVersion(), consentVersionHi: consentVersion("hi"), consentVersions: db().consentVersions || {}
     });
   });
 
@@ -641,4 +682,4 @@ function register(ctx) {
   setInterval(() => { try { runReminders(); } catch (e) { console.warn("reminders failed:", e.message); } }, 60e3).unref();
 }
 
-module.exports = { register, consentError, consentRecord, onBooked, dataRequest, renderShell, renderMarkdown, runReminders, runRetention };
+module.exports = { register, consentError, consentRecord, consentText, onBooked, dataRequest, renderShell, renderMarkdown, runReminders, runRetention };

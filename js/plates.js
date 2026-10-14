@@ -34,6 +34,9 @@ const cssPx = (name, fallback) => parseFloat(getComputedStyle(root).getPropertyV
 const guard = (name, fn) => { try { return fn(); } catch (e) { warn(name, e); return null; } };
 const listen = (mq, fn) => (mq.addEventListener ? mq.addEventListener("change", fn) : mq.addListener(fn));
 
+/* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+const tr = (s, v) => { const d = window.I18N || {}; let r = Object.prototype.hasOwnProperty.call(d, s) ? d[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
+
 /* data.js globals (top-level const in a classic script: visible here through the global lexical scope) */
 const DEPTS = typeof DEPARTMENTS !== "undefined" ? DEPARTMENTS : [];
 const DOCS = typeof DOCTORS !== "undefined" ? DOCTORS : [];
@@ -332,17 +335,17 @@ function initImaging() {
 
   const hint = $("#ch-imaging .scrub-hint__state");
   function readout() {
-    const t = mode === "ct" ? `Rotation ${ct.frame * 10}°` : `Slice ${mri.frame + 1} of ${MRI_COUNT}`;
+    const t = mode === "ct" ? tr("Rotation {n}°", { n: ct.frame * 10 }) : tr("Slice {n} of {total}", { n: mri.frame + 1, total: MRI_COUNT });
     if (readTR) readTR.textContent = t;
     if (hint) hint.textContent = t;
   }
   mri.changed = (f) => {
-    if (mriRange) { mriRange.value = String(f); mriRange.setAttribute("aria-valuetext", `Slice ${f + 1} of ${MRI_COUNT}`); }
+    if (mriRange) { mriRange.value = String(f); mriRange.setAttribute("aria-valuetext", tr("Slice {n} of {total}", { n: f + 1, total: MRI_COUNT })); }
     loc?.style.setProperty("--f", (f / (MRI_COUNT - 1)).toFixed(4));
     if (mode === "mri") readout();
   };
   ct.changed = (f) => {
-    if (ctRange) { ctRange.value = String(f); ctRange.setAttribute("aria-valuetext", `Rotation ${f * 10} degrees`); }
+    if (ctRange) { ctRange.value = String(f); ctRange.setAttribute("aria-valuetext", tr("Rotation {n} degrees", { n: f * 10 })); }
     if (mode === "ct") readout();
   };
 
@@ -665,7 +668,8 @@ function initCabinet() {
   };
 
   const SHAPE = { Oncology: "is-circle" };                 // other image views are photos
-  let cur = { name: (title && title.textContent.trim()) || "Neurology", alt: 0 };
+  // data-dept: the English name (the Hindi page shows the Hindi one)
+  let cur = { name: (title && (title.dataset.dept || title.textContent.trim())) || "Neurology", alt: 0 };
   let token = 0;
 
   const shown = () => cab.getClientRects().length > 0;       // the cabinet is display: none below 1024 px
@@ -675,7 +679,7 @@ function initCabinet() {
     if (!line) { credit.hidden = true; credit.replaceChildren(); return; }
     const a = doc.createElement("a");
     a.href = `credits.html${id ? "#" + id : ""}`;
-    a.textContent = "Credits";
+    a.textContent = tr("Credits");
     credit.replaceChildren(doc.createTextNode(`${line}. `), a);
     credit.hidden = false;
   }
@@ -690,7 +694,7 @@ function initCabinet() {
     const my = ++token;
     const view = d.view === "image" ? "image" : d.view === "type" ? "type" : "still";
 
-    if (title) title.textContent = d.name;
+    if (title) { title.textContent = d.label || d.name; title.dataset.dept = d.name; }
     if (text) text.textContent = (alt && d.captionAlt) || d.caption || "";
     setCredit(alt ? d.creditAlt || d.credit : d.credit, alt ? d.creditIdAlt || d.creditId : d.creditId);
     // the inset and the switch keep their place (visibility only), so the cabinet never changes height
@@ -783,7 +787,7 @@ function initRetina() {
     loadNatural();
     if (fromPointer) range.value = String(v);
     eye.style.setProperty("--reveal", `${v}%`);
-    range.setAttribute("aria-valuetext", v === 0 ? "Red-free" : v === 100 ? "Natural colour" : `${v}% natural colour`);
+    range.setAttribute("aria-valuetext", v === 0 ? tr("Red-free") : v === 100 ? tr("Natural colour") : tr("{n}% natural colour", { n: v }));
   }
 
   range.addEventListener("input", () => set(+range.value, false));
@@ -839,7 +843,7 @@ function initDocCount() {
   const el = $("#docTodayCount");
   if (!el || !DOCS.length) return;
   const n = DOCS.filter((d) => d.today).length;
-  el.textContent = `${n} ${n === 1 ? "consultant" : "consultants"} in today`;
+  el.textContent = tr(n === 1 ? "{n} consultant in today" : "{n} consultants in today", { n });
 }
 
 /* ---------------------------------------------------------------- go */

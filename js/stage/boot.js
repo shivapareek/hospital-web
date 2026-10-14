@@ -3,6 +3,8 @@
    and owns the WebGL context budget. If anything here fails, the posters and stills simply stay. */
 
 import { detectTier } from "./caps.js";
+/* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+const tr = (s, v) => { const d = window.I18N || {}; let r = Object.prototype.hasOwnProperty.call(d, s) ? d[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
 
 const doc = document;
 const root = doc.documentElement;
@@ -106,7 +108,7 @@ function setupHero(tier) {
     msg.className = "stage__status";
     msg.setAttribute("role", "status");
     load.after(msg);
-    setTimeout(() => { msg.textContent = "3D view unavailable. The still image stays."; }, 50);
+    setTimeout(() => { msg.textContent = tr("3D view unavailable. The still image stays."); }, 50);
     if (lost) { box.setAttribute("tabindex", "-1"); box.focus({ preventScroll: true }); }
   };
 
@@ -132,7 +134,7 @@ function setupHero(tier) {
       load.setAttribute("aria-disabled", "true");
       load.setAttribute("aria-busy", "true");
       load.dataset.label = load.textContent;
-      load.textContent = "Loading the 3D model";
+      load.textContent = tr("Loading the 3D model");
       go();
     }, { once: true });
     return;
@@ -149,7 +151,8 @@ let cabinet = null;
 
 function currentSpec() {
   if (lastSpec) return lastSpec;
-  const name = doc.getElementById("cabTitle")?.textContent.trim() || "Neurology";
+  const t = doc.getElementById("cabTitle");
+  const name = (t && (t.dataset.dept || t.textContent.trim())) || "Neurology";   // data-dept: English name, also on Hindi pages
   const alt = doc.querySelector('#cabSwitch [aria-pressed="true"]')?.dataset.alt || 0;
   return { name, alt: +alt };
 }

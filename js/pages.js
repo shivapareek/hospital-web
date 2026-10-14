@@ -16,6 +16,11 @@
   const icon = (id) => `<svg class="ic"><use href="#${id}"/></svg>`;
   const root = document.documentElement;
   const CMS = window.CMS || { api: "/api" };
+  /* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+  const I18N = window.I18N || {};
+  const tr = (s, v) => { let r = Object.prototype.hasOwnProperty.call(I18N, s) ? I18N[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
+  const LANG = CMS.lang || "en";
+  const HOME = CMS.home || "/";   // "/hi/" on Hindi pages
 
   /* ---------- toast ---------- */
   let toastTimer;
@@ -29,9 +34,9 @@
   }
 
   async function post(kind, body) {
-    const r = await fetch(`${CMS.api}/submit/${kind}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify(body) });
+    const r = await fetch(`${CMS.api}/submit/${kind}`, { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify(LANG === "en" ? body : { ...body, lang: LANG }) });
     const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data.error || "We couldn't send that. Please try again or call us.");
+    if (!r.ok) throw new Error(data.error || tr("We couldn't send that. Please try again or call us."));
     return data;
   }
 
@@ -43,7 +48,7 @@
   const sizes = [1, 1.1, 1.2];
   let fs = Math.max(0, sizes.indexOf(parseFloat(storage.get("cn-fs") || "1")));
   const applyFs = () => root.style.setProperty("--fs-scale", String(sizes[fs]));
-  $("#fontToggle")?.addEventListener("click", () => { fs = (fs + 1) % sizes.length; storage.set("cn-fs", String(sizes[fs])); applyFs(); toast(`Text size ${Math.round(sizes[fs] * 100)}%`); });
+  $("#fontToggle")?.addEventListener("click", () => { fs = (fs + 1) % sizes.length; storage.set("cn-fs", String(sizes[fs])); applyFs(); toast(tr("Text size {n}%", { n: Math.round(sizes[fs] * 100) })); });
   applyFs();
 
   /* ---------- header and mobile menu ---------- */
@@ -100,11 +105,11 @@
 
   $("#shareLoc")?.addEventListener("click", () => {
     const msg = $("#locMsg");
-    if (!navigator.geolocation) { msg.className = "form-msg err"; msg.textContent = "This device can't share location. Please call us."; return; }
-    msg.className = "form-msg"; msg.textContent = "Finding your location…";
+    if (!navigator.geolocation) { msg.className = "form-msg err"; msg.textContent = tr("This device can't share location. Please call us."); return; }
+    msg.className = "form-msg"; msg.textContent = tr("Finding your location…");
     navigator.geolocation.getCurrentPosition(
-      (p) => { msg.className = "form-msg ok"; msg.textContent = `Location shared (${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}). Our ER team will call you back.`; },
-      () => { msg.className = "form-msg err"; msg.textContent = "We couldn't get your location. Please call 1800-123-4567."; },
+      (p) => { msg.className = "form-msg ok"; msg.textContent = tr("Location shared ({lat}, {lng}). Our ER team will call you back.", { lat: p.coords.latitude.toFixed(4), lng: p.coords.longitude.toFixed(4) }); },
+      () => { msg.className = "form-msg err"; msg.textContent = tr("We couldn't get your location. Please call 1800-123-4567."); },
       { timeout: 8000 });
   });
 
@@ -121,28 +126,28 @@
   $("#reportForm")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const f = e.target, msg = $("#reportMsg"), uhid = $("#rUhid"), ph = $("#rPhone");
-    if (uhid.value.trim().length < 5 || !/^[6-9]\d{9}$/.test(ph.value.trim())) { msg.className = "form-msg err"; msg.textContent = "Enter your UHID and a 10-digit mobile number."; return; }
-    if (!consentOk(f)) { msg.className = "form-msg err"; msg.textContent = "Tick the box to agree to the privacy policy."; return; }
-    msg.className = "form-msg"; msg.textContent = "Sending…";
+    if (uhid.value.trim().length < 5 || !/^[6-9]\d{9}$/.test(ph.value.trim())) { msg.className = "form-msg err"; msg.textContent = tr("Enter your UHID and a 10-digit mobile number."); return; }
+    if (!consentOk(f)) { msg.className = "form-msg err"; msg.textContent = tr("Tick the box to agree to the privacy policy."); return; }
+    msg.className = "form-msg"; msg.textContent = tr("Sending…");
     post("report", { uhid: uhid.value.trim(), phone: ph.value.trim(), consent: true })
-      .then(() => { msg.className = "form-msg ok"; msg.textContent = `Request received. We'll send your reports to ******${ph.value.trim().slice(-4)}.`; })
+      .then(() => { msg.className = "form-msg ok"; msg.textContent = tr("Request received. We'll send your reports to {phone}.", { phone: "******" + ph.value.trim().slice(-4) }); })
       .catch((err) => { msg.className = "form-msg err"; msg.textContent = err.message; });
   });
 
   $("#newsletter")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const inp = $("input[type=email]", e.target);
-    if (!inp.checkValidity() || !inp.value.trim()) { toast("Enter a valid email address."); return; }
+    if (!inp.checkValidity() || !inp.value.trim()) { toast(tr("Enter a valid email address.")); return; }
     post("subscribe", { email: inp.value.trim(), consent: true })
-      .then(() => { inp.value = ""; toast("Subscribed. The next issue arrives on the 1st."); })
+      .then(() => { inp.value = ""; toast(tr("Subscribed. The next issue arrives on the 1st.")); })
       .catch((err) => toast(err.message));
   });
 
   /* ---------- assistant ---------- */
   const chat = $("#chat"), chatBody = $("#chatBody"), chatBtn = $("#chatToggle");
   const RULES = typeof CHAT_RULES !== "undefined" ? CHAT_RULES : [];
-  // replies link to home-page sections ("#book"): from here they go to the home page
-  const homeLinks = (html) => String(html).replace(/href="#([a-z][\w-]*)"/gi, 'href="/#$1"');
+  // replies link to home-page sections ("#book"): from here they go to the home page (in the page language)
+  const homeLinks = (html) => String(html).replace(/href="#([a-z][\w-]*)"/gi, `href="${HOME}#$1"`);
   let chatStarted = false;
   function addMsg(html, who = "bot") {
     const m = document.createElement("div");
@@ -159,7 +164,7 @@
     const rule = RULES.find((r) => (r.k || []).some((k) => q.includes(k)));
     setTimeout(() => {
       t.classList.remove("msg--typing");
-      t.innerHTML = rule ? homeLinks(rule.a) : "I don't have an answer for that yet. Call our helpdesk on <b>+91 98765 43210</b>, or tap one of the options below.";
+      t.innerHTML = rule ? homeLinks(rule.a) : tr("I don't have an answer for that yet. Call our helpdesk on <b>+91 98765 43210</b>, or tap one of the options below.");
       chatBody.scrollTop = chatBody.scrollHeight;
     }, 600 + Math.random() * 400);
   }
@@ -169,7 +174,7 @@
     chat.classList.toggle("open", open);
     chat.setAttribute("aria-hidden", String(!open));
     chatBtn.setAttribute("aria-expanded", String(open));
-    if (open && !chatStarted) { chatStarted = true; addMsg("Namaste. I'm Nova, CareNova's assistant. What can I help you with?"); }
+    if (open && !chatStarted) { chatStarted = true; addMsg(tr("Namaste. I'm Nova, CareNova's assistant. What can I help you with?")); }
     if (open) setTimeout(() => $("#chatInput")?.focus(), 30);
     if (had) chatBtn.focus();
   }
@@ -177,7 +182,7 @@
     chatBtn.addEventListener("click", () => toggleChat(!chat.classList.contains("open")));
     const quick = $("#chatQuick");
     if (quick) {
-      quick.innerHTML = ["Book appointment", "Emergency", "Health packages", "Insurance", "OPD timings", "WhatsApp"].map((q) => `<button type="button">${q}</button>`).join("");
+      quick.innerHTML = ["Book appointment", "Emergency", "Health packages", "Insurance", "OPD timings", "WhatsApp"].map((q) => `<button type="button">${tr(q)}</button>`).join("");
       quick.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; addMsg(esc(b.textContent), "user"); botReply(b.textContent); });
     }
     $("#chatForm")?.addEventListener("submit", (e) => {
@@ -197,7 +202,7 @@
     if (t.dataset.open) { e.preventDefault(); openModal(t.dataset.open); return; }
     if (t.hasAttribute("data-close")) { const m = t.closest(".modal"); if (m) closeModal(m); return; }
     if (t.hasAttribute("data-open-chat")) { toggleChat(true); return; }
-    if (t.hasAttribute("data-video-book")) { e.preventDefault(); location.href = "/#book?video=1"; }
+    if (t.hasAttribute("data-video-book")) { e.preventDefault(); location.href = HOME + "#book?video=1"; }
   });
 
   /* ---------- doctor directory: search and quick filters (the page works without them) ---------- */

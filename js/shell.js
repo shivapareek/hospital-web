@@ -11,6 +11,10 @@
     set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } }
   };
   const root = document.documentElement;
+  /* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+  const I18N = window.I18N || {};
+  const tr = (s, v) => { let r = Object.prototype.hasOwnProperty.call(I18N, s) ? I18N[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
+  const LANG = (window.CMS && window.CMS.lang) || "en";
 
   /* toast */
   let toastTimer;
@@ -32,7 +36,7 @@
   const sizes = [1, 1.1, 1.2];
   let fs = Math.max(0, sizes.indexOf(parseFloat(storage.get("cn-fs") || "1")));
   const applyFs = () => root.style.setProperty("--fs-scale", String(sizes[fs]));
-  $("#fontToggle")?.addEventListener("click", () => { fs = (fs + 1) % sizes.length; storage.set("cn-fs", String(sizes[fs])); applyFs(); toast(`Text size ${Math.round(sizes[fs] * 100)}%`); });
+  $("#fontToggle")?.addEventListener("click", () => { fs = (fs + 1) % sizes.length; storage.set("cn-fs", String(sizes[fs])); applyFs(); toast(tr("Text size {n}%", { n: Math.round(sizes[fs] * 100) })); });
   applyFs();
 
   /* header and mobile menu */
@@ -79,11 +83,11 @@
   });
   $("#shareLoc")?.addEventListener("click", () => {
     const msg = $("#locMsg");
-    if (!navigator.geolocation) { msg.className = "form-msg err"; msg.textContent = "This device can't share location. Please call us."; return; }
-    msg.className = "form-msg"; msg.textContent = "Finding your location…";
+    if (!navigator.geolocation) { msg.className = "form-msg err"; msg.textContent = tr("This device can't share location. Please call us."); return; }
+    msg.className = "form-msg"; msg.textContent = tr("Finding your location…");
     navigator.geolocation.getCurrentPosition(
-      (p) => { msg.className = "form-msg ok"; msg.textContent = `Location shared (${p.coords.latitude.toFixed(4)}, ${p.coords.longitude.toFixed(4)}). Our ER team will call you back.`; },
-      () => { msg.className = "form-msg err"; msg.textContent = "We couldn't get your location. Please call 1800-123-4567."; },
+      (p) => { msg.className = "form-msg ok"; msg.textContent = tr("Location shared ({lat}, {lng}). Our ER team will call you back.", { lat: p.coords.latitude.toFixed(4), lng: p.coords.longitude.toFixed(4) }); },
+      () => { msg.className = "form-msg err"; msg.textContent = tr("We couldn't get your location. Please call 1800-123-4567."); },
       { timeout: 8000 });
   });
 
@@ -91,10 +95,10 @@
   $("#newsletter")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const inp = $("input[type=email]", e.target);
-    if (!inp.checkValidity() || !inp.value.trim()) { toast("Enter a valid email address."); return; }
-    fetch("/api/submit/subscribe", { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify({ email: inp.value.trim(), consent: true }) })
-      .then((r) => r.json().then((d) => { if (!r.ok) throw new Error(d.error || "We couldn't subscribe you. Please try again."); }))
-      .then(() => { inp.value = ""; toast("Subscribed. The next issue arrives on the 1st."); })
+    if (!inp.checkValidity() || !inp.value.trim()) { toast(tr("Enter a valid email address.")); return; }
+    fetch("/api/submit/subscribe", { method: "POST", headers: { "Content-Type": "application/json", "X-Requested-With": "cms" }, body: JSON.stringify({ email: inp.value.trim(), consent: true, ...(LANG === "en" ? {} : { lang: LANG }) }) })
+      .then((r) => r.json().then((d) => { if (!r.ok) throw new Error(d.error || tr("We couldn't subscribe you. Please try again.")); }))
+      .then(() => { inp.value = ""; toast(tr("Subscribed. The next issue arrives on the 1st.")); })
       .catch((err) => toast(err.message));
   });
 })();

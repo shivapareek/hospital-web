@@ -2,7 +2,7 @@
    Every page reuses the home page's head, header, footer, floating buttons and modals (renderInner) and
    replaces <main>. Inner pages load js/pages.js instead of js/main.js (main.js expects the home page).
 
-   Routes
+   Routes (each also under /hi/… in Hindi: same handlers, the language comes from the URL)
      /doctors, /doctors/:slug            directory (?speciality=<slug>) and profiles
      /specialities, /specialities/:slug  index and speciality pages (/specialties… redirects here)
      /library, /library/:slug            health library and articles
@@ -19,6 +19,8 @@ const { Marked } = require("marked");
 const { addRenderHook } = require("./render");
 const { DEFAULT_SETTINGS } = require("./schema");
 const DEMO = require("./pages-content");
+const i18n = require("./i18n");
+const { tr } = i18n;
 
 let C = null;   // ctx from server/index.js
 const db = () => C.db();
@@ -33,9 +35,13 @@ const initials = (name) => String(name || "").replace(/^Dr\.?\s*/i, "").split(/\
 const bookHref = (q) => "/#book?" + Object.entries(q).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
 const telHref = (s) => "tel:" + String(s || "").replace(/[^\d+]/g, "");
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-function fmtDate(iso) {
+function fmtDate(iso, lang = "en") {
   const m = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(String(iso || ""));
   if (!m) return String(iso || "");
+  if (lang === "hi") {
+    const d = new Date(Date.UTC(+m[1], +m[2] - 1, m[3] ? +m[3] : 1));
+    return d.toLocaleDateString("hi-IN", { ...(m[3] ? { day: "numeric" } : {}), month: "long", year: "numeric", timeZone: "UTC" });
+  }
   return (m[3] ? Number(m[3]) + " " : "") + MONTHS[Number(m[2]) - 1] + " " + m[1];
 }
 const words = (s) => String(s || "").split(/\s+/).filter(Boolean).length;
@@ -52,7 +58,7 @@ function slugify(s, { dropTitle = false } = {}) {
 }
 const SLUG_SOURCES = { doctors: "name", departments: "name", articles: "title", pages: "title" };
 // single-segment paths that a custom page must never take
-const FIXED = ["admin", "api", "assets", "css", "js", "uploads", "doctors", "specialities", "specialties", "library", "index", "index-html", "credits", "credits-html", "sitemap-xml", "robots-txt", "favicon-ico", "404"];
+const FIXED = ["admin", "api", "assets", "css", "js", "uploads", "hi", "doctors", "specialities", "specialties", "library", "index", "index-html", "credits", "credits-html", "sitemap-xml", "robots-txt", "favicon-ico", "404"];
 function takenTopPaths() {
   const set = new Set(FIXED);
   for (const l of (C.app._router && C.app._router.stack) || []) {
@@ -138,19 +144,27 @@ function rewriteUrl(v) {
   if (!v || /^([a-z][a-z0-9+.-]*:|\/|#|\?)/i.test(v)) return v;
   return "/" + v.replace(/^\.\//, "");
 }
+/** Language of a page request: /hi/… is Hindi. */
+const langOf = (req) => (req && /^\/hi(\/|$)/.test(req.path) ? "hi" : "en");
 
 /**
  * Renders a page in the site chrome.
  * opts: { title, description, path, image, type ("website"|"article"), jsonLd (object or array), body (HTML for <main>),
- *         active ("/doctors"…: highlights the menu link), status, noindex, styles [], scripts [], bodyClass, mainClass }
+ *         active ("/doctors"…: highlights the menu link), status, noindex, styles [], scripts [], bodyClass, mainClass,
+ *         lang ("en"|"hi"; default from the URL) }
+ * `path` and `active` are the English paths; on Hindi pages every internal link is moved under /hi/.
  * Also used by server/privacy.js (renderShell) for the legal and manage-booking pages, via ctx.renderInner.
  */
 function renderInner(req, opts) {
+  const lang = i18n.norm(opts.lang || langOf(req));
+  const hi = lang === "hi";
+  const T = (s, v) => tr(lang, s, v);
   const s = settings();
   const data = db();
-  const $ = cheerio.load(C.renderPage(data));
   const base = baseUrl(req);
-  const url = base + (opts.path || (req ? req.path : "/"));
+  const enPath = opts.path || i18n.basePath(req ? req.path : "/");
+  const $ = cheerio.load(C.renderPage(data, { lang, path: enPath, base }));
+  const url = base + i18n.localizeHref(enPath, lang);
   const fullTitle = opts.title ? `${opts.title} · ${s.name}` : s.name;
 
   // head: title, description, canonical, share tags, structured data
@@ -169,21 +183,23 @@ function renderInner(req, opts) {
     `<meta property="og:title" content="${esc(opts.title || s.name)}">`,
     `<meta property="og:description" content="${esc(desc)}">`,
     `<meta property="og:url" content="${esc(url)}">`,
+    hi ? '<meta property="og:locale" content="hi_IN">' : "",
     img ? `<meta property="og:image" content="${esc(img)}">` : "",
     `<meta name="twitter:card" content="${img ? "summary_large_image" : "summary"}">`
   ];
+  if (opts.status === 404) $('link[rel="alternate"][hreflang]').remove();
   for (const ld of [].concat(opts.jsonLd || [])) head.push(`<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`);
   $("head").append(head.filter(Boolean).join("\n"));
 
   // the new main content (settings replacements were applied to the rest of the page already)
   $("main").first().attr("id", "main").attr("class", ["pg", opts.mainClass].filter(Boolean).join(" ")).html(C.applyReplacements(opts.body || "", data.settings));
   if (opts.bodyClass) $("body").addClass(opts.bodyClass);
-  for (const href of opts.styles || []) if (!$(`link[href="${href}"]`).length) $("head").append(`<link rel="stylesheet" href="${esc(href)}">`);
+  for (const href of opts.styles || []) if (!$(`link[href="${href}"], link[href="/${href}"]`).length) $("head").append(`<link rel="stylesheet" href="${esc(href)}">`);
 
   // scripts: keep data.js (chat replies) and anything else global; swap the home-page-only ones for js/pages.js
-  $('script[src="js/main.js"], script[src="js/plates.js"], script[src^="js/stage/"]').remove();
+  $('script[src$="js/main.js"], script[src$="js/plates.js"], script[src*="js/stage/"]').remove();
   $("#pkgModal").remove();   // the check-up request needs the home page's package list
-  const dataJs = $('script[src="js/data.js"]');
+  const dataJs = $('script[src*="js/data.js"]');
   if (dataJs.length) dataJs.after('<script src="js/pages.js"></script>'); else $("body").append('<script src="js/pages.js"></script>');
   for (const src of opts.scripts || []) $("body").append(`<script src="${esc(src)}" defer></script>`);
 
@@ -202,6 +218,8 @@ function renderInner(req, opts) {
   });
   $(".nav__link, #mobileMenu a").removeClass("is-active").removeAttr("aria-current");
   if (opts.active) $(`.nav__link[href="${opts.active}"], #mobileMenu a[href="${opts.active}"]`).addClass("is-active").attr("aria-current", "page");
+  // Hindi: every internal page link stays in /hi/ (files, APIs and the language switcher keep their address)
+  if (hi) $("a[href^='/']").each((_, a) => { if (!$(a).is("[data-lang-switch]")) $(a).attr("href", i18n.localizeHref($(a).attr("href"), "hi")); });
   return $.html();
 }
 
@@ -211,17 +229,17 @@ function send(res, req, opts) {
 }
 
 /* ---------- shared fragments ---------- */
-function crumbs(items) {
-  return `<nav class="crumbs" aria-label="Breadcrumb"><ol>${items.map((it, i) => (i === items.length - 1
+function crumbs(items, lang = "en") {
+  return `<nav class="crumbs" aria-label="${esc(tr(lang, "Breadcrumb"))}"><ol>${items.map((it, i) => (i === items.length - 1
     ? `<li><span aria-current="page">${esc(it.name)}</span></li>`
     : `<li><a href="${esc(it.path)}">${esc(it.name)}</a></li>`)).join("")}</ol></nav>`;
 }
-function crumbsLd(base, items) {
-  return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: base + it.path })) };
+function crumbsLd(base, items, lang = "en") {
+  return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.map((it, i) => ({ "@type": "ListItem", position: i + 1, name: it.name, item: base + i18n.localizeHref(it.path, lang) })) };
 }
-function pageHead({ trail, kicker, fact, title, lead, side }) {
+function pageHead({ trail, kicker, fact, title, lead, side, lang = "en" }) {
   return `<section class="pg-head"><div class="wrap">
-    ${crumbs(trail)}
+    ${crumbs(trail, lang)}
     <header class="sec-head${side ? " sec-head--row" : ""} pg-head__h">
       <div class="sec-head__bar"><p class="kicker">${esc(kicker)}</p>${fact ? `<p class="sec-fact">${fact}</p>` : ""}</div>
       <h1 class="pg-title">${esc(title)}</h1>
@@ -234,47 +252,57 @@ function opdHtml(opd) {
   if (!hours) return esc(opd);
   return `${esc(days)} · ${hours.split(", ").map((r) => `<span class="nowrap">${esc(r)}</span>`).join(", ")}`;
 }
-const deptBySlug = (slug) => visible("departments").find((d) => d.slug === slug);
-const deptByName = (name) => visible("departments").find((d) => d.name === name);
-const doctorByName = (name) => visible("doctors").find((d) => d.name === name);
-const docsIn = (dept) => visible("doctors").filter((d) => d.dept === dept);
+/** Visible items of a collection in a language (Hindi fields swapped in; English fallback). */
+const vis = (col, lang = "en") => visible(col).map((x) => i18n.localized(col, x, lang));
+const deptBySlug = (slug, lang) => vis("departments", lang).find((d) => d.slug === slug);
+const deptByName = (name, lang) => vis("departments", lang).find((d) => d.name === name);
+const doctorByName = (name, lang) => vis("doctors", lang).find((d) => d.name === name);
+const docsIn = (dept, lang) => vis("doctors", lang).filter((d) => d.dept === dept);
+/** A speciality's display name (Hindi on Hindi pages); doctors and symptoms store the English name. */
+const deptLabel = (name, lang) => { const d = deptByName(name, lang); return (d && d.label) || name; };
+const lower = (s, lang) => (lang === "hi" ? s : String(s).toLowerCase());
+const nf = (n) => Number(n).toLocaleString("en-IN");
 
-function doctorCard(d, { headingTag = "h3" } = {}) {
-  const dep = deptByName(d.dept);
+function doctorCard(d, { headingTag = "h3", lang = "en" } = {}) {
+  const T = (s, v) => tr(lang, s, v);
+  const dep = deptByName(d.dept, lang);
+  const dl = deptLabel(d.dept, lang);
   const H = headingTag;
-  return `<article class="doc pg-doc" data-doc="${esc((d.name + " " + d.dept + " " + (d.role || "")).toLowerCase())}">
-    <p class="doc__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? "In today" : "Next: tomorrow"}${d.room ? `<span class="doc__room">Room ${esc(d.room)}</span>` : ""}</p>
+  return `<article class="doc pg-doc" data-doc="${esc((d.name + " " + d.dept + (dl !== d.dept ? " " + dl : "") + " " + (d.role || "")).toLowerCase())}">
+    <p class="doc__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? T("In today") : T("Next: tomorrow")}${d.room ? `<span class="doc__room">${T("Room {room}", { room: esc(d.room) })}</span>` : ""}</p>
     ${d.photo ? `<img class="doc__photo" src="${esc(d.photo)}" alt="${esc(d.photoAlt || d.name)}" width="800" height="1000" loading="lazy" decoding="async">` : ""}
     <div class="doc__id">
       ${d.photo ? "" : `<span class="avatar avatar--lg" aria-hidden="true">${esc(initials(d.name))}</span>`}
-      <div><${H}><a class="pg-doc__link" href="/doctors/${esc(d.slug)}">${esc(d.name)}</a></${H}><p class="doc__role">${esc(d.role)}</p>${String(d.role || "").toLowerCase().includes(String(d.dept).toLowerCase()) ? "" : `<p class="doc__dept">${dep ? `<a href="/specialities/${esc(dep.slug)}">${esc(d.dept)}</a>` : esc(d.dept)}</p>`}</div>
+      <div><${H}><a class="pg-doc__link" href="/doctors/${esc(d.slug)}">${esc(d.name)}</a></${H}><p class="doc__role">${esc(d.role)}</p>${String(d.role || "").toLowerCase().includes(String(dl).toLowerCase()) ? "" : `<p class="doc__dept">${dep ? `<a href="/specialities/${esc(dep.slug)}">${esc(dl)}</a>` : esc(dl)}</p>`}</div>
     </div>
     ${d.deg ? `<p class="doc__deg">${esc(d.deg)}</p>` : ""}
     <dl class="doc__facts">
-      ${d.lang ? `<div><dt>Speaks</dt><dd>${esc(d.lang)}</dd></div>` : ""}
+      ${d.lang ? `<div><dt>${T("Speaks")}</dt><dd>${esc(d.lang)}</dd></div>` : ""}
       ${d.opd ? `<div><dt>OPD</dt><dd class="num">${opdHtml(d.opd)}</dd></div>` : ""}
     </dl>
-    <p class="doc__meta num">${d.exp ? `<span><b>${esc(d.exp)}</b> yrs</span>` : ""}${d.exp && d.rating ? " · " : ""}${d.rating ? `<span>★ <b>${esc(d.rating)}</b>${d.reviews ? ` (${Number(d.reviews).toLocaleString("en-IN")})` : ""}</span>` : ""}</p>
+    <p class="doc__meta num">${d.exp ? `<span>${T("<b>{n}</b> yrs", { n: esc(d.exp) })}</span>` : ""}${d.exp && d.rating ? " · " : ""}${d.rating ? `<span>★ <b>${esc(d.rating)}</b>${d.reviews ? ` (${nf(d.reviews)})` : ""}</span>` : ""}</p>
     <div class="doc__foot">
-      <span>${d.fee ? `<span class="doc__fee num">${inr(d.fee)}</span>` : ""}${d.video ? ` <span class="doc__video">${icon("i-video")} Video</span>` : ""}</span>
-      <a class="link-btn" href="${esc(bookHref({ doctor: d.name }))}">Book ${icon("i-arrow")}<span class="sr-only"> ${esc(d.name)}</span></a>
+      <span>${d.fee ? `<span class="doc__fee num">${inr(d.fee)}</span>` : ""}${d.video ? ` <span class="doc__video">${icon("i-video")} ${T("Video")}</span>` : ""}</span>
+      <a class="link-btn" href="${esc(bookHref({ doctor: d.name }))}">${T("Book")} ${icon("i-arrow")}<span class="sr-only"> ${esc(d.name)}</span></a>
     </div>
   </article>`;
 }
 
-function specimenFigure(d, { size = "lg" } = {}) {
+function specimenFigure(d, { size = "lg", lang = "en" } = {}) {
+  const T = (s, v) => tr(lang, s, v);
+  const name = d.label || d.name;
   const still = d.specimen && fileExists(`assets/img/specimens/${d.specimen}-1072.webp`) ? `assets/img/specimens/${d.specimen}-1072.webp` : null;
-  const credit = d.credit ? `<small class="credit">${esc(d.credit)}.${d.creditId ? ` <a href="/credits.html#${esc(d.creditId)}">Credits</a>` : ""}</small>` : "";
+  const credit = d.credit ? `<small class="credit">${esc(d.credit)}.${d.creditId ? ` <a href="/credits.html#${esc(d.creditId)}">${T("Credits")}</a>` : ""}</small>` : "";
   if (still) {
-    return `<figure class="pg-specimen pg-specimen--${size}"><div class="pg-specimen__stage"><img src="/${still}" width="1072" height="1072" alt="${esc(`Porcelain model: ${d.caption ? d.caption.split(".")[0] : d.name}`)}" decoding="async"${size === "sm" ? ' loading="lazy"' : ""}></div>
-      ${d.caption ? `<figcaption class="cap"><b class="cap__title">${esc(d.name)}</b><span class="cap__text">${esc(d.caption)}</span>${credit}</figcaption>` : ""}</figure>`;
+    return `<figure class="pg-specimen pg-specimen--${size}"><div class="pg-specimen__stage"><img src="/${still}" width="1072" height="1072" alt="${esc(T("Porcelain model: {what}", { what: d.caption ? d.caption.split(lang === "hi" ? "।" : ".")[0] : name }))}" decoding="async"${size === "sm" ? ' loading="lazy"' : ""}></div>
+      ${d.caption ? `<figcaption class="cap"><b class="cap__title">${esc(name)}</b><span class="cap__text">${esc(d.caption)}</span>${credit}</figcaption>` : ""}</figure>`;
   }
   if (d.image) {
     return `<figure class="pg-specimen pg-specimen--photo"><div class="pg-specimen__stage pg-specimen__stage--deep"><img src="${esc(rewriteUrl(d.image))}" alt="" decoding="async"></div>
-      ${d.caption ? `<figcaption class="cap"><b class="cap__title">${esc(d.name)}</b><span class="cap__text">${esc(d.caption)}</span>${credit}</figcaption>` : ""}</figure>`;
+      ${d.caption ? `<figcaption class="cap"><b class="cap__title">${esc(name)}</b><span class="cap__text">${esc(d.caption)}</span>${credit}</figcaption>` : ""}</figure>`;
   }
   return `<figure class="pg-specimen pg-specimen--type"><div class="pg-specimen__stage pg-specimen__stage--type"><span class="pg-specimen__type${String(d.stillText || "").length > 4 ? " is-long" : ""}" aria-hidden="true">${esc(d.stillText || initials(d.name))}</span></div>
-    ${d.caption ? `<figcaption class="cap"><b class="cap__title">${esc(d.name)}</b><span class="cap__text">${esc(d.caption)}</span></figcaption>` : ""}</figure>`;
+    ${d.caption ? `<figcaption class="cap"><b class="cap__title">${esc(name)}</b><span class="cap__text">${esc(d.caption)}</span></figcaption>` : ""}</figure>`;
 }
 function deptThumb(d) {
   if (d.still && fileExists(`${d.still}-320.webp`)) return `<img class="pg-spec__img" src="/${esc(d.still)}-320.webp" width="160" height="160" alt="" loading="lazy" decoding="async">`;
@@ -287,107 +315,119 @@ const hospitalLd = (base) => ({ "@type": "Hospital", name: settings().name, url:
    Doctors
    ========================================================= */
 function doctorsIndex(req, res) {
+  const lang = langOf(req);
+  const hi = lang === "hi";
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
   const base = baseUrl(req);
-  const all = visible("doctors");
-  const depts = visible("departments");
-  const current = req.query.speciality ? deptBySlug(String(req.query.speciality)) : null;
+  const all = vis("doctors", lang);
+  const depts = vis("departments", lang);
+  const current = req.query.speciality ? deptBySlug(String(req.query.speciality), lang) : null;
   if (req.query.speciality && !current) return notFound(req, res);
   const list = current ? all.filter((d) => d.dept === current.name) : all;
   const today = list.filter((d) => d.today).length;
-  const trail = [{ name: "Home", path: "/" }, { name: "Doctors", path: "/doctors" }];
-  if (current) trail.push({ name: current.name, path: `/doctors?speciality=${current.slug}` });
-  const tabs = [{ label: "All", href: "/doctors", on: !current, n: all.length }, ...depts.map((d) => ({ label: d.name, href: `/doctors?speciality=${d.slug}`, on: current && current.slug === d.slug, n: all.filter((x) => x.dept === d.name).length }))].filter((t) => t.n > 0);
+  const trail = [{ name: T("Home"), path: "/" }, { name: T("Doctors"), path: "/doctors" }];
+  if (current) trail.push({ name: current.label, path: `/doctors?speciality=${current.slug}` });
+  const tabs = [{ label: T("All"), href: "/doctors", on: !current, n: all.length }, ...depts.map((d) => ({ label: d.label, href: `/doctors?speciality=${d.slug}`, on: current && current.slug === d.slug, n: all.filter((x) => x.dept === d.name).length }))].filter((t) => t.n > 0);
   const body = `
-  ${pageHead({ trail, kicker: "Our doctors", fact: `${list.length} consultant${list.length === 1 ? "" : "s"} · ${today} in today`, title: current ? `${current.name} doctors` : "Find a doctor",
-    lead: current ? `Consultants in ${current.name.toLowerCase()} at CareNova, with their OPD days, languages and fees. Book online in under a minute.` : "Every consultant, with their OPD days, languages and consultation fees. Open a profile to read about their training and the conditions they treat.", side: true })}
+  ${pageHead({ lang, trail, kicker: T("Our doctors"), fact: T(list.length === 1 ? "{n} consultant · {m} in today" : "{n} consultants · {m} in today", { n: list.length, m: today }), title: current ? T("{dept} doctors", { dept: current.label }) : T("Find a doctor"),
+    lead: current ? T("Consultants in {dept} at CareNova, with their OPD days, languages and fees. Book online in under a minute.", { dept: lower(current.label, lang) }) : T("Every consultant, with their OPD days, languages and consultation fees. Open a profile to read about their training and the conditions they treat."), side: true })}
   <section class="section pg-section pg-section--tight"><div class="wrap">
     <div class="pg-filters">
-      <nav class="tabs pg-tabs" aria-label="Filter by speciality">${tabs.map((t) => `<a href="${esc(t.href)}"${t.on ? ' aria-current="page"' : ""}>${esc(t.label)} <span class="pg-tabs__n">${t.n}</span></a>`).join("")}</nav>
+      <nav class="tabs pg-tabs" aria-label="${esc(T("Filter by speciality"))}">${tabs.map((t) => `<a href="${esc(t.href)}"${t.on ? ' aria-current="page"' : ""}>${esc(t.label)} <span class="pg-tabs__n">${t.n}</span></a>`).join("")}</nav>
       <div class="pg-filters__row">
-        <div class="field-inline pg-search">${icon("i-search")}<label for="dirSearch" class="sr-only">Search doctors by name or condition</label><input type="search" id="dirSearch" placeholder="Search by name or role" data-filter=".pg-doc"></div>
-        <label class="check"><input type="checkbox" id="dirToday" data-filter-flag="today"><span>Available today</span></label>
-        <label class="check"><input type="checkbox" id="dirVideo" data-filter-flag="video"><span>Video consult</span></label>
+        <div class="field-inline pg-search">${icon("i-search")}<label for="dirSearch" class="sr-only">${T("Search doctors by name or condition")}</label><input type="search" id="dirSearch" placeholder="${esc(T("Search by name or role"))}" data-filter=".pg-doc"></div>
+        <label class="check"><input type="checkbox" id="dirToday" data-filter-flag="today"><span>${T("Available today")}</span></label>
+        <label class="check"><input type="checkbox" id="dirVideo" data-filter-flag="video"><span>${T("Video consult")}</span></label>
       </div>
     </div>
-    <div class="doc-grid pg-doc-grid">${list.map((d) => doctorCard(d).replace('class="doc pg-doc"', `class="doc pg-doc" data-today="${d.today ? 1 : 0}" data-video="${d.video ? 1 : 0}"`)).join("")}</div>
-    <p class="empty" id="dirEmpty" hidden>No doctors match. <a class="link-btn" href="${current ? `/doctors?speciality=${esc(current.slug)}` : "/doctors"}">Clear the search</a></p>
-    ${current ? `<p class="pg-more"><a class="link-btn" href="/specialities/${esc(current.slug)}">About ${esc(current.name.toLowerCase())} at CareNova ${icon("i-arrow")}</a></p>` : ""}
+    <div class="doc-grid pg-doc-grid">${list.map((d) => doctorCard(d, { lang }).replace('class="doc pg-doc"', `class="doc pg-doc" data-today="${d.today ? 1 : 0}" data-video="${d.video ? 1 : 0}"`)).join("")}</div>
+    <p class="empty" id="dirEmpty" hidden>${T("No doctors match.")} <a class="link-btn" href="${current ? `/doctors?speciality=${esc(current.slug)}` : "/doctors"}">${T("Clear the search")}</a></p>
+    ${current ? `<p class="pg-more"><a class="link-btn" href="/specialities/${esc(current.slug)}">${T("About {dept} at CareNova", { dept: esc(lower(current.label, lang)) })} ${icon("i-arrow")}</a></p>` : ""}
   </div></section>`;
   send(res, req, {
-    title: current ? `${current.name} doctors in Gurugram` : "Find a doctor", path: current ? `/doctors?speciality=${current.slug}` : "/doctors", active: "/doctors",
-    description: current ? `Book a ${current.name.toLowerCase()} consultant at ${settings().name}, Gurugram. OPD days, fees, languages and video consultations.` : `${all.length} consultants across ${depts.length} specialities at ${settings().name}, Gurugram. See OPD days, fees and languages, and book online.`,
-    jsonLd: [crumbsLd(base, trail), { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: `${base}/doctors/${d.slug}`, name: d.name })) }],
+    lang, title: current ? T("{dept} doctors in Gurugram", { dept: current.label }) : T("Find a doctor"), path: current ? `/doctors?speciality=${current.slug}` : "/doctors", active: "/doctors",
+    description: current ? T("Book a {dept} consultant at {hospital}, Gurugram. OPD days, fees, languages and video consultations.", { dept: lower(current.label, lang), hospital: settings().name }) : T("{n} consultants across {m} specialities at {hospital}, Gurugram. See OPD days, fees and languages, and book online.", { n: all.length, m: depts.length, hospital: settings().name }),
+    jsonLd: [crumbsLd(base, trail, lang), { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: `${base}${L(`/doctors/${d.slug}`)}`, name: d.name })) }],
     body
   });
+  void hi;
 }
 
 function doctorPage(req, res) {
-  const d = visible("doctors").find((x) => x.slug === req.params.slug);
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
+  const d = vis("doctors", lang).find((x) => x.slug === req.params.slug);
   if (!d) return notFound(req, res);
   const s = settings();
   const base = baseUrl(req);
-  const dep = deptByName(d.dept);
-  const trail = [{ name: "Home", path: "/" }, { name: "Doctors", path: "/doctors" }, ...(dep ? [{ name: dep.name, path: `/doctors?speciality=${dep.slug}` }] : []), { name: d.name, path: `/doctors/${d.slug}` }];
+  const dep = deptByName(d.dept, lang);
+  const dl = deptLabel(d.dept, lang);
+  const trail = [{ name: T("Home"), path: "/" }, { name: T("Doctors"), path: "/doctors" }, ...(dep ? [{ name: dep.label, path: `/doctors?speciality=${dep.slug}` }] : []), { name: d.name, path: `/doctors/${d.slug}` }];
   const reviews = asArray(d.patientReviews).filter((r) => r && r.text);
-  const others = docsIn(d.dept).filter((x) => x.name !== d.name);
-  const articles = visible("articles").filter((a) => !a.url && (a.authorDoctor || a.author) === d.name);
-  const stars = (n) => { const k = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return `<span class="pg-stars" aria-label="${k} out of 5">${"★".repeat(k)}<span aria-hidden="true">${"★".repeat(5 - k)}</span></span>`; };
+  const others = docsIn(d.dept, lang).filter((x) => x.name !== d.name);
+  const articles = vis("articles", lang).filter((a) => !a.url && (a.authorDoctor || a.author) === d.name);
+  const stars = (n) => { const k = Math.max(0, Math.min(5, Math.round(Number(n) || 0))); return `<span class="pg-stars" aria-label="${esc(T("{k} out of 5", { k }))}">${"★".repeat(k)}<span aria-hidden="true">${"★".repeat(5 - k)}</span></span>`; };
   const facts = [
-    ["Speciality", dep ? `<a href="/specialities/${esc(dep.slug)}">${esc(d.dept)}</a>` : esc(d.dept)],
-    d.exp ? ["Experience", `${esc(d.exp)} years`] : null,
-    d.lang ? ["Languages", esc(d.lang)] : null,
+    [T("Speciality"), dep ? `<a href="/specialities/${esc(dep.slug)}">${esc(dl)}</a>` : esc(dl)],
+    d.exp ? [T("Experience"), T("{n} years", { n: esc(d.exp) })] : null,
+    d.lang ? [T("Languages"), esc(d.lang)] : null,
     d.opd ? ["OPD", `<span class="num">${opdHtml(d.opd)}</span>`] : null,
-    d.room ? ["Room", esc(d.room)] : null,
-    d.fee ? ["Consultation", `<span class="num">${inr(d.fee)}</span>`] : null,
-    ["Video consult", d.video ? "Available" : "At the hospital only"]
+    d.room ? [T("Room"), esc(d.room)] : null,
+    d.fee ? [T("Consultation"), `<span class="num">${inr(d.fee)}</span>`] : null,
+    [T("Video consult"), d.video ? T("Available") : T("At the hospital only")]
   ].filter(Boolean);
   const body = `
-  <section class="pg-head pg-head--flush"><div class="wrap">${crumbs(trail)}</div></section>
+  <section class="pg-head pg-head--flush"><div class="wrap">${crumbs(trail, lang)}</div></section>
   <section class="section pg-section pg-section--top"><div class="wrap prof">
     <header class="prof__head">
-      <p class="prof__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? "In today" : "Next available: tomorrow"}${dep ? ` · <a href="/specialities/${esc(dep.slug)}">${esc(d.dept)}</a>` : ` · ${esc(d.dept)}`}</p>
+      <p class="prof__status${d.today ? " is-today" : ""}"><span class="doc__bar" aria-hidden="true"></span>${d.today ? T("In today") : T("Next available: tomorrow")}${dep ? ` · <a href="/specialities/${esc(dep.slug)}">${esc(dl)}</a>` : ` · ${esc(dl)}`}</p>
       <h1 class="pg-title">${esc(d.name)}</h1>
       <p class="prof__role">${esc(d.role)}</p>
       ${d.deg ? `<p class="prof__deg">${esc(d.deg)}</p>` : ""}
-      ${d.rating ? `<p class="prof__rating num">★ <b>${esc(d.rating)}</b> out of 5${d.reviews ? ` · ${Number(d.reviews).toLocaleString("en-IN")} patient ratings` : ""}</p>` : ""}
+      ${d.rating ? `<p class="prof__rating num">★ <b>${esc(d.rating)}</b> ${T("out of 5")}${d.reviews ? ` · ${T("{n} patient ratings", { n: nf(d.reviews) })}` : ""}</p>` : ""}
     </header>
-    <aside class="prof__card" aria-label="Appointment details">
+    <aside class="prof__card" aria-label="${esc(T("Appointment details"))}">
       ${d.photo ? `<img class="prof__photo" src="${esc(rewriteUrl(d.photo))}" alt="${esc(d.photoAlt || d.name)}" width="800" height="1000" decoding="async">` : `<div class="prof__mono" aria-hidden="true"><span>${esc(initials(d.name))}</span></div>`}
       <dl class="prof__facts">${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>
       <div class="prof__actions">
-        <a class="btn btn--accent btn--block" href="${esc(bookHref({ doctor: d.name }))}">Book appointment</a>
-        <a class="btn btn--line btn--block" href="${esc(telHref(s.helpdesk))}">${icon("i-phone")} Call the helpdesk</a>
+        <a class="btn btn--accent btn--block" href="${esc(bookHref({ doctor: d.name }))}">${T("Book appointment")}</a>
+        <a class="btn btn--line btn--block" href="${esc(telHref(s.helpdesk))}">${icon("i-phone")} ${T("Call the helpdesk")}</a>
       </div>
     </aside>
     <div class="prof__body">
-      ${d.bio ? `<section class="prof__sec" aria-labelledby="about"><h2 id="about" class="pg-h2">About</h2><div class="prose">${renderMarkdown(d.bio)}</div></section>` : ""}
-      ${asArray(d.conditions).length ? `<section class="prof__sec" aria-labelledby="conds"><h2 id="conds" class="pg-h2">Conditions treated</h2><ul class="pg-tags">${d.conditions.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></section>` : ""}
-      ${asArray(d.education).length ? `<section class="prof__sec" aria-labelledby="edu"><h2 id="edu" class="pg-h2">Education and training</h2><ul class="pg-ticks">${d.education.map((c) => `<li>${icon("i-check")}<span>${esc(c)}</span></li>`).join("")}</ul></section>` : ""}
-      ${asArray(d.awards).length ? `<section class="prof__sec" aria-labelledby="awards"><h2 id="awards" class="pg-h2">Awards and memberships</h2><ul class="pg-ticks">${d.awards.map((c) => `<li>${icon("i-star")}<span>${esc(c)}</span></li>`).join("")}</ul></section>` : ""}
-      ${reviews.length ? `<section class="prof__sec" aria-labelledby="revs"><h2 id="revs" class="pg-h2">What patients say</h2>
-        <div class="pg-reviews">${reviews.map((r) => `<figure class="pg-review">${stars(r.rating)}<blockquote><p>${esc(r.text)}</p></blockquote><figcaption><b>${esc(r.name || "Patient")}</b>${r.date ? ` · <span>${esc(fmtDate(r.date))}</span>` : ""}</figcaption></figure>`).join("")}</div>
-        <p class="pg-note">Reviews are shared by patients after their visit. Names are shortened for privacy.</p></section>` : ""}
-      ${articles.length ? `<section class="prof__sec" aria-labelledby="writes"><h2 id="writes" class="pg-h2">Writes about</h2><ul class="pg-links">${articles.map((a) => `<li><a href="/library/${esc(a.slug)}">${esc(a.title)} ${icon("i-arrow")}</a></li>`).join("")}</ul></section>` : ""}
+      ${d.bio ? `<section class="prof__sec" aria-labelledby="about"><h2 id="about" class="pg-h2">${T("About")}</h2><div class="prose">${renderMarkdown(d.bio)}</div></section>` : ""}
+      ${asArray(d.conditions).length ? `<section class="prof__sec" aria-labelledby="conds"><h2 id="conds" class="pg-h2">${T("Conditions treated")}</h2><ul class="pg-tags">${d.conditions.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></section>` : ""}
+      ${asArray(d.education).length ? `<section class="prof__sec" aria-labelledby="edu"><h2 id="edu" class="pg-h2">${T("Education and training")}</h2><ul class="pg-ticks">${d.education.map((c) => `<li>${icon("i-check")}<span>${esc(c)}</span></li>`).join("")}</ul></section>` : ""}
+      ${asArray(d.awards).length ? `<section class="prof__sec" aria-labelledby="awards"><h2 id="awards" class="pg-h2">${T("Awards and memberships")}</h2><ul class="pg-ticks">${d.awards.map((c) => `<li>${icon("i-star")}<span>${esc(c)}</span></li>`).join("")}</ul></section>` : ""}
+      ${reviews.length ? `<section class="prof__sec" aria-labelledby="revs"><h2 id="revs" class="pg-h2">${T("What patients say")}</h2>
+        <div class="pg-reviews">${reviews.map((r) => `<figure class="pg-review">${stars(r.rating)}<blockquote><p>${esc(r.text)}</p></blockquote><figcaption><b>${esc(r.name || T("Patient"))}</b>${r.date ? ` · <span>${esc(fmtDate(r.date, lang))}</span>` : ""}</figcaption></figure>`).join("")}</div>
+        <p class="pg-note">${T("Reviews are shared by patients after their visit. Names are shortened for privacy.")}</p></section>` : ""}
+      ${articles.length ? `<section class="prof__sec" aria-labelledby="writes"><h2 id="writes" class="pg-h2">${T("Writes about")}</h2><ul class="pg-links">${articles.map((a) => `<li><a href="/library/${esc(a.slug)}">${esc(a.title)} ${icon("i-arrow")}</a></li>`).join("")}</ul></section>` : ""}
     </div>
   </div></section>
   ${others.length ? `<section class="section section--sunk pg-section"><div class="wrap">
-    <header class="sec-head"><div class="sec-head__bar"><p class="kicker">Also in ${esc(d.dept)}</p>${dep ? `<p class="sec-fact"><a href="/specialities/${esc(dep.slug)}">About the department</a></p>` : ""}</div><h2 class="pg-h2 pg-h2--lg">Other ${esc(d.dept.toLowerCase())} consultants</h2></header>
-    <div class="doc-grid pg-doc-grid">${others.slice(0, 4).map((x) => doctorCard(x)).join("")}</div>
+    <header class="sec-head"><div class="sec-head__bar"><p class="kicker">${T("Also in {dept}", { dept: esc(dl) })}</p>${dep ? `<p class="sec-fact"><a href="/specialities/${esc(dep.slug)}">${T("About the department")}</a></p>` : ""}</div><h2 class="pg-h2 pg-h2--lg">${T("Other {dept} consultants", { dept: esc(lower(dl, lang)) })}</h2></header>
+    <div class="doc-grid pg-doc-grid">${others.slice(0, 4).map((x) => doctorCard(x, { lang })).join("")}</div>
   </div></section>` : ""}`;
   const ld = {
-    "@context": "https://schema.org", "@type": "Physician", "@id": `${base}/doctors/${d.slug}#physician`, name: d.name, url: `${base}/doctors/${d.slug}`,
-    description: firstPara(d.bio) || `${d.role}, ${d.dept}, ${s.name}.`, medicalSpecialty: d.dept, jobTitle: d.role,
-    knowsLanguage: String(d.lang || "").split(",").map((x) => x.trim()).filter(Boolean),
+    "@context": "https://schema.org", "@type": "Physician", "@id": `${base}/doctors/${d.slug}#physician`, name: d.name, url: `${base}${L(`/doctors/${d.slug}`)}`,
+    description: firstPara(d.bio) || `${d.role}, ${dl}, ${s.name}.`, medicalSpecialty: d.dept, jobTitle: d.role,
+    knowsLanguage: String(visible("doctors").find((x) => x.slug === d.slug).lang || "").split(",").map((x) => x.trim()).filter(Boolean),
     hospitalAffiliation: hospitalLd(base), address: HOSPITAL_ADDRESS, telephone: s.helpdesk, isAcceptingNewPatients: true
   };
+  if (lang === "hi") ld.inLanguage = "hi-IN";
   if (d.photo) ld.image = /^https?:/.test(d.photo) ? d.photo : base + rewriteUrl(d.photo);
   if (d.rating && d.reviews) ld.aggregateRating = { "@type": "AggregateRating", ratingValue: d.rating, reviewCount: d.reviews, bestRating: 5 };
-  if (d.fee) ld.priceRange = `${inr(d.fee)} consultation`;
-  if (d.opd) ld.availableService = { "@type": "MedicalProcedure", name: `OPD consultation (${d.opd})` };
+  if (d.fee) ld.priceRange = T("{fee} consultation", { fee: inr(d.fee) });
+  if (d.opd) ld.availableService = { "@type": "MedicalProcedure", name: T("OPD consultation ({opd})", { opd: d.opd }) };
   send(res, req, {
-    title: `${d.name}, ${d.role}`, path: `/doctors/${d.slug}`, active: "/doctors", type: "profile", image: d.photo || (dep && dep.specimen ? `assets/img/specimens/${dep.specimen}-1072.webp` : ""),
-    description: `${d.name}${d.deg ? `, ${d.deg}` : ""}. ${d.role} in ${d.dept} at ${s.name}, Gurugram. ${d.exp ? `${d.exp} years of experience. ` : ""}${d.opd ? `OPD ${d.opd}. ` : ""}Book online.`,
-    jsonLd: [ld, crumbsLd(base, trail)], body
+    lang, title: `${d.name}, ${d.role}`, path: `/doctors/${d.slug}`, active: "/doctors", type: "profile", image: d.photo || (dep && dep.specimen ? `assets/img/specimens/${dep.specimen}-1072.webp` : ""),
+    description: lang === "hi"
+      ? `${d.name}${d.deg ? `, ${d.deg}` : ""}। ${s.name}, गुरुग्राम में ${dl} विभाग में ${d.role}। ${d.exp ? `${d.exp} वर्ष का अनुभव। ` : ""}${d.opd ? `OPD ${d.opd}। ` : ""}ऑनलाइन अपॉइंटमेंट बुक करें।`
+      : `${d.name}${d.deg ? `, ${d.deg}` : ""}. ${d.role} in ${d.dept} at ${s.name}, Gurugram. ${d.exp ? `${d.exp} years of experience. ` : ""}${d.opd ? `OPD ${d.opd}. ` : ""}Book online.`,
+    jsonLd: [ld, crumbsLd(base, trail, lang)], body
   });
 }
 
@@ -395,90 +435,97 @@ function doctorPage(req, res) {
    Specialities
    ========================================================= */
 function specialitiesIndex(req, res) {
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
   const base = baseUrl(req);
-  const depts = visible("departments");
-  const trail = [{ name: "Home", path: "/" }, { name: "Specialities", path: "/specialities" }];
+  const depts = vis("departments", lang);
+  const trail = [{ name: T("Home"), path: "/" }, { name: T("Specialities"), path: "/specialities" }];
   const body = `
-  ${pageHead({ trail, kicker: "Specialities", fact: `${depts.length} centres · ${visible("doctors").length} consultants`, title: "Specialities and centres", lead: "Each centre has its own consultants, operating theatres and ICU. Open one to see the conditions it treats, indicative costs and its doctors.", side: true })}
+  ${pageHead({ lang, trail, kicker: T("Specialities"), fact: T("{n} centres · {m} consultants", { n: depts.length, m: visible("doctors").length }), title: T("Specialities and centres"), lead: T("Each centre has its own consultants, operating theatres and ICU. Open one to see the conditions it treats, indicative costs and its doctors."), side: true })}
   <section class="section pg-section pg-section--tight"><div class="wrap">
     <ul class="pg-specs">${depts.map((d) => {
-      const n = docsIn(d.name).length;
+      const n = docsIn(d.name, lang).length;
       return `<li><a class="pg-spec" href="/specialities/${esc(d.slug)}">
         ${deptThumb(d)}
-        <span class="pg-spec__text"><span class="pg-spec__name">${esc(d.name)}</span><span class="pg-spec__desc">${esc(d.desc)}</span></span>
-        <span class="pg-spec__foot"><span class="pg-spec__count">${n} ${n === 1 ? "doctor" : "doctors"}</span><span class="spec__go" aria-hidden="true">${icon("i-arrow")}</span></span>
+        <span class="pg-spec__text"><span class="pg-spec__name">${esc(d.label)}</span><span class="pg-spec__desc">${esc(d.desc)}</span></span>
+        <span class="pg-spec__foot"><span class="pg-spec__count">${T(n === 1 ? "{n} doctor" : "{n} doctors", { n })}</span><span class="spec__go" aria-hidden="true">${icon("i-arrow")}</span></span>
       </a></li>`;
     }).join("")}</ul>
   </div></section>`;
   send(res, req, {
-    title: "Specialities", path: "/specialities", active: "/specialities",
-    description: `${depts.length} specialities at ${settings().name}, Gurugram: ${depts.map((d) => d.name).join(", ")}. Conditions treated, procedures, indicative costs and doctors.`,
-    jsonLd: [crumbsLd(base, trail), { "@context": "https://schema.org", "@type": "ItemList", itemListElement: depts.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: `${base}/specialities/${d.slug}`, name: d.name })) }],
+    lang, title: T("Specialities"), path: "/specialities", active: "/specialities",
+    description: T("{n} specialities at {hospital}, Gurugram: {list}. Conditions treated, procedures, indicative costs and doctors.", { n: depts.length, hospital: settings().name, list: depts.map((d) => d.label).join(", ") }),
+    jsonLd: [crumbsLd(base, trail, lang), { "@context": "https://schema.org", "@type": "ItemList", itemListElement: depts.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: `${base}${L(`/specialities/${d.slug}`)}`, name: d.label })) }],
     body
   });
 }
 
 function specialityPage(req, res) {
-  const d = deptBySlug(req.params.slug);
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
+  const d = deptBySlug(req.params.slug, lang);
   if (!d) return notFound(req, res);
   const s = settings();
   const base = baseUrl(req);
-  const docs = docsIn(d.name);
+  const docs = docsIn(d.name, lang);
   const inToday = docs.filter((x) => x.today).length;
   const costs = asArray(d.costs).filter((c) => c && c.item);
   const faqs = asArray(d.faqs).filter((f) => f && f.q && f.a);
-  const trail = [{ name: "Home", path: "/" }, { name: "Specialities", path: "/specialities" }, { name: d.name, path: `/specialities/${d.slug}` }];
+  const trail = [{ name: T("Home"), path: "/" }, { name: T("Specialities"), path: "/specialities" }, { name: d.label, path: `/specialities/${d.slug}` }];
   const range = (c) => (c.from && c.to && Number(c.to) !== Number(c.from) ? `${inr(c.from)} – ${inr(c.to)}` : inr(c.from || c.to));
   const body = `
-  <section class="pg-head pg-head--flush"><div class="wrap">${crumbs(trail)}</div></section>
+  <section class="pg-head pg-head--flush"><div class="wrap">${crumbs(trail, lang)}</div></section>
   <section class="section pg-section pg-section--top"><div class="wrap pg-spechero">
     <div class="pg-spechero__copy">
-      <div class="sec-head__bar"><p class="kicker">Speciality</p><p class="sec-fact">${docs.length} ${docs.length === 1 ? "consultant" : "consultants"}${docs.length ? ` · ${inToday} in today` : ""}</p></div>
-      <h1 class="pg-title pg-title--xl">${esc(d.name)}</h1>
+      <div class="sec-head__bar"><p class="kicker">${T("Speciality")}</p><p class="sec-fact">${T(docs.length === 1 ? "{n} consultant" : "{n} consultants", { n: docs.length })}${docs.length ? ` · ${T("{n} in today", { n: inToday })}` : ""}</p></div>
+      <h1 class="pg-title pg-title--xl">${esc(d.label)}</h1>
       <p class="pg-lead">${esc(d.desc)}</p>
       <div class="pg-actions">
-        <a class="btn btn--accent" href="${esc(bookHref({ dept: d.name }))}">Book in ${esc(d.name)}</a>
-        ${docs.length ? `<a class="btn btn--line" href="/specialities/${esc(d.slug)}#doctors-list">See the doctors</a>` : ""}
+        <a class="btn btn--accent" href="${esc(bookHref({ dept: d.name }))}">${T("Book in {dept}", { dept: esc(d.label) })}</a>
+        ${docs.length ? `<a class="btn btn--line" href="/specialities/${esc(d.slug)}#doctors-list">${T("See the doctors")}</a>` : ""}
       </div>
       ${d.overview ? `<div class="prose pg-overview">${renderMarkdown(d.overview)}</div>` : ""}
     </div>
-    <div class="pg-spechero__fig">${specimenFigure(d)}</div>
+    <div class="pg-spechero__fig">${specimenFigure(d, { lang })}</div>
   </div></section>
   ${asArray(d.conditions).length || asArray(d.treatments).length ? `<section class="section section--sunk pg-section"><div class="wrap">
     <div class="pg-two">
-      ${asArray(d.conditions).length ? `<div><header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">Conditions</p></div><h2 class="pg-h2 pg-h2--lg">What we treat</h2></header><ul class="pg-ticks pg-ticks--lg">${d.conditions.map((c) => `<li>${icon("i-check")}<span>${esc(c)}</span></li>`).join("")}</ul></div>` : ""}
-      ${asArray(d.treatments).length ? `<div><header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">Treatments and procedures</p></div><h2 class="pg-h2 pg-h2--lg">How we treat it</h2></header><ul class="pg-ticks pg-ticks--lg">${d.treatments.map((c) => `<li>${icon("i-arrow")}<span>${esc(c)}</span></li>`).join("")}</ul></div>` : ""}
+      ${asArray(d.conditions).length ? `<div><header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">${T("Conditions")}</p></div><h2 class="pg-h2 pg-h2--lg">${T("What we treat")}</h2></header><ul class="pg-ticks pg-ticks--lg">${d.conditions.map((c) => `<li>${icon("i-check")}<span>${esc(c)}</span></li>`).join("")}</ul></div>` : ""}
+      ${asArray(d.treatments).length ? `<div><header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">${T("Treatments and procedures")}</p></div><h2 class="pg-h2 pg-h2--lg">${T("How we treat it")}</h2></header><ul class="pg-ticks pg-ticks--lg">${d.treatments.map((c) => `<li>${icon("i-arrow")}<span>${esc(c)}</span></li>`).join("")}</ul></div>` : ""}
     </div>
   </div></section>` : ""}
   ${costs.length ? `<section class="section pg-section"><div class="wrap pg-costs">
-    <header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">Indicative costs</p><p class="sec-fact">In Indian rupees</p></div><h2 class="pg-h2 pg-h2--lg">What it usually costs</h2>
-      <p class="sec-head__sub">These ranges are indicative, for planning only. Your estimate depends on your condition, room type, implants and length of stay. Ask the billing desk for a written estimate before admission.</p></header>
-    <div class="prose__table pg-costs__table" role="region" aria-label="Indicative costs" tabindex="0"><table>
-      <thead><tr><th scope="col">Procedure or service</th><th scope="col" class="num-col">Indicative range</th></tr></thead>
+    <header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">${T("Indicative costs")}</p><p class="sec-fact">${T("In Indian rupees")}</p></div><h2 class="pg-h2 pg-h2--lg">${T("What it usually costs")}</h2>
+      <p class="sec-head__sub">${T("These ranges are indicative, for planning only. Your estimate depends on your condition, room type, implants and length of stay. Ask the billing desk for a written estimate before admission.")}</p></header>
+    <div class="prose__table pg-costs__table" role="region" aria-label="${esc(T("Indicative costs"))}" tabindex="0"><table>
+      <thead><tr><th scope="col">${T("Procedure or service")}</th><th scope="col" class="num-col">${T("Indicative range")}</th></tr></thead>
       <tbody>${costs.map((c) => `<tr><th scope="row">${esc(c.item)}</th><td class="num num-col">${range(c)}</td></tr>`).join("")}</tbody>
     </table></div>
-    <p class="pg-note">Indicative only, not a quote. Insurance and TPA cover depends on your policy. <a href="/insurance-and-tpa">Insurance and TPA</a></p>
+    <p class="pg-note">${T("Indicative only, not a quote. Insurance and TPA cover depends on your policy.")} <a href="/insurance-and-tpa">${T("Insurance and TPA")}</a></p>
   </div></section>` : ""}
   ${docs.length ? `<section class="section section--sunk pg-section" id="doctors-list"><div class="wrap">
-    <header class="sec-head"><div class="sec-head__bar"><p class="kicker">Doctors</p><p class="sec-fact"><a href="/doctors?speciality=${esc(d.slug)}">All ${esc(d.name.toLowerCase())} doctors</a></p></div><h2 class="pg-h2 pg-h2--lg">Consultants in ${esc(d.name)}</h2></header>
-    <div class="doc-grid pg-doc-grid">${docs.map((x) => doctorCard(x)).join("")}</div>
+    <header class="sec-head"><div class="sec-head__bar"><p class="kicker">${T("Doctors")}</p><p class="sec-fact"><a href="/doctors?speciality=${esc(d.slug)}">${T("All {dept} doctors", { dept: esc(lower(d.label, lang)) })}</a></p></div><h2 class="pg-h2 pg-h2--lg">${T("Consultants in {dept}", { dept: esc(d.label) })}</h2></header>
+    <div class="doc-grid pg-doc-grid">${docs.map((x) => doctorCard(x, { lang })).join("")}</div>
   </div></section>` : ""}
   ${faqs.length ? `<section class="section pg-section"><div class="wrap pg-faq-wrap">
-    <header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">Questions</p></div><h2 class="pg-h2 pg-h2--lg">Questions patients ask</h2></header>
+    <header class="sec-head pg-sub"><div class="sec-head__bar"><p class="kicker">${T("Questions")}</p></div><h2 class="pg-h2 pg-h2--lg">${T("Questions patients ask")}</h2></header>
     <div class="pg-faq">${faqs.map((f, i) => `<details class="pg-faq__item"${i === 0 ? " open" : ""}><summary>${esc(f.q)}${icon("i-arrow")}</summary><p>${esc(f.a)}</p></details>`).join("")}</div>
   </div></section>` : ""}`;
   const ld = [{
-    "@context": "https://schema.org", "@type": "MedicalClinic", "@id": `${base}/specialities/${d.slug}#clinic`, name: `${d.name} · ${s.name}`, url: `${base}/specialities/${d.slug}`,
+    "@context": "https://schema.org", "@type": "MedicalClinic", "@id": `${base}/specialities/${d.slug}#clinic`, name: `${d.label} · ${s.name}`, url: `${base}${L(`/specialities/${d.slug}`)}`,
     description: firstPara(d.overview) || d.desc, medicalSpecialty: d.name, telephone: s.helpdesk, address: HOSPITAL_ADDRESS, parentOrganization: hospitalLd(base),
     availableService: asArray(d.treatments).map((t) => ({ "@type": "MedicalProcedure", name: t })),
-    employee: docs.map((x) => ({ "@type": "Physician", name: x.name, url: `${base}/doctors/${x.slug}` }))
-  }, crumbsLd(base, trail)];
+    employee: docs.map((x) => ({ "@type": "Physician", name: x.name, url: `${base}${L(`/doctors/${x.slug}`)}` }))
+  }, crumbsLd(base, trail, lang)];
+  if (lang === "hi") ld[0].inLanguage = "hi-IN";
   if (d.specimen && fileExists(`assets/img/specimens/${d.specimen}-1072.webp`)) ld[0].image = `${base}/assets/img/specimens/${d.specimen}-1072.webp`;
-  if (faqs.length) ld.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) });
+  if (faqs.length) ld.push({ "@context": "https://schema.org", "@type": "FAQPage", ...(lang === "hi" ? { inLanguage: "hi-IN" } : {}), mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) });
   send(res, req, {
-    title: `${d.name} in Gurugram`, path: `/specialities/${d.slug}`, active: "/specialities",
+    lang, title: T("{dept} in Gurugram", { dept: d.label }), path: `/specialities/${d.slug}`, active: "/specialities",
     image: d.specimen ? `assets/img/specimens/${d.specimen}-1072.webp` : d.image || "",
-    description: `${d.name} at ${s.name}, Gurugram. ${d.desc} Conditions treated, procedures, indicative costs and ${docs.length} consultant${docs.length === 1 ? "" : "s"}.`,
+    description: T(docs.length === 1 ? "{dept} at {hospital}, Gurugram. {desc} Conditions treated, procedures, indicative costs and {n} consultant." : "{dept} at {hospital}, Gurugram. {desc} Conditions treated, procedures, indicative costs and {n} consultants.", { dept: d.label, hospital: s.name, desc: d.desc, n: docs.length }),
     jsonLd: ld, body
   });
 }
@@ -486,15 +533,21 @@ function specialityPage(req, res) {
 /* =========================================================
    Health library
    ========================================================= */
-function readingTime(a) { return a.readTime || `${Math.max(1, Math.round(words(a.body) / 200))} min`; }
-function articleAuthor(a) { return doctorByName(a.authorDoctor) || doctorByName(a.author) || null; }
+function readingTime(a, lang = "en") {
+  if (a.readTime) return lang === "hi" ? String(a.readTime).replace(/\bmin\b/, "मिनट") : a.readTime;
+  return tr(lang, "{n} min", { n: Math.max(1, Math.round(words(a.body) / 200)) });
+}
+function articleAuthor(a, lang) { return doctorByName(a.authorDoctor, lang) || doctorByName(a.author, lang) || null; }
 
 function libraryIndex(req, res) {
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
   const base = baseUrl(req);
-  const list = visible("articles");
-  const trail = [{ name: "Home", path: "/" }, { name: "Health library", path: "/library" }];
+  const list = vis("articles", lang);
+  const trail = [{ name: T("Home"), path: "/" }, { name: T("Health library"), path: "/library" }];
   const body = `
-  ${pageHead({ trail, kicker: "Health library", fact: `${list.length} article${list.length === 1 ? "" : "s"}`, title: "Written by our doctors", lead: "Plain-language guides from CareNova's consultants on symptoms, tests, treatment and recovery.", side: true })}
+  ${pageHead({ lang, trail, kicker: T("Health library"), fact: T(list.length === 1 ? "{n} article" : "{n} articles", { n: list.length }), title: T("Written by our doctors"), lead: T("Plain-language guides from CareNova's consultants on symptoms, tests, treatment and recovery."), side: true })}
   <section class="section pg-section pg-section--tight"><div class="wrap">
     <ul class="articles pg-articles">${list.map((a) => {
       const ext = a.url && /^https?:/i.test(a.url);
@@ -502,66 +555,69 @@ function libraryIndex(req, res) {
       return `<li><a href="${esc(rewriteUrl(href))}"${ext ? ' target="_blank" rel="noopener"' : ""}>` +
         (a.image ? `<img class="articles__thumb${a.round ? " articles__thumb--round" : ""}" src="${esc(rewriteUrl(a.image))}" width="320" height="320" alt="" loading="lazy" decoding="async">` : `<span class="articles__thumb pg-articles__blank" aria-hidden="true"></span>`) +
         `<span class="articles__cat">${esc(a.category || "")}</span><span class="articles__title">${esc(a.title)}</span>` +
-        `<span class="articles__meta mono">${esc((articleAuthor(a) || {}).name || a.author || "")}${a.body || a.readTime ? ` · <span class="nowrap">${esc(readingTime(a))}</span>` : ""}</span>${icon(ext ? "i-arrow-ur" : "i-arrow")}</a></li>`;
+        `<span class="articles__meta mono">${esc((articleAuthor(a, lang) || {}).name || a.author || "")}${a.body || a.readTime ? ` · <span class="nowrap">${esc(readingTime(a, lang))}</span>` : ""}</span>${icon(ext ? "i-arrow-ur" : "i-arrow")}</a></li>`;
     }).join("")}</ul>
   </div></section>`;
   send(res, req, {
-    title: "Health library", path: "/library",
-    description: `Health guides written by ${settings().name} doctors: ${list.slice(0, 3).map((a) => a.title.toLowerCase()).join("; ")} and more.`,
-    jsonLd: [crumbsLd(base, trail), { "@context": "https://schema.org", "@type": "Blog", name: `${settings().name} health library`, url: `${base}/library`, blogPost: list.filter((a) => !a.url).map((a) => ({ "@type": "BlogPosting", headline: a.title, url: `${base}/library/${a.slug}`, datePublished: a.date || undefined })) }],
+    lang, title: T("Health library"), path: "/library",
+    description: T("Health guides written by {hospital} doctors: {list} and more.", { hospital: settings().name, list: list.slice(0, 3).map((a) => lower(a.title, lang)).join("; ") }),
+    jsonLd: [crumbsLd(base, trail, lang), { "@context": "https://schema.org", "@type": "Blog", name: T("{hospital} health library", { hospital: settings().name }), url: `${base}${L("/library")}`, ...(lang === "hi" ? { inLanguage: "hi-IN" } : {}), blogPost: list.filter((a) => !a.url).map((a) => ({ "@type": "BlogPosting", headline: a.title, url: `${base}${L(`/library/${a.slug}`)}`, datePublished: a.date || undefined })) }],
     body
   });
 }
 
 function articlePage(req, res) {
-  const a = visible("articles").find((x) => x.slug === req.params.slug);
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
+  const a = vis("articles", lang).find((x) => x.slug === req.params.slug);
   if (!a) return notFound(req, res);
   if (a.url && /^https?:/i.test(a.url) && !a.body) return res.redirect(302, a.url);
   const s = settings();
   const base = baseUrl(req);
-  const doc = articleAuthor(a);
+  const doc = articleAuthor(a, lang);
   const authorName = (doc && doc.name) || a.author || s.name;
-  const trail = [{ name: "Home", path: "/" }, { name: "Health library", path: "/library" }, { name: a.title, path: `/library/${a.slug}` }];
-  const related = visible("articles").filter((x) => x !== a && !x.url).slice(0, 3);
-  const dep = doc ? deptByName(doc.dept) : null;
+  const trail = [{ name: T("Home"), path: "/" }, { name: T("Health library"), path: "/library" }, { name: a.title, path: `/library/${a.slug}` }];
+  const related = vis("articles", lang).filter((x) => x.slug !== a.slug && !x.url).slice(0, 3);
+  const dep = doc ? deptByName(doc.dept, lang) : null;
   const body = `
-  <section class="pg-head pg-head--flush"><div class="wrap">${crumbs(trail)}</div></section>
+  <section class="pg-head pg-head--flush"><div class="wrap">${crumbs(trail, lang)}</div></section>
   <article class="section pg-section pg-section--top"><div class="wrap pg-article">
     <header class="pg-article__head">
-      <p class="pg-article__cat">${esc(a.category || "Health library")}</p>
+      <p class="pg-article__cat">${esc(a.category || T("Health library"))}</p>
       <h1 class="pg-title">${esc(a.title)}</h1>
       ${a.summary ? `<p class="pg-lead">${esc(a.summary)}</p>` : ""}
       <p class="pg-article__meta">
         ${doc ? `<a class="pg-byline" href="/doctors/${esc(doc.slug)}"><span class="avatar" aria-hidden="true">${esc(initials(doc.name))}</span><span><b>${esc(doc.name)}</b><small>${esc(doc.role)}</small></span></a>` : `<span class="pg-byline"><span><b>${esc(authorName)}</b></span></span>`}
-        <span class="pg-article__facts mono">${a.date ? `<time datetime="${esc(a.date)}">${esc(fmtDate(a.date))}</time> · ` : ""}<span class="nowrap">${esc(readingTime(a))} read</span></span>
+        <span class="pg-article__facts mono">${a.date ? `<time datetime="${esc(a.date)}">${esc(fmtDate(a.date, lang))}</time> · ` : ""}<span class="nowrap">${esc(T("{time} read", { time: readingTime(a, lang) }))}</span></span>
       </p>
     </header>
     ${a.image ? `<figure class="pg-article__fig${a.round ? " is-deep" : ""}"><img src="${esc(rewriteUrl(a.image))}" alt="" width="640" height="640" decoding="async"></figure>` : ""}
-    <div class="prose pg-article__body">${a.body ? renderMarkdown(a.body) : `<p>This article is being written. Please check back soon.</p>`}</div>
-    <aside class="pg-article__aside" aria-label="About the author">
+    <div class="prose pg-article__body">${a.body ? renderMarkdown(a.body) : `<p>${T("This article is being written. Please check back soon.")}</p>`}</div>
+    <aside class="pg-article__aside" aria-label="${esc(T("About the author"))}">
       ${doc ? `<div class="pg-author">
-        <p class="kicker">About the author</p>
+        <p class="kicker">${T("About the author")}</p>
         <p class="pg-author__name"><a href="/doctors/${esc(doc.slug)}">${esc(doc.name)}</a></p>
-        <p class="pg-author__role">${esc(doc.role)}${dep ? `, <a href="/specialities/${esc(dep.slug)}">${esc(doc.dept)}</a>` : ""}</p>
-        <a class="btn btn--accent btn--sm" href="${esc(bookHref({ doctor: doc.name }))}">Book with ${esc(doc.name.replace(/^Dr\.?\s*/i, "Dr "))}</a>
+        <p class="pg-author__role">${esc(doc.role)}${dep ? `, <a href="/specialities/${esc(dep.slug)}">${esc(dep.label)}</a>` : ""}</p>
+        <a class="btn btn--accent btn--sm" href="${esc(bookHref({ doctor: doc.name }))}">${T("Book with {name}", { name: esc(doc.name.replace(/^Dr\.?\s*/i, "Dr ")) })}</a>
       </div>` : ""}
-      <p class="pg-note">This article is general information, not medical advice. Speak to a doctor about your own health. In an emergency, call <a class="mono" href="tel:18001234567">1800-123-4567</a>.</p>
+      <p class="pg-note">${T('This article is general information, not medical advice. Speak to a doctor about your own health. In an emergency, call <a class="mono" href="tel:18001234567">1800-123-4567</a>.')}</p>
     </aside>
   </div></article>
   ${related.length ? `<section class="section section--sunk pg-section"><div class="wrap">
-    <header class="sec-head"><div class="sec-head__bar"><p class="kicker">Keep reading</p><p class="sec-fact"><a href="/library">All articles</a></p></div><h2 class="pg-h2 pg-h2--lg">More from the health library</h2></header>
-    <ul class="articles">${related.map((x) => `<li><a href="/library/${esc(x.slug)}">${x.image ? `<img class="articles__thumb${x.round ? " articles__thumb--round" : ""}" src="${esc(rewriteUrl(x.image))}" width="320" height="320" alt="" loading="lazy" decoding="async">` : `<span class="articles__thumb pg-articles__blank" aria-hidden="true"></span>`}<span class="articles__cat">${esc(x.category || "")}</span><span class="articles__title">${esc(x.title)}</span><span class="articles__meta mono">${esc((articleAuthor(x) || {}).name || x.author || "")} · <span class="nowrap">${esc(readingTime(x))}</span></span>${icon("i-arrow")}</a></li>`).join("")}</ul>
+    <header class="sec-head"><div class="sec-head__bar"><p class="kicker">${T("Keep reading")}</p><p class="sec-fact"><a href="/library">${T("All articles")}</a></p></div><h2 class="pg-h2 pg-h2--lg">${T("More from the health library")}</h2></header>
+    <ul class="articles">${related.map((x) => `<li><a href="/library/${esc(x.slug)}">${x.image ? `<img class="articles__thumb${x.round ? " articles__thumb--round" : ""}" src="${esc(rewriteUrl(x.image))}" width="320" height="320" alt="" loading="lazy" decoding="async">` : `<span class="articles__thumb pg-articles__blank" aria-hidden="true"></span>`}<span class="articles__cat">${esc(x.category || "")}</span><span class="articles__title">${esc(x.title)}</span><span class="articles__meta mono">${esc((articleAuthor(x, lang) || {}).name || x.author || "")} · <span class="nowrap">${esc(readingTime(x, lang))}</span></span>${icon("i-arrow")}</a></li>`).join("")}</ul>
   </div></section>` : ""}`;
   const ld = {
-    "@context": "https://schema.org", "@type": "MedicalWebPage", "@id": `${base}/library/${a.slug}#article`, headline: a.title, name: a.title, url: `${base}/library/${a.slug}`,
-    description: a.summary || firstPara(a.body), datePublished: a.date || undefined, articleSection: a.category || undefined, inLanguage: "en-IN",
-    author: doc ? { "@type": "Physician", name: doc.name, url: `${base}/doctors/${doc.slug}` } : { "@type": "Person", name: authorName },
+    "@context": "https://schema.org", "@type": "MedicalWebPage", "@id": `${base}${L(`/library/${a.slug}`)}#article`, headline: a.title, name: a.title, url: `${base}${L(`/library/${a.slug}`)}`,
+    description: a.summary || firstPara(a.body), datePublished: a.date || undefined, articleSection: a.category || undefined, inLanguage: lang === "hi" ? "hi-IN" : "en-IN",
+    author: doc ? { "@type": "Physician", name: doc.name, url: `${base}${L(`/doctors/${doc.slug}`)}` } : { "@type": "Person", name: authorName },
     publisher: hospitalLd(base), lastReviewed: a.date || undefined
   };
   if (a.image) ld.image = base + rewriteUrl(a.image);
   send(res, req, {
-    title: a.title, path: `/library/${a.slug}`, type: "article", image: a.image,
-    description: a.summary || firstPara(a.body) || `${a.title}. By ${authorName}.`, jsonLd: [ld, crumbsLd(base, trail)], body
+    lang, title: a.title, path: `/library/${a.slug}`, type: "article", image: a.image,
+    description: a.summary || firstPara(a.body) || T("{title}. By {author}.", { title: a.title, author: authorName }), jsonLd: [ld, crumbsLd(base, trail, lang)], body
   });
 }
 
@@ -569,15 +625,18 @@ function articlePage(req, res) {
    Custom pages and 404
    ========================================================= */
 function customPage(req, res, next) {
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const L = (p) => i18n.localizeHref(p, lang);
   const slug = String(req.params.slug || "");
   if (!/^[a-z0-9-]+$/.test(slug)) return next();
-  const p = visible("pages").find((x) => x.slug === slug);
-  if (!p) return FIXED.includes(slug) ? next() : notFound(req, res);   // /admin and the static folders are handled later
+  const p = vis("pages", lang).find((x) => x.slug === slug);
+  if (!p) return FIXED.includes(slug) && lang === "en" ? next() : notFound(req, res);   // /admin and the static folders are handled later
   const base = baseUrl(req);
-  const trail = [{ name: "Home", path: "/" }, { name: p.title, path: `/${p.slug}` }];
+  const trail = [{ name: T("Home"), path: "/" }, { name: p.title, path: `/${p.slug}` }];
   const body = `
   <section class="pg-head${p.image ? " pg-head--image" : ""}"><div class="wrap">
-    ${crumbs(trail)}
+    ${crumbs(trail, lang)}
     <header class="sec-head pg-head__h">
       <div class="sec-head__bar"><p class="kicker">${esc(settings().name)}</p></div>
       <h1 class="pg-title">${esc(p.title)}</h1>
@@ -588,40 +647,42 @@ function customPage(req, res, next) {
   </section>
   <section class="section pg-section pg-section--tight"><div class="wrap pg-page">
     <div class="prose pg-page__body">${renderMarkdown(p.body)}</div>
-    <aside class="pg-page__aside" aria-label="Help">
+    <aside class="pg-page__aside" aria-label="${esc(T("Help"))}">
       <div class="pg-help">
-        <p class="kicker">Need help?</p>
-        <p><a class="mono" href="${esc(telHref(settings().helpdesk))}">${esc(settings().helpdesk)}</a><br><span>Helpdesk, 8 AM – 10 PM</span></p>
-        <p><a class="mono er-text" href="tel:18001234567">1800-123-4567</a><br><span>Emergency, 24x7</span></p>
-        <a class="btn btn--accent btn--sm btn--block" href="/#book">Book a visit</a>
+        <p class="kicker">${T("Need help?")}</p>
+        <p><a class="mono" href="${esc(telHref(settings().helpdesk))}">${esc(settings().helpdesk)}</a><br><span>${T("Helpdesk, 8 AM – 10 PM")}</span></p>
+        <p><a class="mono er-text" href="tel:18001234567">1800-123-4567</a><br><span>${T("Emergency, 24x7")}</span></p>
+        <a class="btn btn--accent btn--sm btn--block" href="/#book">${T("Book a visit")}</a>
       </div>
     </aside>
   </div></section>`;
   send(res, req, {
-    title: p.title, path: `/${p.slug}`, active: `/${p.slug}`, image: p.image,
+    lang, title: p.title, path: `/${p.slug}`, active: `/${p.slug}`, image: p.image,
     description: p.summary || firstPara(p.body),
-    jsonLd: [{ "@context": "https://schema.org", "@type": p.slug === "contact" ? "ContactPage" : "WebPage", name: p.title, url: `${base}/${p.slug}`, description: p.summary || firstPara(p.body), isPartOf: { "@type": "WebSite", name: settings().name, url: base + "/" }, about: hospitalLd(base) }, crumbsLd(base, trail)],
+    jsonLd: [{ "@context": "https://schema.org", "@type": p.slug === "contact" ? "ContactPage" : "WebPage", name: p.title, url: `${base}${L(`/${p.slug}`)}`, ...(lang === "hi" ? { inLanguage: "hi-IN" } : {}), description: p.summary || firstPara(p.body), isPartOf: { "@type": "WebSite", name: settings().name, url: base + "/" }, about: hospitalLd(base) }, crumbsLd(base, trail, lang)],
     body
   });
 }
 
 function notFound(req, res) {
-  const depts = visible("departments").slice(0, 6);
+  const lang = langOf(req);
+  const T = (s, v) => tr(lang, s, v);
+  const depts = vis("departments", lang).slice(0, 6);
   const body = `
   <section class="section pg-404"><div class="wrap pg-404__in">
-    <p class="kicker">Error 404</p>
-    <h1 class="pg-title pg-title--xl">We couldn't find that page.</h1>
-    <p class="pg-lead">The link may be old, or the page may have moved. These might help:</p>
-    <div class="pg-actions"><a class="btn btn--accent" href="/doctors">Find a doctor</a><a class="btn btn--line" href="/">Go to the home page</a></div>
+    <p class="kicker">${T("Error 404")}</p>
+    <h1 class="pg-title pg-title--xl">${T("We couldn't find that page.")}</h1>
+    <p class="pg-lead">${T("The link may be old, or the page may have moved. These might help:")}</p>
+    <div class="pg-actions"><a class="btn btn--accent" href="/doctors">${T("Find a doctor")}</a><a class="btn btn--line" href="/">${T("Go to the home page")}</a></div>
     <ul class="pg-404__links">
-      <li><a href="/specialities">All specialities ${icon("i-arrow")}</a></li>
-      ${depts.map((d) => `<li><a href="/specialities/${esc(d.slug)}">${esc(d.name)} ${icon("i-arrow")}</a></li>`).join("")}
-      <li><a href="/library">Health library ${icon("i-arrow")}</a></li>
-      <li><a href="/#book">Book a visit ${icon("i-arrow")}</a></li>
+      <li><a href="/specialities">${T("All specialities")} ${icon("i-arrow")}</a></li>
+      ${depts.map((d) => `<li><a href="/specialities/${esc(d.slug)}">${esc(d.label)} ${icon("i-arrow")}</a></li>`).join("")}
+      <li><a href="/library">${T("Health library")} ${icon("i-arrow")}</a></li>
+      <li><a href="/#book">${T("Book a visit")} ${icon("i-arrow")}</a></li>
     </ul>
-    <p class="pg-note">In an emergency, call <a class="mono er-text" href="tel:18001234567">1800-123-4567</a>.</p>
+    <p class="pg-note">${T('In an emergency, call <a class="mono er-text" href="tel:18001234567">1800-123-4567</a>.')}</p>
   </div></section>`;
-  send(res, req, { status: 404, title: "Page not found", description: "This page could not be found.", body, noindex: true });
+  send(res, req, { lang, status: 404, title: T("Page not found"), description: T("This page could not be found."), body, noindex: true, path: i18n.basePath(req.path) });
 }
 
 /* =========================================================
@@ -641,13 +702,16 @@ function sitemap(req, res) {
   for (const p of asArray(extra)) if (typeof p === "string" && p.startsWith("/")) urls.push({ loc: p, pr: "0.3" });
   // legal pages (server/privacy.js); /manage-booking is noindex, so it stays out
   for (const p of ["/privacy-policy", "/terms", "/patient-rights", "/data-request"]) if (hasRoute(p)) urls.push({ loc: p, pr: "0.3" });
-  if (fileExists("credits.html")) urls.push({ loc: "/credits.html", pr: "0.2" });
+  if (fileExists("credits.html")) urls.push({ loc: "/credits.html", pr: "0.2", shared: true });
+  // every page is listed in English and in Hindi (/hi/…), each with its hreflang alternates
   const seen = new Set();
-  const xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'];
+  const xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'];
   for (const u of urls) {
     if (seen.has(u.loc)) continue;
     seen.add(u.loc);
-    xml.push(`  <url><loc>${esc(base + u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<priority>${u.pr}</priority></url>`);
+    const langs = u.shared ? ["en"] : ["en", "hi"];
+    const alts = u.shared ? "" : ["en", "hi"].map((l) => `<xhtml:link rel="alternate" hreflang="${l}" href="${esc(base + i18n.localizeHref(u.loc, l))}"/>`).join("") + `<xhtml:link rel="alternate" hreflang="x-default" href="${esc(base + u.loc)}"/>`;
+    for (const l of langs) xml.push(`  <url><loc>${esc(base + i18n.localizeHref(u.loc, l))}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<priority>${u.pr}</priority>${alts}</url>`);
   }
   xml.push("</urlset>");
   res.type("application/xml").setHeader("Cache-Control", "no-cache");
@@ -660,13 +724,15 @@ function robots(req, res) {
 /* =========================================================
    Menu and footer links on every page (render hook)
    ========================================================= */
-function decorate($) {
+function decorate($, opts = {}) {
   if (!C) return;
+  const lang = i18n.norm(opts.lang);
+  const T = (s, v) => tr(lang, s, v);
   if (!$('link[href$="css/pages.css"]').length) {
     const anchor = $('head link[rel="stylesheet"]').last();
     if (anchor.length) anchor.after('<link rel="stylesheet" href="css/pages.css">'); else $("head").append('<link rel="stylesheet" href="css/pages.css">');
   }
-  const pages = visible("pages");
+  const pages = vis("pages", lang);
   const link = (p, cls) => `<a href="/${esc(p.slug)}"${cls ? ` class="${cls}"` : ""}>${esc(p.title)}</a>`;
   for (const p of pages.filter((x) => x.showInNav)) {
     $("#nav").append(link(p, "nav__link"));
@@ -678,15 +744,15 @@ function decorate($) {
   cols.find('a[href="#specialities"]').attr("href", "/specialities");
   cols.find('a[href="#doctors"]').attr("href", "/doctors");
   const careers = pages.find((p) => p.slug === "careers" && p.showInFooter);
-  cols.find('a[href="#contact"]').filter((_, a) => $(a).text().trim() === "Careers").each((_, a) => { if (careers) $(a).attr("href", "/careers"); else $(a).remove(); });
+  cols.find('a[href="#contact"]').filter((_, a) => $(a).attr("data-link") === "careers" || $(a).text().trim() === "Careers").each((_, a) => { if (careers) $(a).attr("href", "/careers"); else $(a).remove(); });
   if (visible("articles").length) {
     const faq = cols.find('a[href="#faq"]').first();
-    const lib = '<a href="/library">Health library</a>';
+    const lib = `<a href="/library">${T("Health library")}</a>`;
     if (faq.length) faq.after(lib); else cols.children("div").eq(1).append(lib);
   }
   const more = pages.filter((p) => p.showInFooter && !(careers && p === careers));
   if (more.length) {
-    cols.children("div").last().before(`<div><h4>About us</h4>${more.map((p) => link(p)).join("")}</div>`);
+    cols.children("div").last().before(`<div><h4>${T("About us")}</h4>${more.map((p) => link(p)).join("")}</div>`);
     cols.addClass("footer__cols--4");
   }
 }
@@ -739,7 +805,7 @@ function register(ctx) {
   const origSave = store.save.bind(store);
   store.save = function () { try { ensureSlugs(); } catch (e) { console.warn("slug check failed:", e.message); } return origSave(); };
 
-  addRenderHook(($) => decorate($));
+  addRenderHook(($, _db, _s, opts) => decorate($, opts));
 
   app.get("/robots.txt", robots);
   app.get("/sitemap.xml", sitemap);
@@ -750,16 +816,20 @@ function register(ctx) {
     res.type("application/javascript").setHeader("Cache-Control", "no-cache");
     res.send(ctx.applyReplacements(fs.readFileSync(file, "utf8"), db().settings));
   });
-  app.get("/doctors", doctorsIndex);
-  app.get("/doctors/:slug", doctorPage);
-  app.get("/specialities", specialitiesIndex);
-  app.get("/specialities/:slug", specialityPage);
-  app.get(["/specialties", "/specialties/:slug"], (req, res) => res.redirect(301, "/specialities" + (req.params.slug ? "/" + encodeURIComponent(req.params.slug) : "")));
-  app.get("/library", libraryIndex);
-  app.get("/library/:slug", articlePage);
+  // every page in English and, under /hi/, in Hindi (the handlers read the language from the URL)
+  for (const pre of ["", "/hi"]) {
+    app.get(pre + "/doctors", doctorsIndex);
+    app.get(pre + "/doctors/:slug", doctorPage);
+    app.get(pre + "/specialities", specialitiesIndex);
+    app.get(pre + "/specialities/:slug", specialityPage);
+    app.get([pre + "/specialties", pre + "/specialties/:slug"], (req, res) => res.redirect(301, pre + "/specialities" + (req.params.slug ? "/" + encodeURIComponent(req.params.slug) : "")));
+    app.get(pre + "/library", libraryIndex);
+    app.get(pre + "/library/:slug", articlePage);
+  }
+  app.get("/hi/:slug", customPage);
   app.get("/:slug", customPage);
-  // unknown deeper paths under the page sections get the friendly 404 as well
-  app.get(["/doctors/*", "/specialities/*", "/library/*"], notFound);
+  // unknown deeper paths under the page sections (and anything else under /hi/) get the friendly 404 as well
+  app.get(["/doctors/*", "/specialities/*", "/library/*", "/hi/*"], notFound);
 }
 
-module.exports = { register, renderInner, renderMarkdown, slugify };
+module.exports = { register, renderInner, renderMarkdown, slugify, langOf };

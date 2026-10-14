@@ -1,0 +1,1373 @@
+{
+ "_about": "Hindi translations of the home page text fields (server/render.js discovery keys). 'en' is the English default the translation was made from: when index.html changes and the English no longer matches, the translation is treated as stale and English is shown until it is updated. Admin overrides (db.textsHi) win over these.",
+ "fields": {
+  "t:other:0": {
+   "en": "Skip to content",
+   "hi": "मुख्य सामग्री पर जाएँ"
+  },
+  "t:header:0": {
+   "en": "CareNova",
+   "hi": "CareNova"
+  },
+  "t:header:1": {
+   "en": "Specialities",
+   "hi": "स्पेशियलिटी"
+  },
+  "t:header:2": {
+   "en": "Doctors",
+   "hi": "डॉक्टर"
+  },
+  "t:header:3": {
+   "en": "Imaging",
+   "hi": "इमेजिंग"
+  },
+  "t:header:4": {
+   "en": "Health checks",
+   "hi": "हेल्थ चेकअप"
+  },
+  "t:header:5": {
+   "en": "Patient care",
+   "hi": "मरीज़ सेवाएँ"
+  },
+  "t:header:6": {
+   "en": "Contact",
+   "hi": "संपर्क"
+  },
+  "t:header:7": {
+   "en": "Emergency",
+   "hi": "इमरजेंसी"
+  },
+  "t:header:8": {
+   "en": "1800-123-4567",
+   "hi": "1800-123-4567"
+  },
+  "t:header:9": {
+   "en": "Book a visit",
+   "hi": "अपॉइंटमेंट बुक करें"
+  },
+  "t:header:10": {
+   "en": "Specialities",
+   "hi": "स्पेशियलिटी"
+  },
+  "t:header:11": {
+   "en": "Doctors",
+   "hi": "डॉक्टर"
+  },
+  "t:header:12": {
+   "en": "Imaging",
+   "hi": "इमेजिंग"
+  },
+  "t:header:13": {
+   "en": "Book a visit",
+   "hi": "अपॉइंटमेंट बुक करें"
+  },
+  "t:header:14": {
+   "en": "Health checks",
+   "hi": "हेल्थ चेकअप"
+  },
+  "t:header:15": {
+   "en": "Patient care",
+   "hi": "मरीज़ सेवाएँ"
+  },
+  "t:header:16": {
+   "en": "Contact",
+   "hi": "संपर्क"
+  },
+  "t:header:17": {
+   "en": "Emergency · <span class=\"mono\">1800-123-4567</span>",
+   "hi": "इमरजेंसी · <span class=\"mono\">1800-123-4567</span>"
+  },
+  "t:top:0": {
+   "en": "NABH · JCI · NABL accredited · Sector 44, Gurugram",
+   "hi": "NABH · JCI · NABL से मान्यता प्राप्त · सेक्टर 44, गुरुग्राम"
+  },
+  "t:top:1": {
+   "en": "NABH · JCI accredited · Gurugram",
+   "hi": "NABH · JCI से मान्यता प्राप्त · गुरुग्राम"
+  },
+  "t:top:2": {
+   "en": "Emergency open 24x7",
+   "hi": "इमरजेंसी 24x7 खुली"
+  },
+  "t:top:3": {
+   "en": "Specialist care, without the wait.",
+   "hi": "विशेषज्ञ इलाज, बिना इंतज़ार के।"
+  },
+  "t:top:4": {
+   "en": "Book a consultant in under a minute, see live emergency wait times and get your reports on your phone. 250+ doctors across 40 specialities, on one campus.",
+   "hi": "एक मिनट से कम में डॉक्टर का अपॉइंटमेंट बुक करें, इमरजेंसी में इंतज़ार का समय लाइव देखें और अपनी रिपोर्ट फ़ोन पर पाएँ। एक ही कैंपस में 40 स्पेशियलिटी के 250+ डॉक्टर।"
+  },
+  "t:top:5": {
+   "en": "Search doctors, specialities or symptoms",
+   "hi": "डॉक्टर, स्पेशियलिटी या लक्षण खोजें"
+  },
+  "t:top:6": {
+   "en": "Search",
+   "hi": "खोजें"
+  },
+  "t:top:7": {
+   "en": "Emergency wait right now",
+   "hi": "इमरजेंसी में अभी इंतज़ार"
+  },
+  "t:top:8": {
+   "en": "Updated <span id=\"liveUpdated\">just now</span>",
+   "hi": "अपडेट: <span id=\"liveUpdated\">अभी</span>"
+  },
+  "t:top:9": {
+   "en": "min",
+   "hi": "मिनट"
+  },
+  "t:top:10": {
+   "en": "Beds free",
+   "hi": "खाली बेड"
+  },
+  "t:top:11": {
+   "en": "ICU free",
+   "hi": "खाली ICU बेड"
+  },
+  "t:top:12": {
+   "en": "OPD token",
+   "hi": "OPD टोकन"
+  },
+  "t:top:13": {
+   "en": "Book appointment",
+   "hi": "अपॉइंटमेंट बुक करें"
+  },
+  "t:top:14": {
+   "en": "Video consult",
+   "hi": "वीडियो कंसल्ट"
+  },
+  "t:top:15": {
+   "en": "Download reports",
+   "hi": "रिपोर्ट डाउनलोड करें"
+  },
+  "t:top:16": {
+   "en": "Pause turning",
+   "hi": "घुमाना रोकें"
+  },
+  "t:top:17": {
+   "en": "Drag to turn",
+   "hi": "घुमाने के लिए खींचें"
+  },
+  "t:top:18": {
+   "en": "Turn in 3D · 0.4 MB",
+   "hi": "3D में घुमाएँ · 0.4 MB"
+  },
+  "t:top:19": {
+   "en": "The human heart.",
+   "hi": "मानव हृदय।"
+  },
+  "t:top:20": {
+   "en": "The green vessels are the coronary arteries, the heart's own blood supply. Our cath lab opens blocked ones, day and night.",
+   "hi": "हरी नसें कोरोनरी आर्टरी हैं, जो दिल को ख़ुद ख़ून पहुँचाती हैं। हमारी कैथ लैब दिन-रात बंद आर्टरी खोलती है।"
+  },
+  "t:top:21": {
+   "en": "Model: BodyParts3D, © DBCLS, <span class=\"nowrap\">CC BY-SA 2.1 JP</span>. <a href=\"credits.html#heart\">Credits</a>",
+   "hi": "मॉडल: BodyParts3D, © DBCLS, <span class=\"nowrap\">CC BY-SA 2.1 JP</span>. <a href=\"credits.html#heart\">क्रेडिट</a>"
+  },
+  "t:top:22": {
+   "en": "Next available",
+   "hi": "अगला उपलब्ध डॉक्टर"
+  },
+  "t:top:23": {
+   "en": "Dr. Ananya Rao",
+   "hi": "Dr. Ananya Rao"
+  },
+  "t:top:24": {
+   "en": "Cardiology · English, Hindi, Telugu",
+   "hi": "कार्डियोलॉजी · अंग्रेज़ी, हिन्दी, तेलुगु"
+  },
+  "t:top:25": {
+   "en": "Today, 11:30",
+   "hi": "आज, 11:30"
+  },
+  "t:top:26": {
+   "en": "Book",
+   "hi": "बुक करें"
+  },
+  "t:top:27": {
+   "en": "Dr. Ananya Rao",
+   "hi": "Dr. Ananya Rao"
+  },
+  "t:top:28": {
+   "en": "4.9",
+   "hi": "4.9"
+  },
+  "t:top:29": {
+   "en": "out of 5",
+   "hi": "(5 में से)"
+  },
+  "t:top:30": {
+   "en": "from 18,400 patient reviews on Google",
+   "hi": "Google पर 18,400 मरीज़ों की रेटिंग के आधार पर"
+  },
+  "t:top:31": {
+   "en": "Need an ambulance?",
+   "hi": "एम्बुलेंस चाहिए?"
+  },
+  "t:top:32": {
+   "en": "Average response in <span class=\"nowrap\">12 minutes</span>",
+   "hi": "औसतन <span class=\"nowrap\">12 मिनट</span> में पहुँचती है"
+  },
+  "t:top:33": {
+   "en": "Consultants",
+   "hi": "कंसल्टेंट"
+  },
+  "t:top:34": {
+   "en": "250",
+   "hi": "250"
+  },
+  "t:top:35": {
+   "en": "Specialities",
+   "hi": "स्पेशियलिटी"
+  },
+  "t:top:36": {
+   "en": "40",
+   "hi": "40"
+  },
+  "t:top:37": {
+   "en": "Beds",
+   "hi": "बेड"
+  },
+  "t:top:38": {
+   "en": "1,200",
+   "hi": "1,200"
+  },
+  "t:top:39": {
+   "en": "Years of care",
+   "hi": "सेवा के वर्ष"
+  },
+  "t:top:40": {
+   "en": "28",
+   "hi": "28"
+  },
+  "t:top:41": {
+   "en": "Surgical success",
+   "hi": "सर्जरी में सफलता"
+  },
+  "t:top:42": {
+   "en": "98.6",
+   "hi": "98.6"
+  },
+  "t:top:43": {
+   "en": "Accredited by <b>NABH</b> <b>JCI</b> <b>NABL</b> <b>ISO 9001</b> · Best Multi-Speciality Hospital, National Healthcare Awards 2025",
+   "hi": "मान्यता: <b>NABH</b> <b>JCI</b> <b>NABL</b> <b>ISO 9001</b> · नेशनल हेल्थकेयर अवॉर्ड्स 2025 में सर्वश्रेष्ठ मल्टी-स्पेशियलिटी अस्पताल"
+  },
+  "t:specialities:0": {
+   "en": "Specialities",
+   "hi": "स्पेशियलिटी"
+  },
+  "t:specialities:1": {
+   "en": "Find the right specialist",
+   "hi": "सही विशेषज्ञ चुनें"
+  },
+  "t:specialities:2": {
+   "en": "Each centre has its own consultants, operating theatres and ICU. Pick one to see its doctors.",
+   "hi": "हर सेंटर के अपने कंसल्टेंट, ऑपरेशन थिएटर और ICU हैं। उसके डॉक्टर देखने के लिए कोई एक चुनें।"
+  },
+  "t:specialities:3": {
+   "en": "Neurology",
+   "hi": "न्यूरोलॉजी"
+  },
+  "t:specialities:4": {
+   "en": "The brain, grouped into lobes. The green frontal lobe handles planning, speech and personality.",
+   "hi": "दिमाग़, अलग-अलग हिस्सों (लोब) में बँटा हुआ। हरा फ़्रंटल लोब योजना बनाने, बोलने और व्यक्तित्व से जुड़ा है।"
+  },
+  "t:specialities:5": {
+   "en": "Model: Human Reference Atlas (HuBMAP), CC BY 4.0. <a href=\"credits.html#brain\">Credits</a>",
+   "hi": "मॉडल: Human Reference Atlas (HuBMAP), CC BY 4.0. <a href=\"credits.html#brain\">क्रेडिट</a>"
+  },
+  "i:specialities:0": {
+   "en": {
+    "src": "assets/img/mri-brain-axial-graded-800.webp",
+    "alt": ""
+   },
+   "hi": {
+    "alt": ""
+   }
+  },
+  "t:specialities:6": {
+   "en": "How we see it",
+   "hi": "जाँच में यह ऐसा दिखता है"
+  },
+  "t:specialities:7": {
+   "en": "MRI scan, a slice through the brain",
+   "hi": "MRI स्कैन, दिमाग़ का एक स्लाइस"
+  },
+  "t:specialities:8": {
+   "en": "Knee",
+   "hi": "घुटना"
+  },
+  "t:specialities:9": {
+   "en": "Spine",
+   "hi": "रीढ़"
+  },
+  "t:specialities:10": {
+   "en": "Point to a speciality to see it here.",
+   "hi": "यहाँ देखने के लिए किसी स्पेशियलिटी पर कर्सर ले जाएँ।"
+  },
+  "t:symptom:0": {
+   "en": "Specialist finder",
+   "hi": "सही डॉक्टर खोजें"
+  },
+  "t:symptom:1": {
+   "en": "Not sure who to see?",
+   "hi": "समझ नहीं आ रहा किसे दिखाएँ?"
+  },
+  "t:symptom:2": {
+   "en": "Tap what you're feeling. We'll suggest a speciality and doctors who can see you soon.",
+   "hi": "आपको जो तकलीफ़ है, उस पर टैप करें। हम स्पेशियलिटी और ऐसे डॉक्टर सुझाएँगे जो आपको जल्दी देख सकें।"
+  },
+  "t:symptom:3": {
+   "en": "This is a guide, not a diagnosis. For chest pain, breathlessness or sudden weakness, call <a href=\"tel:18001234567\" class=\"mono\">1800-123-4567</a> now.",
+   "hi": "यह सिर्फ़ मार्गदर्शन है, बीमारी की पहचान (डायग्नोसिस) नहीं। सीने में दर्द, साँस फूलने या अचानक कमज़ोरी में अभी <a href=\"tel:18001234567\" class=\"mono\">1800-123-4567</a> पर कॉल करें।"
+  },
+  "t:symptom:4": {
+   "en": "Tick what you're feeling",
+   "hi": "आपको क्या तकलीफ़ है, चुनें"
+  },
+  "t:doctors:0": {
+   "en": "Our doctors",
+   "hi": "हमारे डॉक्टर"
+  },
+  "t:doctors:1": {
+   "en": "Consultants you can book today",
+   "hi": "आज ही बुक करें अनुभवी डॉक्टर"
+  },
+  "t:doctors:2": {
+   "en": "Search doctors",
+   "hi": "डॉक्टर खोजें"
+  },
+  "t:doctors:3": {
+   "en": "Available today",
+   "hi": "आज उपलब्ध"
+  },
+  "t:doctors:4": {
+   "en": "Video consult",
+   "hi": "वीडियो कंसल्ट"
+  },
+  "t:doctors:5": {
+   "en": "No doctors match these filters.",
+   "hi": "इन फ़िल्टर से कोई डॉक्टर नहीं मिला।"
+  },
+  "t:doctors:6": {
+   "en": "Clear filters",
+   "hi": "फ़िल्टर हटाएँ"
+  },
+  "t:doctors:7": {
+   "en": "Show all doctors",
+   "hi": "सभी डॉक्टर देखें"
+  },
+  "t:book:0": {
+   "en": "Appointments",
+   "hi": "अपॉइंटमेंट"
+  },
+  "t:book:1": {
+   "en": "OPD Mon–Sat, 8 AM – 8 PM",
+   "hi": "OPD सोम–शनि, सुबह 8 – रात 8 बजे"
+  },
+  "t:book:2": {
+   "en": "Book a visit in under a minute",
+   "hi": "एक मिनट से कम में अपॉइंटमेंट बुक करें"
+  },
+  "t:book:3": {
+   "en": "Choose a doctor and a slot. You get a digital token and walk in at your time. Prefer to talk? Call <a href=\"tel:+919876543210\" class=\"mono\">+91 98765 43210</a>.",
+   "hi": "डॉक्टर और समय चुनें। आपको डिजिटल टोकन मिलेगा और आप अपने समय पर सीधे आ सकते हैं। बात करना चाहते हैं? <a href=\"tel:+919876543210\" class=\"mono\">+91 98765 43210</a> पर कॉल करें।"
+  },
+  "t:book:4": {
+   "en": "Doctor",
+   "hi": "डॉक्टर"
+  },
+  "t:book:5": {
+   "en": "Time",
+   "hi": "समय"
+  },
+  "t:book:6": {
+   "en": "Your details",
+   "hi": "आपकी जानकारी"
+  },
+  "t:book:7": {
+   "en": "Choose a doctor",
+   "hi": "डॉक्टर चुनें"
+  },
+  "t:book:8": {
+   "en": "Speciality",
+   "hi": "स्पेशियलिटी"
+  },
+  "t:book:9": {
+   "en": "Doctor",
+   "hi": "डॉक्टर"
+  },
+  "t:book:10": {
+   "en": "Consultation",
+   "hi": "कंसल्टेशन"
+  },
+  "t:book:11": {
+   "en": "At the hospital",
+   "hi": "अस्पताल में"
+  },
+  "t:book:12": {
+   "en": "Video call",
+   "hi": "वीडियो कॉल"
+  },
+  "t:book:13": {
+   "en": "Choose a time",
+   "hi": "समय चुनें"
+  },
+  "t:book:14": {
+   "en": "Choose a time",
+   "hi": "समय चुनें"
+  },
+  "t:book:15": {
+   "en": "Date",
+   "hi": "तारीख़"
+  },
+  "t:book:16": {
+   "en": "Time",
+   "hi": "समय"
+  },
+  "t:book:17": {
+   "en": "Back",
+   "hi": "पीछे"
+  },
+  "t:book:18": {
+   "en": "Add your details",
+   "hi": "अपनी जानकारी भरें"
+  },
+  "t:book:19": {
+   "en": "Patient details",
+   "hi": "मरीज़ की जानकारी"
+  },
+  "t:book:20": {
+   "en": "Patient name",
+   "hi": "मरीज़ का नाम"
+  },
+  "t:book:21": {
+   "en": "Mobile number",
+   "hi": "मोबाइल नंबर"
+  },
+  "t:book:22": {
+   "en": "Age",
+   "hi": "उम्र"
+  },
+  "t:book:23": {
+   "en": "Gender",
+   "hi": "लिंग"
+  },
+  "t:book:24": {
+   "en": "Reason for visit <em>(optional)</em>",
+   "hi": "आने का कारण <em>(वैकल्पिक)</em>"
+  },
+  "t:book:25": {
+   "en": "Back",
+   "hi": "पीछे"
+  },
+  "t:book:26": {
+   "en": "Confirm booking",
+   "hi": "बुकिंग पक्की करें"
+  },
+  "t:book:27": {
+   "en": "You're booked",
+   "hi": "आपकी बुकिंग हो गई"
+  },
+  "t:book:28": {
+   "en": "Show your token at the reception desk in Block A, 15 minutes before your time.",
+   "hi": "अपने समय से 15 मिनट पहले ब्लॉक A के रिसेप्शन डेस्क पर अपना टोकन दिखाएँ।"
+  },
+  "t:book:29": {
+   "en": "Add to calendar",
+   "hi": "कैलेंडर में जोड़ें"
+  },
+  "t:book:30": {
+   "en": "Book another visit",
+   "hi": "एक और अपॉइंटमेंट बुक करें"
+  },
+  "t:book:31": {
+   "en": "CareNova Hospitals · OPD token",
+   "hi": "CareNova Hospitals · OPD टोकन"
+  },
+  "t:book:32": {
+   "en": "Pay at the hospital. Free cancellation up to 2 hours before.",
+   "hi": "भुगतान अस्पताल में करें। 2 घंटे पहले तक मुफ़्त में रद्द कर सकते हैं।"
+  },
+  "t:technology:0": {
+   "en": "Imaging and technology",
+   "hi": "इमेजिंग और टेक्नोलॉजी"
+  },
+  "t:technology:1": {
+   "en": "Reports in 4 hours",
+   "hi": "4 घंटे में रिपोर्ट"
+  },
+  "t:technology:2": {
+   "en": "Equipment you'd otherwise travel abroad for",
+   "hi": "ऐसी मशीनें, जिनके लिए लोग विदेश जाते हैं"
+  },
+  "t:technology:3": {
+   "en": "We buy the same systems used by the world's leading medical centres and train our teams on them in-house.",
+   "hi": "हम वही सिस्टम ख़रीदते हैं जो दुनिया के बड़े मेडिकल सेंटर इस्तेमाल करते हैं, और अपनी टीमों को अस्पताल में ही उनकी ट्रेनिंग देते हैं।"
+  },
+  "t:technology:4": {
+   "en": "Da Vinci Xi robotic surgery",
+   "hi": "Da Vinci Xi रोबोटिक सर्जरी"
+  },
+  "t:technology:5": {
+   "en": "4,000+ procedures",
+   "hi": "4,000+ प्रोसीजर"
+  },
+  "t:technology:6": {
+   "en": "Smaller cuts, less pain and an earlier discharge for urology, gynaecology and cancer surgery.",
+   "hi": "यूरोलॉजी, स्त्री रोग और कैंसर सर्जरी में छोटे चीरे, कम दर्द और जल्दी छुट्टी।"
+  },
+  "t:technology:7": {
+   "en": "Operating theatre.",
+   "hi": "ऑपरेशन थिएटर।"
+  },
+  "t:technology:8": {
+   "en": "An operating theatre with ceiling-mounted surgical lights. Illustrative photograph.",
+   "hi": "छत पर लगी सर्जिकल लाइटों वाला ऑपरेशन थिएटर। उदाहरण के लिए फ़ोटो।"
+  },
+  "t:technology:9": {
+   "en": "Photo: Forgemind ArchiMedia, CC BY 2.0. <a href=\"credits.html#photos\">Credits</a>",
+   "hi": "फ़ोटो: Forgemind ArchiMedia, CC BY 2.0. <a href=\"credits.html#photos\">क्रेडिट</a>"
+  },
+  "t:technology:10": {
+   "en": "3 Tesla MRI and 256-slice CT",
+   "hi": "3 टेस्ला MRI और 256-स्लाइस CT"
+  },
+  "t:technology:11": {
+   "en": "Reports in 4 h",
+   "hi": "4 घंटे में रिपोर्ट"
+  },
+  "t:technology:12": {
+   "en": "Sharper images at a lower radiation dose, with shorter time in the scanner.",
+   "hi": "कम रेडिएशन में ज़्यादा साफ़ तस्वीरें, और स्कैनर में कम समय।"
+  },
+  "t:technology:13": {
+   "en": "Keep scrolling to move through the scan. <span class=\"scrub-hint__state mono\">Slice 19 of 40</span>",
+   "hi": "स्कैन में आगे बढ़ने के लिए स्क्रॉल करते रहें। <span class=\"scrub-hint__state mono\">स्लाइस 19 / 40</span>"
+  },
+  "i:technology:0": {
+   "en": {
+    "src": "assets/img/photo-mri-scanner-640.webp",
+    "alt": "Illustrative photograph: a white MRI scanner and its table in an empty room."
+   },
+   "hi": {
+    "alt": "उदाहरण के लिए फ़ोटो: खाली कमरे में सफ़ेद MRI स्कैनर और उसकी टेबल।"
+   }
+  },
+  "t:technology:14": {
+   "en": "An MRI scanner. Illustrative.",
+   "hi": "MRI स्कैनर। उदाहरण के लिए।"
+  },
+  "i:technology:1": {
+   "en": {
+    "src": "assets/img/photo-ct-scanner-640.webp",
+    "alt": "Illustrative photograph: a CT scanner in an empty room with teal walls."
+   },
+   "hi": {
+    "alt": "उदाहरण के लिए फ़ोटो: हरी-नीली दीवारों वाले खाली कमरे में CT स्कैनर।"
+   }
+  },
+  "t:technology:15": {
+   "en": "A CT scanner. Illustrative.",
+   "hi": "CT स्कैनर। उदाहरण के लिए।"
+  },
+  "t:technology:16": {
+   "en": "Photos: liz west (MRI) and Bytemarks (CT), CC BY 2.0. <a href=\"credits.html#photos\">Credits</a>",
+   "hi": "फ़ोटो: liz west (MRI) और Bytemarks (CT), CC BY 2.0. <a href=\"credits.html#photos\">क्रेडिट</a>"
+  },
+  "t:technology:17": {
+   "en": "MRI",
+   "hi": "MRI"
+  },
+  "t:technology:18": {
+   "en": "CT 3D",
+   "hi": "CT 3D"
+  },
+  "t:technology:19": {
+   "en": "MRI · <span class=\"lb-read__long\">brain · </span>T1 axial",
+   "hi": "MRI · <span class=\"lb-read__long\">दिमाग़ · </span>T1 एक्सियल"
+  },
+  "t:technology:20": {
+   "en": "CT · chest · 3D bone render",
+   "hi": "CT · छाती · हड्डियों का 3D रेंडर"
+  },
+  "t:technology:21": {
+   "en": "Slice 19 of 40",
+   "hi": "स्लाइस 19 / 40"
+  },
+  "t:technology:22": {
+   "en": "Move through the scan",
+   "hi": "स्कैन में आगे-पीछे जाएँ"
+  },
+  "t:technology:23": {
+   "en": "Turn the rib cage",
+   "hi": "पसलियों का ढाँचा घुमाएँ"
+  },
+  "t:technology:24": {
+   "en": "Brain MRI.",
+   "hi": "दिमाग़ का MRI।"
+  },
+  "t:technology:25": {
+   "en": "Forty slices through a healthy adult brain, from the top of the head down to eye level. The line shows where each slice is.",
+   "hi": "एक स्वस्थ वयस्क के दिमाग़ के चालीस स्लाइस, सिर के ऊपरी हिस्से से आँखों के स्तर तक। रेखा दिखाती है कि हर स्लाइस कहाँ है।"
+  },
+  "t:technology:26": {
+   "en": "MRI: OpenNeuro ds003826, CC0 · Brain model: Human Reference Atlas, CC BY 4.0. <a href=\"credits.html#mri\">Credits</a>",
+   "hi": "MRI: OpenNeuro ds003826, CC0 · दिमाग़ का मॉडल: Human Reference Atlas, CC BY 4.0. <a href=\"credits.html#mri\">क्रेडिट</a>"
+  },
+  "t:technology:27": {
+   "en": "Chest CT in 3D.",
+   "hi": "3D में छाती का CT।"
+  },
+  "t:technology:28": {
+   "en": "The rib cage, rebuilt in 3D from a chest CT scan.",
+   "hi": "छाती के CT स्कैन से 3D में दोबारा बनाया गया पसलियों का ढाँचा।"
+  },
+  "t:technology:29": {
+   "en": "LIDC-IDRI, The Cancer Imaging Archive, CC BY 3.0 (modified). <a href=\"credits.html#ct\">Credits</a>",
+   "hi": "LIDC-IDRI, The Cancer Imaging Archive, CC BY 3.0 (बदलाव के साथ). <a href=\"credits.html#ct\">क्रेडिट</a>"
+  },
+  "t:technology:30": {
+   "en": "Hybrid cath lab",
+   "hi": "हाइब्रिड कैथ लैब"
+  },
+  "t:technology:31": {
+   "en": "Door-to-balloon < 60 min",
+   "hi": "डोर-टू-बैलून < 60 मिनट"
+  },
+  "t:technology:32": {
+   "en": "Round-the-clock primary angioplasty for heart attacks, plus complex neuro interventions.",
+   "hi": "हार्ट अटैक के लिए चौबीसों घंटे प्राइमरी एंजियोप्लास्टी, साथ ही दिमाग़ की जटिल इंटरवेंशन प्रक्रियाएँ।"
+  },
+  "t:technology:33": {
+   "en": "CT · abdomen · stent",
+   "hi": "CT · पेट · स्टेंट"
+  },
+  "t:technology:34": {
+   "en": "Rotation 30°",
+   "hi": "घुमाव 30°"
+  },
+  "t:technology:35": {
+   "en": "Contrast",
+   "hi": "कंट्रास्ट"
+  },
+  "t:technology:36": {
+   "en": "Stent, seen by CT.",
+   "hi": "CT में दिखता स्टेंट।"
+  },
+  "t:technology:37": {
+   "en": "A stent holding open the aorta, the body's main artery. The spine sits behind it.",
+   "hi": "शरीर की मुख्य धमनी, एओर्टा, को खुला रखता एक स्टेंट। पीछे रीढ़ की हड्डी है।"
+  },
+  "t:technology:38": {
+   "en": "CT sample from imageio, public domain. <a href=\"credits.html#stent\">Credits</a>",
+   "hi": "CT सैंपल: imageio, पब्लिक डोमेन. <a href=\"credits.html#stent\">क्रेडिट</a>"
+  },
+  "t:technology:39": {
+   "en": "TrueBeam radiotherapy",
+   "hi": "TrueBeam रेडियोथेरेपी"
+  },
+  "t:technology:40": {
+   "en": "Sub-mm accuracy",
+   "hi": "1 मिमी से कम की सटीकता"
+  },
+  "t:technology:41": {
+   "en": "Image-guided radiation that targets the tumour and spares healthy tissue around it.",
+   "hi": "तस्वीरों की मदद से दी जाने वाली रेडिएशन, जो सीधे ट्यूमर पर असर करती है और आसपास के स्वस्थ टिशू को बचाती है।"
+  },
+  "t:technology:42": {
+   "en": "CT · chest · axial",
+   "hi": "CT · छाती · एक्सियल"
+  },
+  "t:technology:43": {
+   "en": "Chest CT.",
+   "hi": "छाती का CT।"
+  },
+  "t:technology:44": {
+   "en": "A slice through the chest at the level of the airways. Radiotherapy plans are drawn on images like this.",
+   "hi": "साँस की नलियों के स्तर पर छाती का एक स्लाइस। रेडियोथेरेपी की योजना ऐसी ही तस्वीरों पर बनाई जाती है।"
+  },
+  "t:technology:45": {
+   "en": "LIDC-IDRI, TCIA, CC BY 3.0 (modified). <a href=\"credits.html#ct\">Credits</a>",
+   "hi": "LIDC-IDRI, TCIA, CC BY 3.0 (बदलाव के साथ). <a href=\"credits.html#ct\">क्रेडिट</a>"
+  },
+  "t:technology:46": {
+   "en": "AI second read",
+   "hi": "AI से दूसरी जाँच"
+  },
+  "t:technology:47": {
+   "en": "2 reads per scan",
+   "hi": "हर स्कैन की 2 बार जाँच"
+  },
+  "t:technology:48": {
+   "en": "Every X-ray, mammogram and ECG gets a software check alongside the radiologist's report.",
+   "hi": "हर X-ray, मैमोग्राम और ECG को रेडियोलॉजिस्ट की रिपोर्ट के साथ-साथ सॉफ़्टवेयर से भी जाँचा जाता है।"
+  },
+  "t:technology:49": {
+   "en": "Read 1 · radiologist",
+   "hi": "जाँच 1 · रेडियोलॉजिस्ट"
+  },
+  "t:technology:50": {
+   "en": "Read 2 · software check",
+   "hi": "जाँच 2 · सॉफ़्टवेयर"
+  },
+  "t:technology:51": {
+   "en": "CT · chest · front view",
+   "hi": "CT · छाती · सामने से"
+  },
+  "t:technology:52": {
+   "en": "Two reads.",
+   "hi": "दो बार जाँच।"
+  },
+  "t:technology:53": {
+   "en": "A chest CT seen from the front. Every scan is read by a radiologist and checked by software.",
+   "hi": "सामने से देखा गया छाती का CT। हर स्कैन रेडियोलॉजिस्ट पढ़ते हैं और सॉफ़्टवेयर भी जाँचता है।"
+  },
+  "t:technology:54": {
+   "en": "LIDC-IDRI, TCIA, CC BY 3.0 (modified). <a href=\"credits.html#ct\">Credits</a>",
+   "hi": "LIDC-IDRI, TCIA, CC BY 3.0 (बदलाव के साथ). <a href=\"credits.html#ct\">क्रेडिट</a>"
+  },
+  "t:technology:55": {
+   "en": "Fully automated NABL lab",
+   "hi": "पूरी तरह ऑटोमेटेड NABL लैब"
+  },
+  "t:technology:56": {
+   "en": "3,500+ tests",
+   "hi": "3,500+ टेस्ट"
+  },
+  "t:technology:57": {
+   "en": "Barcode-tracked samples, 3,500+ tests and results sent straight to your phone.",
+   "hi": "बारकोड से ट्रैक होने वाले सैंपल, 3,500+ टेस्ट और नतीजे सीधे आपके फ़ोन पर।"
+  },
+  "t:technology:58": {
+   "en": "Tissue · fluorescence microscope",
+   "hi": "टिशू · फ़्लोरेसेंस माइक्रोस्कोप"
+  },
+  "t:technology:59": {
+   "en": "Under the microscope.",
+   "hi": "माइक्रोस्कोप के नीचे।"
+  },
+  "t:technology:60": {
+   "en": "Kidney tissue from a mouse, under a confocal microscope. Our lab runs 3,500+ tests.",
+   "hi": "कॉन्फ़ोकल माइक्रोस्कोप में चूहे की किडनी का टिशू। हमारी लैब 3,500+ टेस्ट करती है।"
+  },
+  "t:technology:61": {
+   "en": "Genevieve Buckley, Monash Micro Imaging, CC0. <a href=\"credits.html#kidney-tissue\">Credits</a>",
+   "hi": "Genevieve Buckley, Monash Micro Imaging, CC0. <a href=\"credits.html#kidney-tissue\">क्रेडिट</a>"
+  },
+  "i:closer:0": {
+   "en": {
+    "src": "assets/img/retina-redfree-graded-800.webp",
+    "alt": "The back of a healthy eye photographed in red-free light, showing the optic disc and branching blood vessels."
+   },
+   "hi": {
+    "alt": "रेड-फ़्री रोशनी में ली गई एक स्वस्थ आँख के पिछले हिस्से की फ़ोटो, जिसमें ऑप्टिक डिस्क और फैली हुई रक्त नलिकाएँ दिखती हैं।"
+   }
+  },
+  "t:closer:0": {
+   "en": "Natural colour",
+   "hi": "असली रंग"
+  },
+  "t:closer:1": {
+   "en": "Fundus photograph: Mikael Häggström, CC0. <a href=\"credits.html#retina\">Credits</a>",
+   "hi": "फ़ंडस फ़ोटो: Mikael Häggström, CC0. <a href=\"credits.html#retina\">क्रेडिट</a>"
+  },
+  "t:closer:2": {
+   "en": "Look closer",
+   "hi": "क़रीब से देखें"
+  },
+  "t:closer:3": {
+   "en": "This is the back of a healthy eye, photographed through the pupil. Diabetes and high blood pressure often show up here first, which is why our 60+ check-up includes an eye exam.",
+   "hi": "यह एक स्वस्थ आँख का पिछला हिस्सा है, जिसकी फ़ोटो पुतली के रास्ते ली गई है। डायबिटीज़ और हाई ब्लड प्रेशर के निशान अक्सर सबसे पहले यहीं दिखते हैं, इसलिए हमारे 60+ चेकअप में आँखों की जाँच शामिल है।"
+  },
+  "t:closer:4": {
+   "en": "Red-free light makes the blood vessels stand out. Drag the slider to see the eye in natural colour.",
+   "hi": "रेड-फ़्री रोशनी में रक्त नलिकाएँ साफ़ दिखती हैं। आँख को असली रंग में देखने के लिए स्लाइडर खींचें।"
+  },
+  "t:closer:5": {
+   "en": "See the 60+ check-up",
+   "hi": "60+ चेकअप देखें"
+  },
+  "t:packages:0": {
+   "en": "Preventive health",
+   "hi": "बीमारी से बचाव"
+  },
+  "t:packages:1": {
+   "en": "Free home sample collection above <span class=\"num\">₹1,999</span>",
+   "hi": "<span class=\"num\">₹1,999</span> से ऊपर घर से मुफ़्त सैंपल कलेक्शन"
+  },
+  "t:packages:2": {
+   "en": "Health check-ups",
+   "hi": "हेल्थ चेकअप"
+  },
+  "t:packages:3": {
+   "en": "All",
+   "hi": "सभी"
+  },
+  "t:packages:4": {
+   "en": "Women",
+   "hi": "महिलाएँ"
+  },
+  "t:packages:5": {
+   "en": "Men",
+   "hi": "पुरुष"
+  },
+  "t:packages:6": {
+   "en": "60+",
+   "hi": "60+"
+  },
+  "t:packages:7": {
+   "en": "Heart",
+   "hi": "हृदय"
+  },
+  "t:packages:8": {
+   "en": "Free home sample collection on packages above <span class=\"num\">₹1,999</span>. Reports in 24 hours. Doctor review included.",
+   "hi": "<span class=\"num\">₹1,999</span> से ऊपर के पैकेज पर घर से मुफ़्त सैंपल कलेक्शन। 24 घंटे में रिपोर्ट। डॉक्टर रिपोर्ट समझाएँगे।"
+  },
+  "t:care:0": {
+   "en": "Patient care",
+   "hi": "मरीज़ों की देखभाल"
+  },
+  "t:care:1": {
+   "en": "Cashless with 150+ insurers",
+   "hi": "150+ बीमा कंपनियों के साथ कैशलेस"
+  },
+  "t:care:2": {
+   "en": "Care that continues after you leave",
+   "hi": "अस्पताल से जाने के बाद भी देखभाल"
+  },
+  "i:care:0": {
+   "en": {
+    "src": "assets/img/photo-doctor-tablet-1024.webp",
+    "alt": "Illustrative photograph: a doctor in a white coat reading on a tablet, face not shown."
+   },
+   "hi": {
+    "alt": "उदाहरण के लिए फ़ोटो: सफ़ेद कोट में एक डॉक्टर टैबलेट पर पढ़ते हुए, चेहरा नहीं दिख रहा।"
+   }
+  },
+  "t:care:3": {
+   "en": "Illustrative photograph.",
+   "hi": "उदाहरण के लिए फ़ोटो।"
+  },
+  "t:care:4": {
+   "en": "Photo: NEC Corporation of America, CC BY 2.0. <a href=\"credits.html#photos\">Credits</a>",
+   "hi": "फ़ोटो: NEC Corporation of America, CC BY 2.0. <a href=\"credits.html#photos\">क्रेडिट</a>"
+  },
+  "t:care:5": {
+   "en": "See a doctor on video, usually within 15 minutes",
+   "hi": "वीडियो पर डॉक्टर से मिलें, आमतौर पर 15 मिनट के अंदर"
+  },
+  "t:care:6": {
+   "en": "The same senior consultants you'd meet at the hospital. Prescriptions arrive on WhatsApp and medicines at your door.",
+   "hi": "वही सीनियर कंसल्टेंट, जिनसे आप अस्पताल में मिलते। पर्चा WhatsApp पर और दवाइयाँ आपके घर पर।"
+  },
+  "t:care:7": {
+   "en": "Start a video consult",
+   "hi": "वीडियो कंसल्ट शुरू करें"
+  },
+  "t:care:8": {
+   "en": "At home",
+   "hi": "घर पर"
+  },
+  "t:care:9": {
+   "en": "Home healthcare",
+   "hi": "घर पर इलाज"
+  },
+  "t:care:10": {
+   "en": "Nursing, physiotherapy and ICU-at-home.",
+   "hi": "नर्सिंग, फ़िज़ियोथेरेपी और घर पर ICU।"
+  },
+  "t:care:11": {
+   "en": "2 h",
+   "hi": "2 घंटे"
+  },
+  "t:care:12": {
+   "en": "Pharmacy, 24x7",
+   "hi": "फ़ार्मेसी, 24x7"
+  },
+  "t:care:13": {
+   "en": "Delivered to your door within 2 hours.",
+   "hi": "2 घंटे के अंदर दवाइयाँ आपके घर तक।"
+  },
+  "t:care:14": {
+   "en": "6 AM",
+   "hi": "सुबह 6 बजे"
+  },
+  "t:care:15": {
+   "en": "Samples from home",
+   "hi": "घर से सैंपल"
+  },
+  "t:care:16": {
+   "en": "Certified phlebotomists from 6 AM.",
+   "hi": "सुबह 6 बजे से सर्टिफ़ाइड फ़्लेबोटोमिस्ट।"
+  },
+  "t:care:17": {
+   "en": "12 languages",
+   "hi": "12 भाषाएँ"
+  },
+  "t:care:18": {
+   "en": "International patients",
+   "hi": "विदेशी मरीज़"
+  },
+  "t:care:19": {
+   "en": "Visa letters, airport pickup, interpreters in 12 languages.",
+   "hi": "वीज़ा लेटर, एयरपोर्ट से पिकअप, 12 भाषाओं में दुभाषिए।"
+  },
+  "t:care:20": {
+   "en": "48 h",
+   "hi": "48 घंटे"
+  },
+  "t:care:21": {
+   "en": "Second opinion",
+   "hi": "सेकंड ओपिनियन"
+  },
+  "t:care:22": {
+   "en": "Our panel reviews your reports in 48 hours.",
+   "hi": "हमारा पैनल 48 घंटे में आपकी रिपोर्ट देखता है।"
+  },
+  "t:care:23": {
+   "en": "24x7",
+   "hi": "24x7"
+  },
+  "t:care:24": {
+   "en": "Blood bank",
+   "hi": "ब्लड बैंक"
+  },
+  "t:care:25": {
+   "en": "Component therapy and apheresis, day and night.",
+   "hi": "कंपोनेंट थेरेपी और एफ़ेरेसिस, दिन-रात।"
+  },
+  "t:care:26": {
+   "en": "<b>150+</b> insurers and TPAs, cashless",
+   "hi": "<b>150+</b> बीमा कंपनियाँ और TPA, कैशलेस"
+  },
+  "t:care:27": {
+   "en": "Star Health · HDFC ERGO · ICICI Lombard · Niva Bupa · Care Health · Bajaj Allianz · Tata AIG · CGHS · ECHS · Ayushman Bharat · and 140 more. Pre-authorisation in about 30 minutes at our insurance desk.",
+   "hi": "Star Health · HDFC ERGO · ICICI Lombard · Niva Bupa · Care Health · Bajaj Allianz · Tata AIG · CGHS · ECHS · आयुष्मान भारत · और 140 कंपनियाँ। हमारे इंश्योरेंस डेस्क पर लगभग 30 मिनट में प्री-ऑथराइज़ेशन।"
+  },
+  "t:tools:0": {
+   "en": "Health tools",
+   "hi": "हेल्थ टूल"
+  },
+  "t:tools:1": {
+   "en": "What you type stays on your device",
+   "hi": "आपकी भरी जानकारी आपके डिवाइस पर ही रहती है"
+  },
+  "t:tools:2": {
+   "en": "Know your numbers",
+   "hi": "अपने आँकड़े जानें"
+  },
+  "t:tools:3": {
+   "en": "Quick calculators. What you type stays on your device.",
+   "hi": "आसान कैलकुलेटर। आपकी भरी जानकारी आपके डिवाइस पर ही रहती है।"
+  },
+  "t:tools:4": {
+   "en": "Body mass index",
+   "hi": "बॉडी मास इंडेक्स (BMI)"
+  },
+  "t:tools:5": {
+   "en": "Height (cm)",
+   "hi": "लंबाई (सेमी)"
+  },
+  "t:tools:6": {
+   "en": "Weight (kg)",
+   "hi": "वज़न (किलो)"
+  },
+  "t:tools:7": {
+   "en": "Under",
+   "hi": "कम"
+  },
+  "t:tools:8": {
+   "en": "Healthy",
+   "hi": "सही"
+  },
+  "t:tools:9": {
+   "en": "Over",
+   "hi": "ज़्यादा"
+  },
+  "t:tools:10": {
+   "en": "Obese",
+   "hi": "मोटापा"
+  },
+  "t:tools:11": {
+   "en": "Daily water",
+   "hi": "रोज़ कितना पानी"
+  },
+  "t:tools:12": {
+   "en": "Weight (kg)",
+   "hi": "वज़न (किलो)"
+  },
+  "t:tools:13": {
+   "en": "Activity",
+   "hi": "शारीरिक मेहनत"
+  },
+  "t:tools:14": {
+   "en": "Pregnancy due date",
+   "hi": "डिलीवरी की संभावित तारीख़"
+  },
+  "t:tools:15": {
+   "en": "First day of your last period",
+   "hi": "आख़िरी पीरियड का पहला दिन"
+  },
+  "t:tools:16": {
+   "en": "Book an obstetrician",
+   "hi": "स्त्री रोग विशेषज्ञ से अपॉइंटमेंट लें"
+  },
+  "t:stories:0": {
+   "en": "Patient stories",
+   "hi": "मरीज़ों के अनुभव"
+  },
+  "t:stories:1": {
+   "en": "Patient stories",
+   "hi": "मरीज़ों के अनुभव"
+  },
+  "t:stories:2": {
+   "en": "Pause stories",
+   "hi": "अनुभव रोकें"
+  },
+  "t:faq:0": {
+   "en": "Questions",
+   "hi": "सवाल-जवाब"
+  },
+  "t:faq:1": {
+   "en": "Or call <a href=\"tel:+919876543210\" class=\"mono\">+91 98765 43210</a>",
+   "hi": "या <a href=\"tel:+919876543210\" class=\"mono\">+91 98765 43210</a> पर कॉल करें"
+  },
+  "t:faq:2": {
+   "en": "Before your visit",
+   "hi": "अस्पताल आने से पहले"
+  },
+  "i:faq:0": {
+   "en": {
+    "src": "assets/img/photo-xray-hand-640.webp",
+    "alt": "An X-ray of a hand, white bones on a dark background."
+   },
+   "hi": {
+    "alt": "हाथ का X-ray, गहरे रंग की पृष्ठभूमि पर सफ़ेद हड्डियाँ।"
+   }
+  },
+  "t:faq:3": {
+   "en": "Bring your old X-rays and reports, even from other hospitals. They help your doctor compare.",
+   "hi": "अपने पुराने X-ray और रिपोर्ट साथ लाएँ, चाहे वे दूसरे अस्पताल की हों। इससे डॉक्टर को तुलना करने में मदद मिलती है।"
+  },
+  "t:faq:4": {
+   "en": "X-ray photo: Trace Meek, CC BY 2.0. <a href=\"credits.html#photos\">Credits</a>",
+   "hi": "X-ray फ़ोटो: Trace Meek, CC BY 2.0. <a href=\"credits.html#photos\">क्रेडिट</a>"
+  },
+  "t:library:0": {
+   "en": "Health library",
+   "hi": "हेल्थ लाइब्रेरी"
+  },
+  "t:library:1": {
+   "en": "Written by our doctors",
+   "hi": "हमारे डॉक्टरों के लिखे लेख"
+  },
+  "t:contact:0": {
+   "en": "Visit us",
+   "hi": "हमसे मिलें"
+  },
+  "t:contact:1": {
+   "en": "Emergency open 24x7",
+   "hi": "इमरजेंसी 24x7 खुली"
+  },
+  "t:contact:2": {
+   "en": "Plot 21, Health City, Sector 44, Gurugram",
+   "hi": "प्लॉट 21, हेल्थ सिटी, सेक्टर 44, गुरुग्राम"
+  },
+  "t:contact:3": {
+   "en": "Helpdesk",
+   "hi": "हेल्पडेस्क"
+  },
+  "t:contact:4": {
+   "en": "+91 98765 43210",
+   "hi": "+91 98765 43210"
+  },
+  "t:contact:5": {
+   "en": "WhatsApp",
+   "hi": "WhatsApp"
+  },
+  "t:contact:6": {
+   "en": "+91 98765 43210",
+   "hi": "+91 98765 43210"
+  },
+  "t:contact:7": {
+   "en": "Emergency",
+   "hi": "इमरजेंसी"
+  },
+  "t:contact:8": {
+   "en": "<a href=\"tel:18001234567\" class=\"mono er-text\">1800-123-4567</a> · 24x7",
+   "hi": "<a href=\"tel:18001234567\" class=\"mono er-text\">1800-123-4567</a> · 24x7"
+  },
+  "t:contact:9": {
+   "en": "Email",
+   "hi": "ईमेल"
+  },
+  "t:contact:10": {
+   "en": "care@carenovahospitals.com",
+   "hi": "care@carenovahospitals.com"
+  },
+  "t:contact:11": {
+   "en": "OPD",
+   "hi": "OPD"
+  },
+  "t:contact:12": {
+   "en": "Mon–Sat, 8 AM – 8 PM",
+   "hi": "सोम–शनि, सुबह 8 – रात 8 बजे"
+  },
+  "t:contact:13": {
+   "en": "Visiting",
+   "hi": "मिलने का समय"
+  },
+  "t:contact:14": {
+   "en": "11 AM – 1 PM and 5 – 7 PM",
+   "hi": "सुबह 11 – दोपहर 1 बजे और शाम 5 – 7 बजे"
+  },
+  "t:contact:15": {
+   "en": "Free valet parking for senior citizens and patients with disabilities.",
+   "hi": "सीनियर सिटिज़न और दिव्यांग मरीज़ों के लिए मुफ़्त वैले पार्किंग।"
+  },
+  "t:contact:16": {
+   "en": "Send us a message",
+   "hi": "हमें संदेश भेजें"
+  },
+  "t:contact:17": {
+   "en": "Our patient care team replies within 2 hours, 8 AM to 10 PM.",
+   "hi": "हमारी पेशेंट केयर टीम सुबह 8 से रात 10 बजे तक, 2 घंटे के अंदर जवाब देती है।"
+  },
+  "t:contact:18": {
+   "en": "Name",
+   "hi": "नाम"
+  },
+  "t:contact:19": {
+   "en": "Mobile",
+   "hi": "मोबाइल"
+  },
+  "t:contact:20": {
+   "en": "Email",
+   "hi": "ईमेल"
+  },
+  "t:contact:21": {
+   "en": "How can we help?",
+   "hi": "हम आपकी क्या मदद कर सकते हैं?"
+  },
+  "t:contact:22": {
+   "en": "Send message",
+   "hi": "संदेश भेजें"
+  },
+  "i:footer:0": {
+   "en": {
+    "src": "assets/img/nuclei-graded-1024.webp",
+    "alt": ""
+   },
+   "hi": {
+    "alt": ""
+   }
+  },
+  "t:footer:0": {
+   "en": "Specialist care, without the wait.",
+   "hi": "विशेषज्ञ इलाज, बिना इंतज़ार के।"
+  },
+  "t:footer:1": {
+   "en": "Email for health tips",
+   "hi": "हेल्थ टिप्स के लिए ईमेल"
+  },
+  "t:footer:2": {
+   "en": "Subscribe",
+   "hi": "सब्सक्राइब करें"
+  },
+  "t:footer:3": {
+   "en": "Hospital",
+   "hi": "अस्पताल"
+  },
+  "t:footer:4": {
+   "en": "Specialities",
+   "hi": "स्पेशियलिटी"
+  },
+  "t:footer:5": {
+   "en": "Doctors",
+   "hi": "डॉक्टर"
+  },
+  "t:footer:6": {
+   "en": "Imaging and technology",
+   "hi": "इमेजिंग और टेक्नोलॉजी"
+  },
+  "t:footer:7": {
+   "en": "Careers",
+   "hi": "करियर"
+  },
+  "t:footer:8": {
+   "en": "Image and model credits",
+   "hi": "फ़ोटो और मॉडल के क्रेडिट"
+  },
+  "t:footer:9": {
+   "en": "Patients",
+   "hi": "मरीज़ों के लिए"
+  },
+  "t:footer:10": {
+   "en": "Book a visit",
+   "hi": "अपॉइंटमेंट बुक करें"
+  },
+  "t:footer:11": {
+   "en": "Health checks",
+   "hi": "हेल्थ चेकअप"
+  },
+  "t:footer:12": {
+   "en": "Reports",
+   "hi": "रिपोर्ट"
+  },
+  "t:footer:13": {
+   "en": "FAQs",
+   "hi": "आम सवाल"
+  },
+  "t:footer:14": {
+   "en": "Emergency",
+   "hi": "इमरजेंसी"
+  },
+  "t:footer:15": {
+   "en": "1800-123-4567",
+   "hi": "1800-123-4567"
+  },
+  "t:footer:16": {
+   "en": "Request ambulance",
+   "hi": "एम्बुलेंस बुलाएँ"
+  },
+  "t:footer:17": {
+   "en": "3D anatomy: Human Reference Atlas, HuBMAP (CC BY 4.0); BodyParts3D, © The Database Center for Life Science (CC BY-SA 2.1 JP). Scans: LIDC-IDRI, The Cancer Imaging Archive (CC BY 3.0); OpenNeuro ds003826 (CC0); scikit-image and CellProfiler sample data (CC0 / public domain); stent CT sample from imageio (public domain). Photos via Open Images: Forgemind ArchiMedia, liz west, Bytemarks, NEC Corporation of America, Trace Meek (CC BY 2.0). Images and models were resized, cropped, rendered or colour-graded. <a href=\"credits.html\">All image and model credits →</a>",
+   "hi": "3D एनाटॉमी: Human Reference Atlas, HuBMAP (CC BY 4.0); BodyParts3D, © The Database Center for Life Science (CC BY-SA 2.1 JP). स्कैन: LIDC-IDRI, The Cancer Imaging Archive (CC BY 3.0); OpenNeuro ds003826 (CC0); scikit-image और CellProfiler का सैंपल डेटा (CC0 / पब्लिक डोमेन); imageio का स्टेंट CT सैंपल (पब्लिक डोमेन). फ़ोटो Open Images से: Forgemind ArchiMedia, liz west, Bytemarks, NEC Corporation of America, Trace Meek (CC BY 2.0). तस्वीरों और मॉडलों का आकार बदला गया है, उन्हें क्रॉप, रेंडर या कलर-ग्रेड किया गया है। <a href=\"credits.html\">सभी फ़ोटो और मॉडल के क्रेडिट →</a>"
+  },
+  "t:footer:18": {
+   "en": "© <span id=\"year\">2026</span> CareNova Hospitals Pvt. Ltd.",
+   "hi": "© <span id=\"year\">2026</span> CareNova Hospitals Pvt. Ltd."
+  },
+  "t:footer:19": {
+   "en": "Privacy",
+   "hi": "गोपनीयता"
+  },
+  "t:footer:20": {
+   "en": "Terms",
+   "hi": "शर्तें"
+  },
+  "t:footer:21": {
+   "en": "Patient rights",
+   "hi": "मरीज़ के अधिकार"
+  },
+  "t:footer:22": {
+   "en": "Manage booking",
+   "hi": "बुकिंग बदलें"
+  },
+  "t:other:1": {
+   "en": "Emergency",
+   "hi": "इमरजेंसी"
+  },
+  "t:chat:0": {
+   "en": "Nova",
+   "hi": "Nova"
+  },
+  "t:chat:1": {
+   "en": "<span class=\"live-dot\" aria-hidden=\"true\"></span> Assistant · replies instantly",
+   "hi": "<span class=\"live-dot\" aria-hidden=\"true\"></span> सहायक · तुरंत जवाब"
+  },
+  "t:chat:2": {
+   "en": "Message",
+   "hi": "संदेश"
+  },
+  "t:sosModal:0": {
+   "en": "Emergency",
+   "hi": "इमरजेंसी"
+  },
+  "t:sosModal:1": {
+   "en": "Call us now. We're ready.",
+   "hi": "अभी कॉल करें। हम तैयार हैं।"
+  },
+  "t:sosModal:2": {
+   "en": "Our emergency team and ambulances are available 24x7.",
+   "hi": "हमारी इमरजेंसी टीम और एम्बुलेंस 24x7 उपलब्ध हैं।"
+  },
+  "t:sosModal:3": {
+   "en": "1800-123-4567",
+   "hi": "1800-123-4567"
+  },
+  "t:sosModal:4": {
+   "en": "National ambulance · 108",
+   "hi": "राष्ट्रीय एम्बुलेंस · 108"
+  },
+  "t:sosModal:5": {
+   "en": "Share my location",
+   "hi": "मेरी लोकेशन भेजें"
+  },
+  "t:sosModal:6": {
+   "en": "Keep the patient still and calm.",
+   "hi": "मरीज़ को हिलाएँ नहीं और शांत रखें।"
+  },
+  "t:sosModal:7": {
+   "en": "Don't give food or water if they're drowsy or unconscious.",
+   "hi": "अगर मरीज़ बेहोश हो या उसे नींद आ रही हो, तो खाना या पानी न दें।"
+  },
+  "t:sosModal:8": {
+   "en": "Keep ID, insurance card and a medicine list ready.",
+   "hi": "पहचान पत्र, बीमा कार्ड और दवाइयों की सूची तैयार रखें।"
+  },
+  "t:pkgModal:0": {
+   "en": "Health check-up",
+   "hi": "हेल्थ चेकअप"
+  },
+  "t:pkgModal:1": {
+   "en": "Book <span id=\"pkgName\">this check-up</span>",
+   "hi": "<span id=\"pkgName\">यह चेकअप</span> बुक करें"
+  },
+  "t:pkgModal:2": {
+   "en": "Leave your number and our team will call you to fix a date and time.",
+   "hi": "अपना नंबर छोड़ें, हमारी टीम आपको कॉल करके तारीख़ और समय तय करेगी।"
+  },
+  "t:pkgModal:3": {
+   "en": "Your name",
+   "hi": "आपका नाम"
+  },
+  "t:pkgModal:4": {
+   "en": "Mobile number",
+   "hi": "मोबाइल नंबर"
+  },
+  "t:pkgModal:5": {
+   "en": "Request a call back",
+   "hi": "कॉल बैक का अनुरोध करें"
+  },
+  "i:reportsModal:0": {
+   "en": {
+    "src": "assets/img/ct-chest-axial-graded-640.webp",
+    "alt": ""
+   },
+   "hi": {
+    "alt": ""
+   }
+  },
+  "t:reportsModal:0": {
+   "en": "Secure download · OTP to your phone",
+   "hi": "सुरक्षित डाउनलोड · फ़ोन पर OTP"
+  },
+  "t:reportsModal:1": {
+   "en": "Reports",
+   "hi": "रिपोर्ट"
+  },
+  "t:reportsModal:2": {
+   "en": "Download your reports",
+   "hi": "अपनी रिपोर्ट डाउनलोड करें"
+  },
+  "t:reportsModal:3": {
+   "en": "Use the UHID on your registration slip and your registered mobile number.",
+   "hi": "रजिस्ट्रेशन पर्ची पर लिखा UHID और अपना रजिस्टर्ड मोबाइल नंबर डालें।"
+  },
+  "t:reportsModal:4": {
+   "en": "UHID",
+   "hi": "UHID"
+  },
+  "t:reportsModal:5": {
+   "en": "Registered mobile",
+   "hi": "रजिस्टर्ड मोबाइल"
+  },
+  "t:reportsModal:6": {
+   "en": "Send OTP",
+   "hi": "OTP भेजें"
+  }
+ }
+}

@@ -9,6 +9,8 @@ import {
 } from "./core.js";
 import { SPECIMENS, modelPath, specimenForDept } from "./specimens.js";
 import { prefersReduced } from "./caps.js";
+/* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+const tr = (s, v) => { const d = window.I18N || {}; let r = Object.prototype.hasOwnProperty.call(d, s) ? d[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
 
 const finePointer = matchMedia("(pointer: fine)");
 const lowMemory = navigator.deviceMemory !== undefined && navigator.deviceMemory <= 4;
@@ -115,7 +117,7 @@ export class CabinetStage extends LiveStage {
     if (my !== this.token) return;
     this.setHint(true);
     // only now can it be turned: a tab stop for the arrow keys, labelled for screen readers (§15)
-    setTurnable(this.box, `3D model of ${spec.name || "the organ"}. Use the left and right arrow keys, or drag, to turn it.`);
+    setTurnable(this.box, tr("3D model of {name}. Use the left and right arrow keys, or drag, to turn it.", { name: tr(spec.name || "the organ") }));
     this.loop?.invalidate();
   }
 
@@ -152,7 +154,7 @@ export class CabinetStage extends LiveStage {
   }
 
   setHint(live) {
-    if (this.hint) this.hint.textContent = live ? "Drag to turn" : this.hintText;
+    if (this.hint) this.hint.textContent = live ? tr("Drag to turn") : this.hintText;
   }
 
   lightOn() { return finePointer.matches && !prefersReduced.matches && !this.interactionOnly; }

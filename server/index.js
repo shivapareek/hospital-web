@@ -10,6 +10,7 @@ const { COLLECTIONS, SUBMISSIONS, SETTINGS, DEFAULT_SETTINGS } = require("./sche
 const { renderPage, renderDataJs, textGroups, sectionList, applyReplacements, loadTemplate, sanitizeInline } = require("./render");
 const auth = require("./auth");
 const privacy = require("./privacy");
+const i18n = require("./i18n");
 
 const ROOT = path.join(__dirname, "..");
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
@@ -82,7 +83,7 @@ const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, role: u.rol
 
 /* ---------- cleaning content items against the schema ---------- */
 // Markdown fields are sanitised when rendered (server/pages.js), so they are stored as typed
-const isMarkdown = (f) => f.markdown === true || /^Markdown/.test(f.help || "");
+const isMarkdown = (f) => f.markdown === true || /^Markdown/.test(f.help || "");   // Hindi copies of Markdown fields carry markdown:true
 function cleanItem(col, body, existing) {
   const def = COLLECTIONS[col];
   const out = { ...(existing || {}) };
@@ -114,12 +115,21 @@ function cleanItem(col, body, existing) {
    ========================================================= */
 app.get(["/", "/index.html"], (req, res) => {
   res.type("html").setHeader("Cache-Control", "no-cache");
-  res.send(renderPage(db()));
+  res.send(renderPage(db(), { lang: "en", path: "/", base: i18n.baseUrl(req) }));
 });
-app.get("/js/data.js", (req, res) => {
+// Hindi home page (every other Hindi page is registered by its module: /hi/doctors…, /hi/privacy-policy…)
+app.get("/hi", (req, res) => res.redirect(301, "/hi/" + (req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "")));
+app.get(["/hi/", "/hi/index.html"], (req, res) => {
+  res.type("html").setHeader("Cache-Control", "no-cache");
+  res.send(renderPage(db(), { lang: "hi", path: "/", base: i18n.baseUrl(req) }));
+});
+app.get(["/js/data.js", "/hi/js/data.js"], (req, res) => {
   res.type("application/javascript").setHeader("Cache-Control", "no-cache");
-  res.send(renderDataJs(db()));
+  res.send(renderDataJs(db(), { lang: req.query.lang === "hi" || req.path.startsWith("/hi/") ? "hi" : "en" }));
 });
+// scripts build some image paths relative to the page ("assets/img/…"): the same files from /hi/
+app.use("/hi/assets", express.static(path.join(ROOT, "assets"), { maxAge: "7d" }));
+app.get("/hi/credits.html", (req, res) => res.redirect(301, "/credits.html"));
 for (const file of ["js/main.js", "credits.html"]) {
   app.get("/" + file, (req, res) => {
     res.type(file.endsWith(".js") ? "application/javascript" : "html").setHeader("Cache-Control", "no-cache");
@@ -143,13 +153,17 @@ const PHONE = /^[6-9]\d{9}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 app.post("/api/submit/:kind", (req, res) => {
   const ip = req.ip || req.socket.remoteAddress;
+  // messages in the language of the page the form was sent from (body.lang / X-Lang)
+  const lang = i18n.reqLang(req);
+  const T = (msg, vars) => i18n.tr(lang, msg, vars);
+  const bad = (r, code, error) => r.status(code).json({ error: T(error) });
   if (limited("submit:" + ip, 20, 10 * 60e3)) return bad(res, 429, "Too many requests. Please call us instead.");
   const b = req.body || {};
   if (b.website) return res.json({ ok: true }); // honeypot
   // consent (privacy.js): every form that collects personal data must carry consent:true
   const consentError = privacy.consentError(req.params.kind, b);
   if (consentError) return bad(res, 400, consentError);
-  const base = { id: newId(), createdAt: nowIso(), status: "new", note: "", consent: privacy.consentRecord() };
+  const base = { id: newId(), createdAt: nowIso(), status: "new", note: "", consent: privacy.consentRecord(lang), ...(lang === "hi" ? { lang } : {}) };
   const S = db().submissions;
   switch (req.params.kind) {
     case "appointment": {
@@ -199,7 +213,7 @@ app.post("/api/submit/:kind", (req, res) => {
       break;
     }
     case "datarequest": {
-      const r = privacy.dataRequest(b, base);
+      const r = privacy.dataRequest(b, base, lang);
       if (r.error) return bad(res, 400, r.error);
       S.dataRequests.unshift(r.item);
       break;
@@ -346,24 +360,28 @@ app.delete("/api/admin/content/:col/:id", requireAuth("content"), colGuard, (req
 });
 
 /* ---------- page text ---------- */
-app.get("/api/admin/texts", requireAuth("texts"), (req, res) => res.json({ groups: textGroups(db()) }));
+// ?lang=hi reads and writes the Hindi overrides (db.textsHi); without it, English (db.texts)
+const textLang = (req) => (req.query.lang === "hi" ? "hi" : "en");
+app.get("/api/admin/texts", requireAuth("texts"), (req, res) => res.json({ lang: textLang(req), groups: textGroups(db(), { lang: textLang(req) }) }));
 app.put("/api/admin/texts", requireAuth("texts"), (req, res) => {
   const values = (req.body && req.body.values) || {};
+  const lang = textLang(req);
+  const target = lang === "hi" ? (db().textsHi = db().textsHi || {}) : db().texts;
   const known = new Map(loadTemplate().fields.map((f) => [f.key, f]));
   let n = 0;
   for (const [key, v] of Object.entries(values)) {
     const f = known.get(key);
     if (!f) continue;
-    if (v === null) { delete db().texts[key]; n++; continue; }
+    if (v === null) { delete target[key]; n++; continue; }
     if (f.kind === "image") {
       if (typeof v !== "object") return bad(res, 400, "Image values need src and alt.");
-      db().texts[key] = { value: { src: str(v.src, 500), alt: str(v.alt, 300) }, default: f.default };
+      target[key] = { value: { src: str(v.src, 500), alt: str(v.alt, 300) }, default: f.default };
     } else {
-      db().texts[key] = { value: f.kind === "html" ? sanitizeInline(str(v, 5000)) : str(v, 5000), default: f.default };
+      target[key] = { value: f.kind === "html" ? sanitizeInline(str(v, 5000)) : str(v, 5000), default: f.default };
     }
     n++;
   }
-  audit(req.user, "Edited page text", `${n} field(s)`);
+  audit(req.user, lang === "hi" ? "Edited page text (Hindi)" : "Edited page text", `${n} field(s)`);
   store.save();
   res.json({ ok: true });
 });

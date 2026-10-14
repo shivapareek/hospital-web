@@ -12,6 +12,8 @@ import { NRRDLoader } from "three/addons/loaders/NRRDLoader.js";
 import { VolumeRenderShader1 } from "three/addons/shaders/VolumeShader.js";
 import { fetchBuffer, compileScene, DragYaw, Loop, LiveStage, revealCanvas, watchContextLoss, DEG, setTurnable } from "./core.js";
 import { prefersReduced } from "./caps.js";
+/* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+const tr = (s, v) => { const d = window.I18N || {}; let r = Object.prototype.hasOwnProperty.call(d, s) ? d[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
 
 export const STENT = {
   path: "assets/models/ct-stent.nrrd",
@@ -245,7 +247,7 @@ export class VolumeStage extends LiveStage {
     await revealCanvas(view.canvas, this.box);
     if (this.state !== "loading") return;
     // the poster (and its alt text) is now hidden: the box itself is the labelled, turnable image (§15)
-    setTurnable(this.box, "CT view of a stent inside the aorta, with the spine behind it. Use the left and right arrow keys, or drag, to turn it.");
+    setTurnable(this.box, tr("CT view of a stent inside the aorta, with the spine behind it. Use the left and right arrow keys, or drag, to turn it."));
     this.showSlider(true);
   }
 

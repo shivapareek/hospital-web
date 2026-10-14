@@ -8,6 +8,8 @@ import {
 } from "./core.js";
 import { HERO, modelPath } from "./specimens.js";
 import { prefersReduced } from "./caps.js";
+/* i18n: window.I18N (set by the server on Hindi pages) maps English text to the page language */
+const tr = (s, v) => { const d = window.I18N || {}; let r = Object.prototype.hasOwnProperty.call(d, s) ? d[s] : s; if (v) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in v ? v[k] : m)); return r; };
 
 const desktopMQ = matchMedia("(min-width: 1024px)");
 // the caption sits inside the plate from 1280 px (css/style.css); only then is the heart moved off centre
@@ -15,8 +17,8 @@ const insideMQ = matchMedia("(min-width: 1280px)");
 const finePointer = matchMedia("(pointer: fine)");
 const TAU = Math.PI * 2;
 // the box is a tab stop with turning instructions only while the 3D view is live (§15)
-const LIVE_LABEL = "3D model of the human heart. Use the left and right arrow keys, or drag, to turn it.";
-export const STILL_LABEL = "Model of the human heart. The coronary arteries on its surface are green.";
+const LIVE_LABEL = tr("3D model of the human heart. Use the left and right arrow keys, or drag, to turn it.");
+export const STILL_LABEL = tr("Model of the human heart. The coronary arteries on its surface are green.");
 
 /** Pose shared with the bake page, so the poster and the first live frame match.
     `inside`: the caption is inside the plate (>= 1280 px), so the heart moves right and up to clear it. */
@@ -251,7 +253,7 @@ export class HeroStage extends LiveStage {
     const b = this.pauseBtn;
     if (!b) return;
     b.hidden = prefersReduced.matches || this.interactionOnly;
-    b.textContent = this.paused ? "Resume turning" : "Pause turning";
+    b.textContent = this.paused ? tr("Resume turning") : tr("Pause turning");
   }
 
   /* ------------------------------------------------ leader labels (P1: desktop, live tier) */
@@ -447,7 +449,7 @@ class HeroLabels {
       const el = document.createElement("span");
       el.className = "stage__label is-off";
       el.innerHTML = '<i class="stage__ring"></i><i class="stage__leader"></i><span class="stage__label-text"></span>';
-      el.lastChild.textContent = def.text;
+      el.lastChild.textContent = tr(def.text);
       this.el.appendChild(el);
       this.items.push({ def, local, el, w: 0, h: 0 });
     }
