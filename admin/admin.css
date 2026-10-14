@@ -345,6 +345,9 @@ table.data .nowrap { white-space: nowrap; }
 }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
 .tabs button:hover { color: var(--ink); }
+.tabs a { font-weight: 600; font-size: 14px; color: var(--muted); padding: 10px 14px; border-bottom: 3px solid transparent; white-space: nowrap; text-decoration: none; margin-bottom: -1px; }
+.tabs a:hover { color: var(--ink); }
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 
 /* states */
 .state { padding: 40px 16px; text-align: center; color: var(--muted); }

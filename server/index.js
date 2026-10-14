@@ -581,7 +581,7 @@ app.use("/uploads", express.static(UPLOAD_DIR, {
   maxAge: "7d",
   setHeaders: (res, file) => { res.setHeader("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'"); if (file.endsWith(".pdf")) res.setHeader("Content-Disposition", "inline"); }
 }));
-app.get("/admin", (req, res) => res.redirect("/admin/"));
+app.get("/admin", (req, res, next) => (req.originalUrl === "/admin" ? res.redirect("/admin/") : next()));
 app.use("/admin", express.static(path.join(ROOT, "admin"), { index: "index.html" }));
 // only the public parts of the repo are served (never server/, data/, node_modules/)
 for (const dir of ["assets", "css", "js"]) app.use("/" + dir, express.static(path.join(ROOT, dir), { maxAge: dir === "assets" ? "7d" : 0 }));
