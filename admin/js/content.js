@@ -217,13 +217,21 @@ export async function renderContent(root, params) {
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 const normImg = (v) => ({ src: (v && v.src) || '', alt: (v && v.alt) || '' });
 
-export async function renderTexts(root) {
+export async function renderTexts(root, params) {
+  // language of the text being edited: English (the home page at /) or Hindi (the home page at /hi/)
+  const lang = state.textsLang === 'hi' ? 'hi' : 'en';
+  const hi = lang === 'hi';
   root.innerHTML = loadingHTML();
   let data;
-  try { data = await get('/api/admin/texts'); } catch (e) { root.innerHTML = errorHTML(e); return; }
+  try { data = await get(`/api/admin/texts${hi ? '?lang=hi' : ''}`); } catch (e) { root.innerHTML = errorHTML(e); return; }
   const groups = data.groups || [];
   const sid = uid('ts');
-  root.innerHTML = `<div class="page-head"><div><h1>Page text</h1><p class="sub">Every heading, paragraph and image on the home page. Changes go live when you save.</p></div></div>
+  const langSwitch = `<div class="seg" role="group" aria-label="Language of the page text">
+      <button type="button" class="seg__btn" data-lang="en" aria-pressed="${!hi}">English</button>
+      <button type="button" class="seg__btn" data-lang="hi" aria-pressed="${hi}"><span lang="hi">हिन्दी</span></button></div>`;
+  root.innerHTML = `<div class="page-head"><div><h1>Page text</h1><p class="sub">${hi
+    ? 'Hindi text for the home page at <a href="/hi/" target="_blank" rel="noopener">/hi/</a>. The default is the built-in Hindi translation; a field without one shows the English. Changes go live when you save.'
+    : 'Every heading, paragraph and image on the home page. Changes go live when you save.'}</p></div>${langSwitch}</div>
     <div class="toolbar"><div class="field grow"><label for="${sid}">Find a field</label><input id="${sid}" type="search" placeholder="Search by words on the page"></div>
       <div class="btn-row"><button type="button" class="btn btn-sm" data-expand>Open all</button><button type="button" class="btn btn-sm" data-collapse>Close all</button></div></div>
     <p class="count-line" aria-live="polite" data-found></p>
@@ -251,7 +259,7 @@ export async function renderTexts(root) {
     d.innerHTML = `<summary>${esc(g.label || g.id)}<span class="n">${(g.fields || []).length} ${(g.fields || []).length === 1 ? 'field' : 'fields'}</span></summary><div class="inner"></div>`;
     const inner = d.querySelector('.inner');
     for (const f of g.fields || []) {
-      const s = textField(f, refresh);
+      const s = textField(f, refresh, { lang });
       s.groupEl = d;
       fieldsState.push(s);
       inner.appendChild(s.wrap);
@@ -265,7 +273,7 @@ export async function renderTexts(root) {
     const q = e.target.value.trim().toLowerCase();
     let hits = 0;
     for (const s of fieldsState) {
-      const hay = [s.f.label, s.f.key, textOf(s.def), textOf(s.get())].join(' ').toLowerCase();
+      const hay = [s.f.label, s.f.key, textOf(s.def), textOf(s.get()), textOf(s.f.english)].join(' ').toLowerCase();
       const m = !q || hay.includes(q);
       s.wrap.hidden = !m; if (m) hits++;
     }
@@ -279,12 +287,22 @@ export async function renderTexts(root) {
   root.querySelector('[data-expand]').addEventListener('click', () => gEl.querySelectorAll('details').forEach((d) => { d.open = true; }));
   root.querySelector('[data-collapse]').addEventListener('click', () => gEl.querySelectorAll('details').forEach((d) => { d.open = false; }));
   undoBtn.addEventListener('click', () => { for (const s of fieldsState) s.set(s.original === null ? s.def : s.original); refresh(); });
+  root.querySelectorAll('.seg__btn').forEach((b) => b.addEventListener('click', async () => {
+    const to = b.dataset.lang;
+    if (to === lang) return;
+    if (fieldsState.some(isChanged) && !(await confirmIn(root.querySelector('.page-head'), 'Switch language and discard the unsaved changes?'))) return;
+    state.textsLang = to;
+    setPageGuard(null);
+    renderTexts(root, params);
+  }));
   saveBtn.addEventListener('click', () => busy(saveBtn, async () => {
     const values = {};
     for (const s of fieldsState) if (isChanged(s)) values[s.f.key] = desired(s);
     if (!Object.keys(values).length) return;
+    // Hindi images: keep following the English image unless a different one was chosen
+    if (hi) for (const s of fieldsState) if (s.f.type === 'image' && values[s.f.key] && values[s.f.key].src === s.def.src) values[s.f.key] = { ...values[s.f.key], src: '' };
     try {
-      await put('/api/admin/texts', { values });
+      await put(`/api/admin/texts${hi ? '?lang=hi' : ''}`, { values });
       for (const s of fieldsState) if (Object.prototype.hasOwnProperty.call(values, s.f.key)) s.original = values[s.f.key];
       toast(`Saved ${Object.keys(values).length} ${Object.keys(values).length === 1 ? 'change' : 'changes'}.`);
     } catch (e) { toastError(e); }
@@ -292,12 +310,14 @@ export async function renderTexts(root) {
   setPageGuard(() => fieldsState.some(isChanged));
 }
 
-function textField(f, onChange) {
+function textField(f, onChange, { lang = 'en' } = {}) {
   const id = uid('tx');
+  const hi = lang === 'hi';
   const wrap = el('div', { class: 'tfield' });
   const isImg = f.type === 'image';
   const def = isImg ? normImg(f.default) : (f.default ?? '');
-  const original = f.value === null || f.value === undefined ? null : (isImg ? normImg(f.value) : f.value);
+  // a Hindi image override with an empty src follows the English image
+  const original = f.value === null || f.value === undefined ? null : (isImg ? normImg(hi && !f.value.src ? { ...f.value, src: def.src } : f.value) : f.value);
   const start = original === null ? def : original;
   let get, set;
   const labelTxt = `<label for="${id}">${esc(f.label || f.key)}<span class="key">${esc(f.key)}</span></label>`;
@@ -317,15 +337,24 @@ function textField(f, onChange) {
     wrap.innerHTML = `${labelTxt}${long ? `<textarea id="${id}" rows="${Math.min(8, Math.max(3, Math.ceil(String(def).length / 70)))}"${f.type === 'html' ? ` class="mono" aria-describedby="${id}-h"` : ''}></textarea>` : `<input id="${id}" type="text">`}
       ${f.type === 'html' ? `<div class="help" id="${id}-h">Formatting allowed: links (&lt;a href&gt;), &lt;em&gt;, &lt;strong&gt;, &lt;b&gt;, &lt;i&gt;, &lt;span&gt;, &lt;br&gt;, &lt;small&gt;, &lt;abbr&gt;, &lt;sup&gt;. Other tags are removed.</div>` : ''}`;
     const c = wrap.querySelector('input, textarea'); c.value = start;
+    if (hi) c.setAttribute('lang', 'hi');
     c.addEventListener('input', onChange);
     get = () => c.value;
     set = (v) => { c.value = v ?? ''; };
   }
   const defBox = el('div', { class: 'def' });
+  const defLabel = hi ? (f.shipped ? 'Built-in Hindi' : 'No built-in Hindi, so the English is shown') : 'Default';
   defBox.innerHTML = isImg
-    ? `Default: <code>${esc(def.src)}</code>${def.alt ? `, alt “${esc(def.alt)}”` : ''} <button type="button" class="link-btn" data-reset>Reset to default</button>`
-    : `Default: <code>${esc(def)}</code> <button type="button" class="link-btn" data-reset>Reset to default</button>`;
+    ? `${defLabel}: <code>${esc(def.src)}</code>${def.alt ? `, alt “<span${hi ? ' lang="hi"' : ''}>${esc(def.alt)}</span>”` : ''} <button type="button" class="link-btn" data-reset>Reset to default</button>`
+    : `${defLabel}: <code${hi ? ' lang="hi"' : ''}>${esc(def)}</code> <button type="button" class="link-btn" data-reset>Reset to default</button>`;
   wrap.appendChild(defBox);
+  if (hi) {
+    // the English the Hindi page would otherwise show, and a hint when it was edited after the translation was made
+    const en = el('div', { class: 'def def--en' });
+    const english = isImg ? normImg(f.english) : f.english;
+    en.innerHTML = `English now: <code>${esc(isImg ? (english.alt || english.src) : english)}</code>${f.englishEdited ? ' <span class="pill pill-confirmed">English edited: check the Hindi</span>' : ''}${f.stale ? ' <span class="pill pill-confirmed">Built-in Hindi is out of date</span>' : ''}`;
+    wrap.appendChild(en);
+  }
   const resetBtn = defBox.querySelector('[data-reset]');
   resetBtn.setAttribute('aria-label', `Reset ${f.label || f.key} to default`);
   resetBtn.addEventListener('click', () => { set(def); onChange(); });

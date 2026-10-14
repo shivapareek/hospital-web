@@ -150,13 +150,14 @@ function sectionList(db) {
 }
 
 /* ---------- sanitising admin-provided inline HTML ---------- */
-function sanitizeInline(html) {
+/** keepIds: ids the page scripts rely on (taken from the field's default HTML, e.g. <span id="liveUpdated">) may stay. */
+function sanitizeInline(html, keepIds) {
   const $ = cheerio.load(`<div id="x">${html}</div>`, null, false);
   $("#x *").each((_, el) => {
     if (!INLINE.has(el.tagName)) { $(el).replaceWith($(el).text()); return; }
     for (const name of Object.keys(el.attribs || {})) {
       const v = el.attribs[name];
-      const okAttr = (el.tagName === "a" && (name === "href" || name === "target" || name === "rel")) || name === "class" || name === "lang" || name === "title";
+      const okAttr = (el.tagName === "a" && (name === "href" || name === "target" || name === "rel")) || name === "class" || name === "lang" || name === "title" || (name === "id" && keepIds && keepIds.has(v));
       if (!okAttr || (name === "href" && /^\s*(javascript|data|vbscript):/i.test(v))) $(el).removeAttr(name);
     }
   });
@@ -230,7 +231,7 @@ function renderPage(db, opts = {}) {
     } else if (f.kind === "text") {
       $el.text(String(v));
     } else if (f.kind === "html") {
-      $el.html(sanitizeInline(String(v)));
+      $el.html(sanitizeInline(String(v), new Set([...String(f.default).matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]))));
     } else if (f.kind === "textnode") {
       const node = (f.el.children || []).find((c) => c.type === "text" && c.data.trim());
       if (node) node.data = node.data.replace(node.data.trim(), escHtml(String(v)));
@@ -306,6 +307,7 @@ function renderPage(db, opts = {}) {
 
   // 7. language: switcher, hreflang links, and on Hindi pages the attributes, fonts and links
   languageChrome($, { lang, path: opts.path || "/", base: opts.base || "" });
+  if (hi && !$('link[rel="canonical"]').length) $("head").append(`<link rel="canonical" href="${escAttr((opts.base || "") + i18n.pathFor(opts.path || "/", "hi"))}">`);
   if (hi) hindiPass($, db);
 
   return applyReplacements($.html(), settings);
@@ -318,13 +320,12 @@ function languageChrome($, { lang, path, base }) {
   const label = i18n.LANG_NAMES[other];
   const title = other === "hi" ? "यह पेज हिन्दी में पढ़ें" : "Read this page in English";
   const short = other === "hi" ? "हि" : "EN";
-  const link = `<a class="lang-switch" href="${escAttr(href)}" hreflang="${other}" lang="${other}" title="${escAttr(title)}" aria-label="${escAttr(label)}" data-lang-switch><svg class="ic" aria-hidden="true"><use href="#i-lang"/></svg><span class="lang-switch__long" aria-hidden="true">${label}</span><span class="lang-switch__short" aria-hidden="true">${short}</span></a>`;
+  const link = `<a class="lang-switch" href="${escAttr(href)}" hreflang="${other}" lang="${other}" title="${escAttr(title)}" aria-label="${escAttr(label)}" data-lang-switch><span class="lang-switch__long" aria-hidden="true">${label}</span><span class="lang-switch__short" aria-hidden="true">${short}</span></a>`;
   const actions = $(".header__actions");
   if (actions.length) { const ft = actions.find("#fontToggle"); if (ft.length) ft.before(link); else actions.prepend(link); }
   const er = $("#mobileMenu .mobile-menu__er");
   const mm = `<a class="mobile-menu__lang" href="${escAttr(href)}" hreflang="${other}" lang="${other}" data-lang-switch>${other === "hi" ? "हिन्दी में पढ़ें" : "Read in English"}</a>`;
   if (er.length) er.after(mm); else $("#mobileMenu .mobile-menu__in").append(mm);
-  if (!$("#i-lang").length) $("svg defs").first().append('<symbol id="i-lang" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>');
   if (!$('link[href$="css/i18n.css"]').length) $("head").append('<link rel="stylesheet" href="/css/i18n.css">');
   // keep the section the reader is on (#doctors…) when switching language
   $("body").append('<script>document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("[data-lang-switch]");if(a&&location.hash&&location.hash.indexOf("?")<0)a.href=a.href.split("#")[0]+location.hash},true);</script>');
@@ -352,7 +353,8 @@ function hindiPass($, db) {
   for (const attr of ["aria-label", "placeholder", "title", "alt", "aria-valuetext"]) {
     $(`[${attr}]`).each((_, el) => { const v = $(el).attr(attr); if (v && Object.prototype.hasOwnProperty.call(A.attrs, v)) $(el).attr(attr, A.attrs[v]); });
   }
-  $("option").each((_, o) => { const t = $(o).text().trim(); if (A.options[t]) { if ($(o).attr("value") === undefined) $(o).attr("value", t); $(o).text(A.options[t]); } });
+  // the value stays English (what the form sends); only the label changes
+  $("option").each((_, o) => { const t = $(o).text().trim(); if (A.options[t]) { if (!o.attribs || !Object.prototype.hasOwnProperty.call(o.attribs, "value")) $(o).attr("value", t); $(o).text(A.options[t]); } });
   // static text inside areas the page script fills (the booking slip) and aria-hidden labels
   $("body *").contents().each((_, n) => {
     if (n.type !== "text" || !n.data.trim()) return;

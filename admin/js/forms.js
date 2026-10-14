@@ -25,8 +25,10 @@ export function buildForm(root, fields, values = {}, { onChange } = {}) {
   const controls = [];
   const changed = () => { if (onChange) onChange(); };
 
-  const main = fields.filter((f) => !f.advanced);
-  const adv = fields.filter((f) => f.advanced);
+  // Hindi versions (lang:"hi") go in their own collapsed block, so English editing stays as it was
+  const hi = fields.filter((f) => f.lang === 'hi');
+  const main = fields.filter((f) => !f.advanced && f.lang !== 'hi');
+  const adv = fields.filter((f) => f.advanced && f.lang !== 'hi');
 
   const renderGroupList = (list, container) => {
     let currentGroup = null;
@@ -46,11 +48,19 @@ export function buildForm(root, fields, values = {}, { onChange } = {}) {
         }
       }
       const c = renderField(f, values[f.name], changed);
+      if (f.lang === 'hi') c.wrap.querySelectorAll('input:not([type=checkbox]), textarea').forEach((i) => i.setAttribute('lang', 'hi'));
       controls.push(c);
       groupBox.appendChild(c.wrap);
     }
   };
   renderGroupList(main, root);
+  if (hi.length) {
+    const filled = hi.filter((f) => { const v = values[f.name]; return Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null && String(v).trim() !== ''; }).length;
+    const d = el('details', { class: 'adv adv--lang', lang: 'en' });
+    d.innerHTML = `<summary><span lang="hi">हिन्दी</span> (Hindi) translations <span class="adv__n">${filled} of ${hi.length} filled</span></summary><div class="inner"><p class="help adv__help">Shown on the Hindi site (/hi/…). Leave a field empty to show the English there. Names, photos, numbers and web addresses are shared.</p></div>`;
+    root.appendChild(d);
+    renderGroupList(hi.map((f) => ({ ...f, group: '' })), d.querySelector('.inner'));
+  }
   if (adv.length) {
     const d = el('details', { class: 'adv' });
     d.innerHTML = '<summary>Advanced</summary><div class="inner"></div>';

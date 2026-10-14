@@ -1,0 +1,71 @@
+/* =========================================================
+   Languages: the header switcher (every page) and Hindi typography.
+   Hindi pages (/hi/…) load "Noto Sans Devanagari" (body and UI, next to Atkinson Hyperlegible) and
+   "Tiro Devanagari Hindi" (display and headings, next to Newsreader). The Latin faces stay first in each
+   stack, so numbers, ₹ amounts and English terms (OPD, ICU, MRI) keep the site's own type; the Devanagari
+   faces take over for Devanagari letters. Everything below is scoped to :lang(hi).
+   ========================================================= */
+
+/* ---------- switcher ---------- */
+.lang-switch { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 44px; padding: 0 12px; margin-right: 4px; border: 1px solid var(--rule-strong); border-radius: var(--r-control); color: var(--ink); font-family: var(--sans); font-weight: 600; font-size: 15px; line-height: 1; white-space: nowrap; flex-shrink: 0; transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
+.lang-switch:hover { background: var(--paper-2); border-color: var(--ink); }
+.lang-switch__short { display: none; }
+.header.scrolled .lang-switch { background: transparent; }
+/* room for the switcher: the header's own breakpoints (css/style.css) move up by about its width */
+.er-link__label { display: none; }   /* the emergency number itself stays */
+@media (max-width: 1439px) { .er-link { display: none; } .er-call { display: inline-grid; } }
+@media (max-width: 1279px) { .header__cta { display: none; } }
+@media (min-width: 1024px) and (max-width: 1179px) {
+  .nav { gap: 14px; margin-left: 16px; }
+  .lang-switch { padding: 0 8px; }
+  .lang-switch__long { display: none; }
+  .lang-switch__short { display: inline; }
+}
+@media (max-width: 599px) {
+  .lang-switch { min-width: 36px; padding: 0 6px; margin-right: 0; font-size: 16px; }
+  .lang-switch__long { display: none; }
+  .lang-switch__short { display: inline; }
+}
+@media (max-width: 419px) {
+  .header__actions .icon-btn { width: 40px; height: 40px; }
+  .lang-switch { min-height: 40px; min-width: 34px; }
+}
+@media (max-width: 379px) { .header__actions .icon-btn { width: 38px; height: 38px; } .logo__word { font-size: 20px; } }
+.mobile-menu a.mobile-menu__lang { font-family: var(--sans); font-size: 1.125rem; font-weight: 600; color: var(--accent); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.mobile-menu a.mobile-menu__lang:lang(hi) { font-family: "Noto Sans Devanagari", var(--sans); }
+
+/* ---------- Hindi typography ---------- */
+:root:lang(hi) {
+  --serif: "Newsreader", "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Iowan Old Style", Georgia, serif;
+  --sans: "Atkinson Hyperlegible Next", "Noto Sans Devanagari", "Nirmala UI", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --mono: "Atkinson Hyperlegible Mono", "Noto Sans Devanagari", ui-monospace, "SF Mono", Menlo, monospace;
+}
+/* the switcher on English pages names Hindi in Devanagari (the system's Devanagari font is enough there) */
+.lang-switch:lang(hi) { font-family: "Noto Sans Devanagari", "Nirmala UI", var(--sans); font-size: 16px; }
+
+/* Devanagari needs more room above and below the line: the headline (shirorekha) and the vowel signs (matras)
+   above and below it clip or collide at the tight Latin display leading. No negative tracking either. */
+:lang(hi) body { line-height: 1.7; }
+:lang(hi) h1, :lang(hi) h2, :lang(hi) h3, :lang(hi) h4,
+:lang(hi) .hero__title, :lang(hi) .pg-title, :lang(hi) .legal__title, :lang(hi) .credits h1 { letter-spacing: 0; }
+:lang(hi) .hero__title { line-height: 1.22; max-width: 14ch; }
+:lang(hi) h2, :lang(hi) .pg-title, :lang(hi) .legal__title { line-height: 1.28; }
+:lang(hi) h3 { line-height: 1.32; }
+:lang(hi) h4 { line-height: 1.45; }
+:lang(hi) .spec__name, :lang(hi) .doc h3, :lang(hi) .pkg__head h3, :lang(hi) .fr-head h3, :lang(hi) .quote p,
+:lang(hi) .mobile-menu a, :lang(hi) .pg-spec__name, :lang(hi) .pg-h2, :lang(hi) .prof__role, :lang(hi) .pg-lead,
+:lang(hi) .articles__title, :lang(hi) .chapter__title, :lang(hi) .live__sos-text strong, :lang(hi) .care-feature__text h3 { line-height: 1.32; }
+:lang(hi) .pkg__head h3 { hyphens: manual; -webkit-hyphens: manual; }
+:lang(hi) .sec-head__sub, :lang(hi) .hero__lead, :lang(hi) .finder__lead { line-height: 1.6; }
+:lang(hi) .kicker, :lang(hi) .sec-fact, :lang(hi) .cap__title, :lang(hi) .doc__status, :lang(hi) .live__head { line-height: 1.6; }
+/* Devanagari has no true italic: captions and quotes stay upright */
+:lang(hi) .cap__text, :lang(hi) .print figcaption, :lang(hi) .prose blockquote, :lang(hi) .pg-review blockquote { font-style: normal; }
+/* longer labels: buttons may wrap rather than run out of their box on phones */
+:lang(hi) .btn { white-space: normal; line-height: 1.35; padding-block: 8px; }
+:lang(hi) .btn--sm { padding-block: 6px; }
+:lang(hi) .nav__link { white-space: nowrap; }
+:lang(hi) .prose { line-height: 1.75; }
+:lang(hi) .prose h2, :lang(hi) .prose h3 { line-height: 1.35; }
+:lang(hi) .tabs button, :lang(hi) .tabs a { line-height: 1.4; }
+:lang(hi) .chip, :lang(hi) .slot-group small, :lang(hi) .date small { line-height: 1.5; }
+:lang(hi) .form-msg, :lang(hi) .form-error, :lang(hi) .tool__out { line-height: 1.6; }

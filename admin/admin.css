@@ -511,3 +511,16 @@ legend { font-weight: 600; font-size: 13.5px; color: var(--ink-2); margin-bottom
 .pill-logged::before { border-radius: 1px; }
 .pill-failed, .pill-rejected { background: var(--red-wash); color: var(--red); }
 .pill-failed::before, .pill-rejected::before { border-radius: 0; transform: rotate(45deg); }
+
+/* ---------- languages: Page text English | हिन्दी switch, Hindi translations block in content forms ---------- */
+.seg { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: var(--r-s, 8px); overflow: hidden; flex: none; }
+.seg__btn { min-height: 40px; padding: 0 16px; font: inherit; font-weight: 700; font-size: 14px; color: var(--muted); background: var(--surface); border: 0; cursor: pointer; }
+.seg__btn + .seg__btn { border-left: 1px solid var(--rule-strong); }
+.seg__btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg__btn:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+[lang="hi"] { font-family: "Noto Sans Devanagari", "Nirmala UI", var(--sans, system-ui), sans-serif; }
+code[lang="hi"] { font-family: "Noto Sans Devanagari", "Nirmala UI", var(--mono, monospace), sans-serif; }
+details.adv--lang > summary { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+details.adv--lang .adv__n { font-weight: 400; font-size: 13px; color: var(--muted); }
+details.adv--lang .adv__help { margin: 8px 0 4px; }
+.tfield .def--en { margin-top: 4px; }

@@ -118,8 +118,9 @@ app.get(["/", "/index.html"], (req, res) => {
   res.send(renderPage(db(), { lang: "en", path: "/", base: i18n.baseUrl(req) }));
 });
 // Hindi home page (every other Hindi page is registered by its module: /hi/doctors…, /hi/privacy-policy…)
-app.get("/hi", (req, res) => res.redirect(301, "/hi/" + (req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : "")));
-app.get(["/hi/", "/hi/index.html"], (req, res) => {
+app.get(["/hi", "/hi/", "/hi/index.html"], (req, res) => {
+  // /hi → /hi/ (relative links and "#section" anchors on the page resolve against /hi/)
+  if (!/^\/hi\/(index\.html)?(\?|$)/.test(req.originalUrl)) return res.redirect(301, "/hi/" + (req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : ""));
   res.type("html").setHeader("Cache-Control", "no-cache");
   res.send(renderPage(db(), { lang: "hi", path: "/", base: i18n.baseUrl(req) }));
 });
@@ -609,6 +610,7 @@ app.get("/api/admin/audit", requireAuth("users"), (req, res) => res.json({ items
 const ctx = { app, store, db, ROOT, UPLOAD_DIR, requireAuth, audit, bad, str, nowIso, newId, limited, renderPage, applyReplacements };
 privacy.register(ctx);   // legal pages, consent, data requests, manage booking, reminders
 require("./pages").register(ctx);     // doctor / speciality / article / custom pages, sitemap
+require("./i18n/migrate").run(ctx);  // Hindi: db.textsHi and the Hindi demo content (once, never overwrites)
 
 app.use("/api", (req, res) => bad(res, 404, "Not found."));
 
