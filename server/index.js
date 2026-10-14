@@ -572,6 +572,11 @@ app.delete("/api/admin/users/:id", requireAuth("users"), (req, res) => {
 /* ---------- audit ---------- */
 app.get("/api/admin/audit", requireAuth("users"), (req, res) => res.json({ items: db().audit.slice(0, Math.min(1000, Number(req.query.limit) || 200)) }));
 
+/* ---------- feature modules (each owns its routes) ---------- */
+const ctx = { app, store, db, ROOT, UPLOAD_DIR, requireAuth, audit, bad, str, nowIso, newId, limited, renderPage, applyReplacements };
+require("./privacy").register(ctx);   // legal pages, consent, data requests, manage booking, reminders
+require("./pages").register(ctx);     // doctor / speciality / article / custom pages, sitemap
+
 app.use("/api", (req, res) => bad(res, 404, "Not found."));
 
 /* =========================================================
