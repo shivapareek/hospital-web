@@ -10,248 +10,160 @@
    "hi": "CareNova"
   },
   "t:header:1": {
-   "en": "Specialities",
-   "hi": "स्पेशियलिटी"
-  },
-  "t:header:2": {
    "en": "Doctors",
    "hi": "डॉक्टर"
   },
-  "t:header:3": {
-   "en": "Imaging",
-   "hi": "इमेजिंग"
+  "t:header:2": {
+   "en": "Specialities",
+   "hi": "स्पेशियलिटी"
   },
-  "t:header:4": {
+  "t:header:3": {
    "en": "Health checks",
    "hi": "हेल्थ चेकअप"
   },
-  "t:header:5": {
-   "en": "Patient care",
-   "hi": "मरीज़ सेवाएँ"
-  },
-  "t:header:6": {
+  "t:header:4": {
    "en": "Contact",
    "hi": "संपर्क"
   },
-  "t:header:7": {
+  "t:header:5": {
    "en": "Emergency",
    "hi": "इमरजेंसी"
   },
-  "t:header:8": {
+  "t:header:6": {
    "en": "1800-123-4567",
    "hi": "1800-123-4567"
   },
-  "t:header:9": {
+  "t:header:7": {
    "en": "Book a visit",
    "hi": "अपॉइंटमेंट बुक करें"
+  },
+  "t:header:8": {
+   "en": "Book a visit",
+   "hi": "अपॉइंटमेंट बुक करें"
+  },
+  "t:header:9": {
+   "en": "Doctors",
+   "hi": "डॉक्टर"
   },
   "t:header:10": {
    "en": "Specialities",
    "hi": "स्पेशियलिटी"
   },
   "t:header:11": {
-   "en": "Doctors",
-   "hi": "डॉक्टर"
-  },
-  "t:header:12": {
-   "en": "Imaging",
-   "hi": "इमेजिंग"
-  },
-  "t:header:13": {
-   "en": "Book a visit",
-   "hi": "अपॉइंटमेंट बुक करें"
-  },
-  "t:header:14": {
    "en": "Health checks",
    "hi": "हेल्थ चेकअप"
   },
-  "t:header:15": {
-   "en": "Patient care",
-   "hi": "मरीज़ सेवाएँ"
-  },
-  "t:header:16": {
+  "t:header:12": {
    "en": "Contact",
    "hi": "संपर्क"
   },
-  "t:header:17": {
+  "t:header:13": {
    "en": "Emergency · <span class=\"mono\">1800-123-4567</span>",
    "hi": "इमरजेंसी · <span class=\"mono\">1800-123-4567</span>"
   },
   "t:top:0": {
-   "en": "NABH · JCI · NABL accredited · Sector 44, Gurugram",
-   "hi": "NABH · JCI · NABL से मान्यता प्राप्त · सेक्टर 44, गुरुग्राम"
+   "en": "<span class=\"live-dot live-dot--red\" aria-hidden=\"true\"></span> Emergency open 24x7",
+   "hi": "<span class=\"live-dot live-dot--red\" aria-hidden=\"true\"></span> इमरजेंसी 24x7 खुली"
   },
   "t:top:1": {
-   "en": "NABH · JCI accredited · Gurugram",
-   "hi": "NABH · JCI से मान्यता प्राप्त · गुरुग्राम"
-  },
-  "t:top:2": {
-   "en": "Emergency open 24x7",
-   "hi": "इमरजेंसी 24x7 खुली"
-  },
-  "t:top:3": {
    "en": "Specialist care, without the wait.",
    "hi": "विशेषज्ञ इलाज, बिना इंतज़ार के।"
   },
-  "t:top:4": {
-   "en": "Book a consultant in under a minute, see live emergency wait times and get your reports on your phone. 250+ doctors across 40 specialities, on one campus.",
-   "hi": "एक मिनट से कम में डॉक्टर का अपॉइंटमेंट बुक करें, इमरजेंसी में इंतज़ार का समय लाइव देखें और अपनी रिपोर्ट फ़ोन पर पाएँ। एक ही कैंपस में 40 स्पेशियलिटी के 250+ डॉक्टर।"
+  "t:top:2": {
+   "en": "Find a doctor, book a visit and get your reports, all in one place.",
+   "hi": "डॉक्टर ढूँढें, अपॉइंटमेंट बुक करें और अपनी रिपोर्ट पाएँ, सब एक ही जगह।"
   },
-  "t:top:5": {
+  "t:top:3": {
    "en": "Search doctors, specialities or symptoms",
    "hi": "डॉक्टर, स्पेशियलिटी या लक्षण खोजें"
   },
-  "t:top:6": {
+  "t:top:4": {
    "en": "Search",
    "hi": "खोजें"
   },
-  "t:top:7": {
+  "t:top:5": {
    "en": "Emergency wait right now",
    "hi": "इमरजेंसी में अभी इंतज़ार"
   },
-  "t:top:8": {
-   "en": "Updated <span id=\"liveUpdated\">just now</span>",
-   "hi": "अपडेट: <span id=\"liveUpdated\">अभी</span>"
-  },
-  "t:top:9": {
+  "t:top:6": {
    "en": "min",
    "hi": "मिनट"
   },
-  "t:top:10": {
+  "t:top:7": {
    "en": "Beds free",
    "hi": "खाली बेड"
   },
-  "t:top:11": {
-   "en": "ICU free",
-   "hi": "खाली ICU बेड"
-  },
-  "t:top:12": {
-   "en": "OPD token",
-   "hi": "OPD टोकन"
-  },
-  "t:top:13": {
+  "t:top:8": {
    "en": "Book appointment",
    "hi": "अपॉइंटमेंट बुक करें"
   },
-  "t:top:14": {
+  "t:top:9": {
    "en": "Video consult",
    "hi": "वीडियो कंसल्ट"
   },
-  "t:top:15": {
-   "en": "Download reports",
-   "hi": "रिपोर्ट डाउनलोड करें"
+  "t:top:10": {
+   "en": "Get reports",
+   "hi": "रिपोर्ट पाएँ"
   },
-  "t:top:16": {
+  "t:top:11": {
    "en": "Pause turning",
    "hi": "घुमाना रोकें"
   },
-  "t:top:17": {
+  "t:top:12": {
    "en": "Drag to turn",
    "hi": "घुमाने के लिए खींचें"
   },
-  "t:top:18": {
+  "t:top:13": {
    "en": "Turn in 3D · 0.4 MB",
    "hi": "3D में घुमाएँ · 0.4 MB"
   },
-  "t:top:19": {
-   "en": "The human heart.",
-   "hi": "मानव हृदय।"
-  },
-  "t:top:20": {
-   "en": "The green vessels are the coronary arteries, the heart's own blood supply. Our cath lab opens blocked ones, day and night.",
-   "hi": "हरी नसें कोरोनरी आर्टरी हैं, जो दिल को ख़ुद ख़ून पहुँचाती हैं। हमारी कैथ लैब दिन-रात बंद आर्टरी खोलती है।"
-  },
-  "t:top:21": {
+  "t:top:14": {
    "en": "Model: BodyParts3D, © DBCLS, <span class=\"nowrap\">CC BY-SA 2.1 JP</span>. <a href=\"credits.html#heart\">Credits</a>",
    "hi": "मॉडल: BodyParts3D, © DBCLS, <span class=\"nowrap\">CC BY-SA 2.1 JP</span>. <a href=\"credits.html#heart\">क्रेडिट</a>"
   },
-  "t:top:22": {
-   "en": "Next available",
-   "hi": "अगला उपलब्ध डॉक्टर"
-  },
-  "t:top:23": {
-   "en": "Dr. Ananya Rao",
-   "hi": "Dr. Ananya Rao"
-  },
-  "t:top:24": {
-   "en": "Cardiology · English, Hindi, Telugu",
-   "hi": "कार्डियोलॉजी · अंग्रेज़ी, हिन्दी, तेलुगु"
-  },
-  "t:top:25": {
-   "en": "Today, 11:30",
-   "hi": "आज, 11:30"
-  },
-  "t:top:26": {
-   "en": "Book",
-   "hi": "बुक करें"
-  },
-  "t:top:27": {
-   "en": "Dr. Ananya Rao",
-   "hi": "Dr. Ananya Rao"
-  },
-  "t:top:28": {
-   "en": "4.9",
-   "hi": "4.9"
-  },
-  "t:top:29": {
-   "en": "out of 5",
-   "hi": "(5 में से)"
-  },
-  "t:top:30": {
-   "en": "from 18,400 patient reviews on Google",
-   "hi": "Google पर 18,400 मरीज़ों की रेटिंग के आधार पर"
-  },
-  "t:top:31": {
+  "t:top:15": {
    "en": "Need an ambulance?",
    "hi": "एम्बुलेंस चाहिए?"
   },
-  "t:top:32": {
+  "t:top:16": {
    "en": "Average response in <span class=\"nowrap\">12 minutes</span>",
    "hi": "औसतन <span class=\"nowrap\">12 मिनट</span> में पहुँचती है"
   },
-  "t:top:33": {
+  "t:top:17": {
    "en": "Consultants",
    "hi": "कंसल्टेंट"
   },
-  "t:top:34": {
+  "t:top:18": {
    "en": "250",
    "hi": "250"
   },
-  "t:top:35": {
+  "t:top:19": {
    "en": "Specialities",
    "hi": "स्पेशियलिटी"
   },
-  "t:top:36": {
+  "t:top:20": {
    "en": "40",
    "hi": "40"
   },
-  "t:top:37": {
+  "t:top:21": {
    "en": "Beds",
    "hi": "बेड"
   },
-  "t:top:38": {
+  "t:top:22": {
    "en": "1,200",
    "hi": "1,200"
   },
-  "t:top:39": {
+  "t:top:23": {
    "en": "Years of care",
    "hi": "सेवा के वर्ष"
   },
-  "t:top:40": {
+  "t:top:24": {
    "en": "28",
    "hi": "28"
   },
-  "t:top:41": {
-   "en": "Surgical success",
-   "hi": "सर्जरी में सफलता"
-  },
-  "t:top:42": {
-   "en": "98.6",
-   "hi": "98.6"
-  },
-  "t:top:43": {
-   "en": "Accredited by <b>NABH</b> <b>JCI</b> <b>NABL</b> <b>ISO 9001</b> · Best Multi-Speciality Hospital, National Healthcare Awards 2025",
-   "hi": "मान्यता: <b>NABH</b> <b>JCI</b> <b>NABL</b> <b>ISO 9001</b> · नेशनल हेल्थकेयर अवॉर्ड्स 2025 में सर्वश्रेष्ठ मल्टी-स्पेशियलिटी अस्पताल"
+  "t:top:25": {
+   "en": "Accredited by <b>NABH</b> <b>JCI</b> <b>NABL</b> · Rated <b>4.9 ★</b> by 18,400 patients",
+   "hi": "<b>NABH</b> <b>JCI</b> <b>NABL</b> से मान्यता प्राप्त · 18,400 मरीज़ों ने दी <b>4.9 ★</b> रेटिंग"
   },
   "t:specialities:0": {
    "en": "Specialities",
@@ -262,49 +174,8 @@
    "hi": "सही विशेषज्ञ चुनें"
   },
   "t:specialities:2": {
-   "en": "Each centre has its own consultants, operating theatres and ICU. Pick one to see its doctors.",
-   "hi": "हर सेंटर के अपने कंसल्टेंट, ऑपरेशन थिएटर और ICU हैं। उसके डॉक्टर देखने के लिए कोई एक चुनें।"
-  },
-  "t:specialities:3": {
-   "en": "Neurology",
-   "hi": "न्यूरोलॉजी"
-  },
-  "t:specialities:4": {
-   "en": "The brain, grouped into lobes. The green frontal lobe handles planning, speech and personality.",
-   "hi": "दिमाग़, अलग-अलग हिस्सों (लोब) में बँटा हुआ। हरा फ़्रंटल लोब योजना बनाने, बोलने और व्यक्तित्व से जुड़ा है।"
-  },
-  "t:specialities:5": {
-   "en": "Model: Human Reference Atlas (HuBMAP), CC BY 4.0. <a href=\"credits.html#brain\">Credits</a>",
-   "hi": "मॉडल: Human Reference Atlas (HuBMAP), CC BY 4.0. <a href=\"credits.html#brain\">क्रेडिट</a>"
-  },
-  "i:specialities:0": {
-   "en": {
-    "src": "assets/img/mri-brain-axial-graded-800.webp",
-    "alt": ""
-   },
-   "hi": {
-    "alt": ""
-   }
-  },
-  "t:specialities:6": {
-   "en": "How we see it",
-   "hi": "जाँच में यह ऐसा दिखता है"
-  },
-  "t:specialities:7": {
-   "en": "MRI scan, a slice through the brain",
-   "hi": "MRI स्कैन, दिमाग़ का एक स्लाइस"
-  },
-  "t:specialities:8": {
-   "en": "Knee",
-   "hi": "घुटना"
-  },
-  "t:specialities:9": {
-   "en": "Spine",
-   "hi": "रीढ़"
-  },
-  "t:specialities:10": {
-   "en": "Point to a speciality to see it here.",
-   "hi": "यहाँ देखने के लिए किसी स्पेशियलिटी पर कर्सर ले जाएँ।"
+   "en": "Pick a speciality to see its doctors.",
+   "hi": "उसके डॉक्टर देखने के लिए स्पेशियलिटी चुनें।"
   },
   "t:symptom:0": {
    "en": "Specialist finder",
@@ -827,7 +698,7 @@
   },
   "t:care:0": {
    "en": "Patient care",
-   "hi": "मरीज़ों की देखभाल"
+   "hi": "मरीज़ सेवाएँ"
   },
   "t:care:1": {
    "en": "Cashless with 150+ insurers",

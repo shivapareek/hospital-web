@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,60,400;1,60,400&family=Atkinson+Hyperlegible+Next:wght@400..700&family=Atkinson+Hyperlegible+Mono:wght@400..500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/privacy.css" />
+  <link rel="stylesheet" href="css/simple.css" />
   <script type="importmap">
   {
     "imports": {
@@ -58,6 +59,7 @@
     <symbol id="i-ribbon" viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4c0 2 1 4 4 8 3-4 4-6 4-8a4 4 0 0 0-4-4Z"/><path d="M9.2 11 5 21l3-1 1.5 3 2.5-9"/><path d="M14.8 11 19 21l-3-1-1.5 3-2.5-9"/></symbol>
     <symbol id="i-tooth" viewBox="0 0 24 24"><path d="M7 3c-2 0-4 1.5-4 4.5 0 2.5 1 4 1.5 6S5 21 7 21c1.5 0 1.5-4 2-5.5S10.5 13 12 13s2.5 1 3 2.5.5 5.5 2 5.5c2 0 2-5.5 2.5-7.5S21 10 21 7.5C21 4.5 19 3 17 3c-2 0-3 1-5 1S9 3 7 3Z"/></symbol>
     <symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
     <symbol id="i-arrow-ur" viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></symbol>
@@ -85,11 +87,9 @@
       <span class="logo__word">CareNova</span>
     </a>
     <nav class="nav" id="nav" aria-label="Primary">
-      <a href="#specialities" class="nav__link">Specialities</a>
       <a href="#doctors" class="nav__link">Doctors</a>
-      <a href="#technology" class="nav__link">Imaging</a>
+      <a href="#specialities" class="nav__link">Specialities</a>
       <a href="#packages" class="nav__link">Health checks</a>
-      <a href="#care" class="nav__link">Patient care</a>
       <a href="#contact" class="nav__link">Contact</a>
     </nav>
     <div class="header__actions">
@@ -105,12 +105,10 @@
   </div>
   <div class="mobile-menu" id="mobileMenu" hidden>
     <div class="wrap mobile-menu__in">
-      <a href="#specialities">Specialities</a>
-      <a href="#doctors">Doctors</a>
-      <a href="#technology">Imaging</a>
       <a href="#book">Book a visit</a>
+      <a href="#doctors">Doctors</a>
+      <a href="#specialities">Specialities</a>
       <a href="#packages">Health checks</a>
-      <a href="#care">Patient care</a>
       <a href="#contact">Contact</a>
       <a href="tel:18001234567" class="mobile-menu__er">Emergency · <span class="mono">1800-123-4567</span></a>
     </div>
@@ -123,9 +121,9 @@
 <section class="hero" id="top">
   <div class="wrap hero__grid">
     <div class="hero__copy">
-      <p class="runhead"><span><span class="runhead__long">NABH · JCI · NABL accredited · Sector 44, Gurugram</span><span class="runhead__short">NABH · JCI accredited · Gurugram</span></span><span class="runhead__fact">Emergency open 24x7</span></p>
+      <p class="hero__badge"><span class="live-dot live-dot--red" aria-hidden="true"></span> Emergency open 24x7</p>
       <h1 class="hero__title">Specialist care, without the wait.</h1>
-      <p class="hero__lead">Book a consultant in under a minute, see live emergency wait times and get your reports on your phone. 250+ doctors across 40 specialities, on one campus.</p>
+      <p class="hero__lead">Find a doctor, book a visit and get your reports, all in one place.</p>
 
       <form class="search" id="heroSearch" role="search" autocomplete="off">
         <svg class="ic" aria-hidden="true"><use href="#i-search"/></svg>
@@ -137,20 +135,18 @@
     </div>
 
     <div class="live live--er" role="group" aria-labelledby="erHead">
-      <p class="live__head"><span class="live-dot live-dot--mint" aria-hidden="true"></span> <span id="erHead">Emergency wait right now</span> <span class="live__upd">Updated <span id="liveUpdated">just now</span></span></p>
+      <p class="live__head"><span class="live-dot live-dot--mint" aria-hidden="true"></span> <span id="erHead">Emergency wait right now</span></p>
       <p class="wait"><span class="wait__num" id="liveEr">08</span><span class="wait__unit">min</span></p>
       <svg class="pulse-line" viewBox="0 0 300 60" preserveAspectRatio="none" aria-hidden="true"><polyline points="0,32 60,32 72,32 80,12 90,52 100,20 108,32 160,32 172,32 180,14 188,46 196,32 300,32"/></svg>
       <dl class="live__facts">
         <div><dt>Beds free</dt><dd class="mono" id="liveBeds">42</dd></div>
-        <div><dt>ICU free</dt><dd class="mono" id="liveIcu">7</dd></div>
-        <div><dt>OPD token</dt><dd class="mono" id="liveToken">A-114</dd></div>
       </dl>
     </div>
 
     <ul class="hero__links">
-      <li><a href="#book">Book appointment <svg class="ic" aria-hidden="true"><use href="#i-arrow-ur"/></svg></a></li>
-      <li><a href="#book" data-video-book>Video consult <svg class="ic" aria-hidden="true"><use href="#i-arrow-ur"/></svg></a></li>
-      <li><a href="#" data-open="reportsModal">Download reports <svg class="ic" aria-hidden="true"><use href="#i-arrow-ur"/></svg></a></li>
+      <li><a href="#book" class="hero__act hero__act--main"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> Book appointment</a></li>
+      <li><a href="#book" class="hero__act" data-video-book><svg class="ic" aria-hidden="true"><use href="#i-video"/></svg> Video consult</a></li>
+      <li><a href="#" class="hero__act" data-open="reportsModal"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg> Get reports</a></li>
     </ul>
 
     <figure class="cover stage" id="coverHeart" data-stage="hero">
@@ -173,21 +169,10 @@
       </div>
       <button type="button" class="btn btn--line btn--sm stage__load" hidden>Turn in 3D · 0.4 MB</button>
       <figcaption class="cap">
-        <b class="cap__title">The human heart.</b>
-        <span class="cap__text">The green vessels are the coronary arteries, the heart's own blood supply. Our cath lab opens blocked ones, day and night.</span>
         <small class="credit">Model: BodyParts3D, © DBCLS, <span class="nowrap">CC BY-SA 2.1 JP</span>. <a href="credits.html#heart">Credits</a></small>
       </figcaption>
     </figure>
 
-    <div class="live live--next">
-      <p class="live__label">Next available</p>
-      <div class="next-doc"><span class="avatar" aria-hidden="true">AR</span><div><strong>Dr. Ananya Rao</strong><small>Cardiology · English, Hindi, Telugu</small></div></div>
-      <div class="next-slot"><span class="mono">Today, 11:30</span><button class="link-btn" data-book-doc="Dr. Ananya Rao">Book <svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg><span class="sr-only"> Dr. Ananya Rao</span></button></div>
-    </div>
-    <div class="live live--rating">
-      <p class="rating"><span class="rating__num">4.9</span> <svg class="star" aria-hidden="true"><use href="#i-star"/></svg><span class="sr-only"> out of 5</span></p>
-      <small>from 18,400 patient reviews on Google</small>
-    </div>
     <button type="button" class="live live--sos" data-open="sosModal">
       <span class="live__sos-ic" aria-hidden="true"><svg class="ic"><use href="#i-ambulance"/></svg></span>
       <span class="live__sos-text"><strong>Need an ambulance?</strong><small>Average response in <span class="nowrap">12 minutes</span></small></span>
@@ -201,9 +186,8 @@
       <div><dt>Specialities</dt><dd><span class="counter" data-to="40">40</span>+</dd></div>
       <div><dt>Beds</dt><dd><span class="counter" data-to="1200">1,200</span></dd></div>
       <div><dt>Years of care</dt><dd><span class="counter" data-to="28">28</span></dd></div>
-      <div><dt>Surgical success</dt><dd><span class="counter" data-to="98.6" data-decimals="1">98.6</span>%</dd></div>
     </dl>
-    <p class="accred">Accredited by <b>NABH</b> <b>JCI</b> <b>NABL</b> <b>ISO 9001</b> · Best Multi-Speciality Hospital, National Healthcare Awards 2025</p>
+    <p class="accred">Accredited by <b>NABH</b> <b>JCI</b> <b>NABL</b> · Rated <b>4.9 ★</b> by 18,400 patients</p>
   </div>
 </section>
 
@@ -213,32 +197,9 @@
     <header class="sec-head">
       <div class="sec-head__bar"><p class="kicker">Specialities</p></div>
       <h2>Find the right specialist</h2>
-      <p class="sec-head__sub">Each centre has its own consultants, operating theatres and ICU. Pick one to see its doctors.</p>
+      <p class="sec-head__sub">Pick a speciality to see its doctors.</p>
     </header>
-    <div class="spec-layout">
-      <ul class="spec-list" id="specList"></ul>
-      <aside class="cabinet" id="cabinet" aria-label="Specimen view">
-        <figure class="fig cabinet__fig">
-          <div class="cabinet__stage stage__box" data-stage="cabinet">
-            <img class="cabinet__still is-on" src="assets/img/specimens/brain-1072.webp" width="1072" height="1072" alt="" decoding="async" loading="lazy">
-            <img class="cabinet__still" alt="" decoding="async">
-          </div>
-          <figcaption class="cap">
-            <b class="cap__title" id="cabTitle" data-dept="Neurology">Neurology</b>
-            <span class="cap__text" id="cabText">The brain, grouped into lobes. The green frontal lobe handles planning, speech and personality.</span>
-            <small class="credit" id="cabCredit">Model: Human Reference Atlas (HuBMAP), CC BY 4.0. <a href="credits.html#brain">Credits</a></small>
-          </figcaption>
-        </figure>
-        <figure class="inset" id="cabInset">
-          <img src="assets/img/mri-brain-axial-graded-800.webp" width="112" height="112" alt="" loading="lazy" decoding="async">
-          <figcaption><b>How we see it</b><span id="cabInsetLabel">MRI scan, a slice through the brain</span></figcaption>
-        </figure>
-        <div class="cabinet__switch" id="cabSwitch" hidden role="group" aria-label="Show">
-          <button type="button" aria-pressed="true" data-alt="0">Knee</button><button type="button" aria-pressed="false" data-alt="1">Spine</button>
-        </div>
-        <p class="cabinet__hint">Point to a speciality to see it here.</p>
-      </aside>
-    </div>
+    <ul class="spec-list" id="specList"></ul>
   </div>
 </section>
 

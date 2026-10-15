@@ -8,6 +8,8 @@ const { newId } = require("./store");
 const { hashPassword } = require("./auth");
 
 const ROOT = path.join(__dirname, "..");
+// sections the simple home page starts without (they stay in index.html; the admin can show them)
+const SIMPLE_HOME_HIDDEN = ["technology", "closer", "tools"];
 
 function readStaticData() {
   // the template copy is kept so the static site keeps working without the server
@@ -50,7 +52,7 @@ function seed() {
     content,
     texts: {},
     textsHi: {},
-    hiddenSections: [],
+    hiddenSections: [...SIMPLE_HOME_HIDDEN],
     live: { mode: "demo", erWait: 8, beds: 42, icu: 7, token: "A-114", updatedAt: now },
     submissions: { appointments: [], messages: [], reports: [], packages: [], subscribers: [] },
     users: [{
@@ -62,4 +64,4 @@ function seed() {
   };
 }
 
-module.exports = { seed, readStaticData, readArticles };
+module.exports = { seed, readStaticData, readArticles, SIMPLE_HOME_HIDDEN };

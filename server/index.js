@@ -5,7 +5,7 @@ const fs = require("fs");
 const express = require("express");
 const multer = require("multer");
 const { Store, newId } = require("./store");
-const { seed } = require("./seed");
+const { seed, SIMPLE_HOME_HIDDEN } = require("./seed");
 const { COLLECTIONS, SUBMISSIONS, SETTINGS, DEFAULT_SETTINGS } = require("./schema");
 const { renderPage, renderDataJs, textGroups, sectionList, applyReplacements, loadTemplate, sanitizeInline } = require("./render");
 const auth = require("./auth");
@@ -611,6 +611,18 @@ const ctx = { app, store, db, ROOT, UPLOAD_DIR, requireAuth, audit, bad, str, no
 privacy.register(ctx);   // legal pages, consent, data requests, manage booking, reminders
 require("./pages").register(ctx);     // doctor / speciality / article / custom pages, sitemap
 require("./i18n/migrate").run(ctx);  // Hindi: db.textsHi and the Hindi demo content (once, never overwrites)
+
+/* Migration "simple-home-v1": the simpler home page hides the detailed sections (imaging, "Look closer",
+   health tools) once. Admins can show them again under Sections; this never runs a second time. */
+{
+  const d = db();
+  d.migrations = d.migrations || {};
+  if (!d.migrations["simple-home-v1"]) {
+    d.hiddenSections = [...new Set([...(d.hiddenSections || []), ...SIMPLE_HOME_HIDDEN])];
+    d.migrations["simple-home-v1"] = nowIso();
+    store.save();
+  }
+}
 
 app.use("/api", (req, res) => bad(res, 404, "Not found."));
 
