@@ -55,7 +55,7 @@ What the admin panel controls
 - **Enquiries**: contact messages, report requests, health check-up call-back requests; **newsletter subscribers**
 - **Content**: doctors (with photos), specialities, health check-ups, patient stories, FAQs, symptom finder, chat replies, health library
 - **Page text and images**: every heading, paragraph, button label and content image on the home page (about 330 fields), each with "reset to default", in English and in Hindi (see below)
-- **Sections**: show or hide any section of the page. The simple home page starts with Imaging and technology, "Look closer" and Health tools hidden; turn them on here. Delete `css/simple.css` (and its link in index.html) for the detailed layout.
+- **Sections**: show or hide any section of the page
 - **Settings**: hospital name, phone numbers, WhatsApp, email, map, SEO title/description/share image, brand colour, logo, announcement bar, booking hours/closed days/slot length, social links
 - **Live status**: the "Emergency wait right now" panel (manual values or demo mode)
 - **Media library**, **users with roles** (admin, editor, reception), **activity log**

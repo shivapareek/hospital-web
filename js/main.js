@@ -138,7 +138,7 @@
   let lastUpdate = Date.now();
   function setLive(sel, val) {
     const el = $(sel);
-    if (!el || el.textContent === String(val)) return;
+    if (el.textContent === String(val)) return;
     el.textContent = val;
     el.classList.add("flash");
     setTimeout(() => el.classList.remove("flash"), 900);
@@ -167,8 +167,7 @@
   }, 7000);
   setInterval(() => {
     const s = Math.round((Date.now() - lastUpdate) / 1000);
-    const upd = $("#liveUpdated");
-    if (upd) upd.textContent = s < 3 ? tr("just now") : s < 120 ? tr("{n} s ago", { n: s }) : s < 7200 ? tr("{n} min ago", { n: Math.round(s / 60) }) : tr("{n} h ago", { n: Math.round(s / 3600) });
+    $("#liveUpdated").textContent = s < 3 ? tr("just now") : s < 120 ? tr("{n} s ago", { n: s }) : s < 7200 ? tr("{n} min ago", { n: Math.round(s / 60) }) : tr("{n} h ago", { n: Math.round(s / 3600) });
   }, 1000);
 
   /* ---------- Hero search with suggestions ---------- */
@@ -684,48 +683,46 @@
   });
   renderPackages();
 
-  /* ---------- Tools (the section can be hidden from the admin) ---------- */
-  if ($("#bmiH")) {
-    function bmi() {
-      const h = parseFloat($("#bmiH").value), w = parseFloat($("#bmiW").value);
-      const out = $("#bmiOut"), pin = $("#bmiPin");
-      if (!(h > 50 && w > 10)) { out.textContent = tr("Enter your height and weight."); return; }
-      const v = w / Math.pow(h / 100, 2);
-      const [cat, tip] = v < 18.5 ? ["in the underweight range", "A nutrition consult can help."] : v < 25 ? ["in the healthy range", "Keep it up."] : v < 30 ? ["in the overweight range", "Small daily changes add up."] : ["in the obese range", "We'd suggest a doctor's review."];
-      pin.style.left = Math.max(2, Math.min(98, ((v - 12) / (40 - 12)) * 100)) + "%";
-      out.innerHTML = `<b>${v.toFixed(1)}</b>${tr("Your BMI is {range}.", { range: tr(cat) })} ${tr(tip)}`;
-    }
-    ["#bmiH", "#bmiW"].forEach((s) => $(s).addEventListener("input", bmi));
-    bmi();
-
-    function water() {
-      const w = parseFloat($("#waterW").value), a = parseFloat($("#waterA").value);
-      const out = $("#waterOut"), g = $("#waterGlasses");
-      if (!(w > 10)) { out.textContent = tr("Enter your weight."); g.innerHTML = ""; return; }
-      const litres = w * 0.033 + a;
-      const glasses = Math.round((litres * 1000) / 250);
-      g.innerHTML = Array.from({ length: Math.min(glasses, 20) }, () => `<span class="glass"></span>`).join("");
-      out.innerHTML = `<b>${tr("{n} L", { n: litres.toFixed(1) })}</b>${tr("About {n} glasses of water a day.", { n: glasses })}`;
-    }
-    ["#waterW", "#waterA"].forEach((s) => $(s).addEventListener("input", water));
-    water();
-
-    const lmp = $("#lmp");
-    lmp.max = new Date().toISOString().split("T")[0];
-    const sample = new Date(); sample.setDate(sample.getDate() - 70);
-    lmp.value = sample.toISOString().split("T")[0];
-    function due() {
-      const out = $("#dueOut");
-      if (!lmp.value) { out.textContent = tr("Pick a date to estimate your due date."); return; }
-      const start = new Date(lmp.value + "T00:00:00");
-      const d = new Date(start); d.setDate(d.getDate() + 280);
-      const weeks = Math.floor((Date.now() - start) / (7 * 864e5));
-      if (weeks < 0 || weeks > 42) { out.textContent = tr("Choose a date within the last 42 weeks."); return; }
-      out.innerHTML = `<b>${d.getDate()} ${(I18N["@monthsLong"] || MON)[d.getMonth()]} ${d.getFullYear()}</b>${tr("Your estimated due date. You're about {weeks} weeks along, in trimester {n}.", { weeks, n: weeks < 13 ? 1 : weeks < 27 ? 2 : 3, nth: tr(weeks < 13 ? "first" : weeks < 27 ? "second" : "third") })}`;
-    }
-    lmp.addEventListener("input", due);
-    due();
+  /* ---------- Tools ---------- */
+  function bmi() {
+    const h = parseFloat($("#bmiH").value), w = parseFloat($("#bmiW").value);
+    const out = $("#bmiOut"), pin = $("#bmiPin");
+    if (!(h > 50 && w > 10)) { out.textContent = tr("Enter your height and weight."); return; }
+    const v = w / Math.pow(h / 100, 2);
+    const [cat, tip] = v < 18.5 ? ["in the underweight range", "A nutrition consult can help."] : v < 25 ? ["in the healthy range", "Keep it up."] : v < 30 ? ["in the overweight range", "Small daily changes add up."] : ["in the obese range", "We'd suggest a doctor's review."];
+    pin.style.left = Math.max(2, Math.min(98, ((v - 12) / (40 - 12)) * 100)) + "%";
+    out.innerHTML = `<b>${v.toFixed(1)}</b>${tr("Your BMI is {range}.", { range: tr(cat) })} ${tr(tip)}`;
   }
+  ["#bmiH", "#bmiW"].forEach((s) => $(s).addEventListener("input", bmi));
+  bmi();
+
+  function water() {
+    const w = parseFloat($("#waterW").value), a = parseFloat($("#waterA").value);
+    const out = $("#waterOut"), g = $("#waterGlasses");
+    if (!(w > 10)) { out.textContent = tr("Enter your weight."); g.innerHTML = ""; return; }
+    const litres = w * 0.033 + a;
+    const glasses = Math.round((litres * 1000) / 250);
+    g.innerHTML = Array.from({ length: Math.min(glasses, 20) }, () => `<span class="glass"></span>`).join("");
+    out.innerHTML = `<b>${tr("{n} L", { n: litres.toFixed(1) })}</b>${tr("About {n} glasses of water a day.", { n: glasses })}`;
+  }
+  ["#waterW", "#waterA"].forEach((s) => $(s).addEventListener("input", water));
+  water();
+
+  const lmp = $("#lmp");
+  lmp.max = new Date().toISOString().split("T")[0];
+  const sample = new Date(); sample.setDate(sample.getDate() - 70);
+  lmp.value = sample.toISOString().split("T")[0];
+  function due() {
+    const out = $("#dueOut");
+    if (!lmp.value) { out.textContent = tr("Pick a date to estimate your due date."); return; }
+    const start = new Date(lmp.value + "T00:00:00");
+    const d = new Date(start); d.setDate(d.getDate() + 280);
+    const weeks = Math.floor((Date.now() - start) / (7 * 864e5));
+    if (weeks < 0 || weeks > 42) { out.textContent = tr("Choose a date within the last 42 weeks."); return; }
+    out.innerHTML = `<b>${d.getDate()} ${(I18N["@monthsLong"] || MON)[d.getMonth()]} ${d.getFullYear()}</b>${tr("Your estimated due date. You're about {weeks} weeks along, in trimester {n}.", { weeks, n: weeks < 13 ? 1 : weeks < 27 ? 2 : 3, nth: tr(weeks < 13 ? "first" : weeks < 27 ? "second" : "third") })}`;
+  }
+  lmp.addEventListener("input", due);
+  due();
 
   /* ---------- Stories ---------- */
   const quote = $("#quote");
